@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจองคิวตรวจ SAIS</title>
+    <title>SAIS Inspection Booking System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,13 +29,14 @@
     <div class="container mx-auto p-4 md:p-6">
         <!-- Header -->
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-green-400">SAIS Inspection Booking Dashboard</h1>
+            <h1 id="dashboardTitle" class="text-2xl md:text-3xl font-bold text-green-400">SAIS Inspection Booking Dashboard</h1>
             <div class="flex items-center gap-4">
+                 <button id="langToggleBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm">ไทย</button>
                 <button id="settingsBtn" class="hidden p-2 bg-gray-700 hover:bg-gray-600 rounded-full transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
                 <label for="adminToggle" class="flex items-center cursor-pointer admin-switch">
-                    <span class="mr-3 text-sm font-medium">Admin Mode</span>
+                    <span id="adminModeLabel" class="mr-3 text-sm font-medium">Admin Mode</span>
                     <div class="relative">
                         <input type="checkbox" id="adminToggle" class="sr-only">
                         <div class="block w-14 h-8 rounded-full slider"></div>
@@ -173,9 +174,9 @@
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md border border-gray-600 overflow-y-auto max-h-screen">
-            <h2 class="text-2xl font-bold mb-6 text-green-400">Settings</h2>
+            <h2 id="settingsTitle" class="text-2xl font-bold mb-6 text-green-400">Settings</h2>
             <div id="inspectorSettingsContainer">
-                <h3 class="text-lg font-semibold mb-3 text-gray-300">Inspector Management</h3>
+                <h3 id="inspectorManagementTitle" class="text-lg font-semibold mb-3 text-gray-300">Inspector Management</h3>
                 <div id="inspectorList" class="space-y-2 max-h-40 overflow-y-auto"></div>
                 <div class="flex gap-2 mt-4">
                     <input type="text" id="newInspectorName" placeholder="New Inspector Name" class="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 w-full">
@@ -184,12 +185,12 @@
             </div>
             <hr class="border-gray-600 my-6">
             <div id="displaySettingsContainer">
-                <h3 class="text-lg font-semibold mb-3 text-gray-300">Card Display Settings</h3>
+                <h3 id="cardDisplaySettingsTitle" class="text-lg font-semibold mb-3 text-gray-300">Card Display Settings</h3>
                 <div id="displaySettingsList" class="space-y-3"></div>
             </div>
             <hr class="border-gray-600 my-6">
             <div id="holidaySettingsContainer">
-                <h3 class="text-lg font-semibold mb-3 text-gray-300">Holiday Management</h3>
+                <h3 id="holidayManagementTitle" class="text-lg font-semibold mb-3 text-gray-300">Holiday Management</h3>
                 <div class="flex gap-2 mb-4">
                     <input type="date" id="holidayDate" class="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 w-full">
                     <select id="holidayInspector" class="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 w-full"></select>
@@ -199,7 +200,7 @@
             </div>
             <hr class="border-gray-600 my-6">
             <div id="leaveSettingsContainer">
-                <h3 class="text-lg font-semibold mb-3 text-gray-300">Leave Management</h3>
+                <h3 id="leaveManagementTitle" class="text-lg font-semibold mb-3 text-gray-300">Leave Management</h3>
                 <div class="flex gap-2 mb-4">
                     <input type="date" id="leaveDate" class="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 w-full">
                     <select id="leaveInspector" class="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 w-full"></select>
@@ -233,6 +234,7 @@
             let draggedBookingId = null;
             let currentModalType = 'qc';
             let activeBookingId = null;
+            let currentLanguage = localStorage.getItem('qcLanguage') || 'en';
 
             // --- MOCK DATA (for initial view) ---
             if (bookings.length === 0) {
@@ -283,6 +285,17 @@
             const mobileInspectorFilter = document.getElementById('mobileInspectorFilter');
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
+            const langToggleBtn = document.getElementById('langToggleBtn');
+
+            // --- TRANSLATIONS ---
+            const translations = {
+                en: {
+                    dashboardTitle: "SAIS Inspection Booking Dashboard", adminMode: "Admin Mode", prevMonth: "< Prev Month", nextMonth: "Next Month >", searchPlaceholder: "Search Equipment No. / Site Name...", dateHeader: "Date", sunday: "Sunday", holiday: "Holiday", leave: "Leave", detailsTitle: "Booking Details", detailsSaisTitle: "SAIS Booking Details", detailsNoteTitle: "General Task Details", close: "Close", customText: "Custom Text", delete: "Delete", edit: "Edit", bookingTitle: "SAIS Inspection Booking", editTitle: "Edit Entry", saisInspection: "SAIS Inspection", generalTask: "General Task", equipmentNo: "Equipment No.", productLine: "Product Line", siteName: "Site Name", province: "Province", otherProvince: "Other...", specifyProvince: "Specify Province", peName: "PE Name", forman: "Forman", tester: "TESTER", gmapsUrl: "Google Maps URL", note: "Note", pin: "4-Digit PIN (for edit/delete)", setPin: "Set a 4-digit PIN", editPin: "Enter current or new PIN", taskDetails: "Task Details", cancel: "Cancel", save: "Save", settings: "Settings", inspectorManagement: "Inspector Management", newInspectorPlaceholder: "New Inspector Name", add: "Add", cardDisplaySettings: "Card Display Settings", holidayManagement: "Holiday Management", leaveManagement: "Leave Management", everyone: "Everyone", adminEnabled: "Admin mode enabled.", adminDisabled: "Admin mode disabled.", incorrectPass: "Incorrect Password!", actionConfirm: (action) => `Admin: Are you sure you want to ${action} this entry?`, pinConfirm: (action) => `Please enter the 4-digit PIN to ${action} this entry:`, incorrectPin: "Incorrect PIN!", deleteConfirm: (name) => `Are you sure you want to delete ${name}? Their bookings will not be removed.`, enterNewName: "Enter the new name:", customTextPrompt: "Enter custom display text (leave blank to reset to default):"
+                },
+                th: {
+                    dashboardTitle: "แดชบอร์ดการจองตรวจ SAIS", adminMode: "โหมดแอดมิน", prevMonth: "< เดือนก่อนหน้า", nextMonth: "เดือนถัดไป >", searchPlaceholder: "ค้นหาเลขงาน / ไซต์งาน...", dateHeader: "วันที่", sunday: "Sunday", holiday: "Holiday", leave: "ลา", detailsTitle: "รายละเอียดการจอง", detailsSaisTitle: "รายละเอียดการจอง SAIS", detailsNoteTitle: "รายละเอียดงานทั่วไป", close: "ปิด", customText: "แก้ไขข้อความ", delete: "ลบ", edit: "แก้ไข", bookingTitle: "จองคิวตรวจ SAIS", editTitle: "แก้ไขรายการ", saisInspection: "ตรวจ SAIS", generalTask: "งานทั่วไป", equipmentNo: "Equipment No.", productLine: "Product Line", siteName: "ชื่อไซต์งาน", province: "จังหวัด", otherProvince: "อื่นๆ...", specifyProvince: "ระบุจังหวัด", peName: "ชื่อ PE", forman: "Forman", tester: "TESTER", gmapsUrl: "Google Maps URL", note: "หมายเหตุ", pin: "รหัส 4 หลัก (สำหรับแก้ไข/ลบ)", setPin: "ตั้งรหัส 4 หลัก", editPin: "ใส่รหัสเดิม หรือตั้งใหม่", taskDetails: "รายละเอียดงาน", cancel: "ยกเลิก", save: "บันทึก", settings: "ตั้งค่า", inspectorManagement: "จัดการผู้ตรวจ", newInspectorPlaceholder: "ชื่อผู้ตรวจใหม่", add: "เพิ่ม", cardDisplaySettings: "ตั้งค่าการแสดงผลบนการ์ด", holidayManagement: "จัดการวันหยุด", leaveManagement: "จัดการวันลา", everyone: "ทุกคน", adminEnabled: "เปิดโหมดแอดมินแล้ว", adminDisabled: "ปิดโหมดแอดมินแล้ว", incorrectPass: "รหัสผ่านไม่ถูกต้อง!", actionConfirm: (action) => `แอดมิน: คุณแน่ใจหรือไม่ว่าต้องการ ${action === 'edit' ? 'แก้ไข' : 'ลบ'} รายการนี้?`, pinConfirm: (action) => `กรุณาใส่รหัส 4 หลักเพื่อ ${action === 'edit' ? 'แก้ไข' : 'ลบ'} รายการ:`, incorrectPin: "รหัสไม่ถูกต้อง!", deleteConfirm: (name) => `คุณแน่ใจหรือไม่ว่าต้องการลบ ${name}? การจองของพวกเขาจะไม่ถูกลบไปด้วย`, enterNewName: "ใส่ชื่อใหม่:", customTextPrompt: "ใส่ข้อความที่ต้องการแสดง (เว้นว่างเพื่อกลับไปใช้ค่าเริ่มต้น):"
+                }
+            };
 
             // --- FUNCTIONS ---
             function saveInspectors() { localStorage.setItem('qcInspectors_v11', JSON.stringify(inspectors)); }
@@ -306,9 +319,11 @@
                 const month = currentDate.getMonth();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-                currentMonthDisplay.textContent = `${currentDate.toLocaleString('en-US', { month: 'long' })} ${year}`;
+                const t = translations[currentLanguage];
+                const locale = currentLanguage === 'th' ? 'th-TH' : 'en-US';
+                const yearOffset = currentLanguage === 'th' ? 543 : 0;
+                currentMonthDisplay.textContent = `${currentDate.toLocaleString(locale, { month: 'long' })} ${year + yearOffset}`;
 
-                // --- Performance & Data Filtering ---
                 const monthStr = `${year}-${month + 1}`;
                 const monthlyBookings = bookings.filter(b => b.date.startsWith(monthStr));
                 const monthlyHolidays = holidays.filter(h => h.date.startsWith(monthStr));
@@ -318,7 +333,6 @@
                 const holidayMap = new Map(monthlyHolidays.map(h => [`${h.date}-${h.inspector}`, h]));
                 const leaveMap = new Map(monthlyLeaveDays.map(l => [`${l.date}-${l.inspector}`, l]));
 
-                // --- Mobile View Logic ---
                 const isMobile = window.innerWidth < 768;
                 let inspectorsToRender = inspectors;
                 if (isMobile) {
@@ -331,7 +345,7 @@
 
                 const headerCorner = document.createElement('div');
                 headerCorner.className = 'p-1 border-b border-r border-gray-600 bg-gray-700 sticky top-0 font-bold text-center text-sm';
-                headerCorner.textContent = 'Date';
+                headerCorner.textContent = t.dateHeader;
                 grid.appendChild(headerCorner);
 
                 inspectorsToRender.forEach(name => {
@@ -365,13 +379,13 @@
 
                         if (isSunday) {
                             cell.classList.add('bg-red-900/50');
-                            cell.innerHTML = `<div class="m-auto text-xs text-red-300 font-bold">Sunday</div>`;
+                            cell.innerHTML = `<div class="m-auto text-xs text-red-300 font-bold">${t.sunday}</div>`;
                         } else if (isHoliday) {
                             cell.classList.add('bg-red-900/50');
-                            cell.innerHTML = `<div class="m-auto text-xs text-red-300 font-bold">Holiday</div>`;
+                            cell.innerHTML = `<div class="m-auto text-xs text-red-300 font-bold">${t.holiday}</div>`;
                         } else if (isLeaveDay) {
                             cell.classList.add('bg-yellow-500');
-                            cell.innerHTML = `<div class="m-auto text-xs text-black font-bold">ลา</div>`;
+                            cell.innerHTML = `<div class="m-auto text-xs text-black font-bold">${t.leave}</div>`;
                         } else if (entry) {
                             cell.dataset.bookingId = entry.id;
                             let isMatch = searchTerm === '';
@@ -432,56 +446,380 @@
             }
             
             function openDetailsModal(bookingId) {
-                // ... (unchanged)
+                activeBookingId = bookingId;
+                const entry = bookings.find(b => b.id == bookingId);
+                if (!entry) return;
+
+                const t = translations[currentLanguage];
+                if (entry.type === 'booking') {
+                    detailsModalTitle.textContent = t.detailsSaisTitle;
+                    detailsContent.innerHTML = `
+                        <p><strong>${t.equipmentNo}:</strong> ${entry.equipmentNo}</p>
+                        <p><strong>${t.productLine}:</strong> ${entry.productLine || '-'}</p>
+                        <p><strong>${t.siteName}:</strong> ${entry.siteName}</p>
+                        <p><strong>${t.province}:</strong> ${entry.province || '-'}</p>
+                        <p><strong>${t.peName}:</strong> ${entry.peName}</p>
+                        <p><strong>${t.forman}:</strong> ${entry.forman || '-'}</p>
+                        <p><strong>${t.tester}:</strong> ${entry.tester || '-'}</p>
+                        <p><strong>${t.note}:</strong> ${entry.qcNote || '-'}</p>
+                        ${entry.gmapsUrl ? `<p><strong>Map:</strong> <a href="${entry.gmapsUrl}" target="_blank" class="text-blue-400 hover:underline">Open Map</a></p>` : ''}
+                    `;
+                    editDetailsBtn.classList.remove('hidden');
+                    deleteDetailsBtn.classList.remove('hidden');
+                    if (isAdmin) customTextBtn.classList.remove('hidden');
+                } else { // Note
+                    detailsModalTitle.textContent = t.detailsNoteTitle;
+                    detailsContent.innerHTML = `<p>${entry.text}</p>`;
+                    customTextBtn.classList.add('hidden');
+                    if (isAdmin) {
+                        editDetailsBtn.classList.remove('hidden');
+                        deleteDetailsBtn.classList.remove('hidden');
+                    } else {
+                        editDetailsBtn.classList.add('hidden');
+                        deleteDetailsBtn.classList.add('hidden');
+                    }
+                }
+                detailsModal.classList.remove('hidden');
             }
 
             function openBookingModal(day, inspector, bookingId = null) {
-                // ... (unchanged)
+                bookingForm.reset();
+                otherProvinceContainer.classList.add('hidden');
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                document.getElementById('bookingDate').value = `${year}-${month + 1}-${day}`;
+                document.getElementById('bookingInspector').value = inspector;
+
+                const t = translations[currentLanguage];
+                if (bookingId) {
+                    const entry = bookings.find(b => b.id == bookingId);
+                    modalTitle.textContent = t.editTitle;
+                    document.getElementById('bookingId').value = entry.id;
+                    if (entry.type === 'booking') {
+                        switchModalType('qc');
+                        document.getElementById('equipmentNo').value = entry.equipmentNo;
+                        document.getElementById('productLine').value = entry.productLine;
+                        document.getElementById('siteName').value = entry.siteName;
+                        
+                        const province = entry.province || 'BKK';
+                        const presetProvinces = ['BKK', 'CM', 'PK'];
+                        if (presetProvinces.includes(province)) {
+                            provinceSelect.value = province;
+                        } else {
+                            provinceSelect.value = 'Other';
+                            otherProvince.value = province;
+                            otherProvinceContainer.classList.remove('hidden');
+                        }
+                        
+                        document.getElementById('peName').value = entry.peName;
+                        document.getElementById('forman').value = entry.forman;
+                        document.getElementById('tester').value = entry.tester;
+                        document.getElementById('gmapsUrl').value = entry.gmapsUrl;
+                        document.getElementById('qcNote').value = entry.qcNote;
+                        document.getElementById('bookingPassword').placeholder = t.editPin;
+                    } else {
+                        switchModalType('note');
+                        document.getElementById('noteText').value = entry.text;
+                    }
+                    if (isAdmin) document.getElementById('taskTypeToggleContainer').classList.remove('hidden');
+                } else {
+                    modalTitle.textContent = t.bookingTitle;
+                    document.getElementById('bookingId').value = '';
+                    document.getElementById('bookingPassword').placeholder = t.setPin;
+                    switchModalType('qc');
+                    if (isAdmin) {
+                        document.getElementById('taskTypeToggleContainer').classList.remove('hidden');
+                    } else {
+                        document.getElementById('taskTypeToggleContainer').classList.add('hidden');
+                    }
+                }
+                bookingModal.classList.remove('hidden');
             }
 
             function handleFormSubmit(e) {
-                // ... (unchanged)
+                e.preventDefault();
+                const id = document.getElementById('bookingId').value;
+                let entryData;
+
+                if (currentModalType === 'qc') {
+                    let province = provinceSelect.value;
+                    if (province === 'Other') {
+                        province = otherProvince.value.trim().toUpperCase() || 'Other';
+                    }
+
+                    entryData = {
+                        type: 'booking', date: document.getElementById('bookingDate').value, inspector: document.getElementById('bookingInspector').value,
+                        equipmentNo: document.getElementById('equipmentNo').value, productLine: document.getElementById('productLine').value,
+                        siteName: document.getElementById('siteName').value, province: province, peName: document.getElementById('peName').value,
+                        forman: document.getElementById('forman').value, tester: document.getElementById('tester').value,
+                        gmapsUrl: document.getElementById('gmapsUrl').value, qcNote: document.getElementById('qcNote').value,
+                        password: document.getElementById('bookingPassword').value
+                    };
+                } else {
+                    entryData = {
+                        type: 'note', date: document.getElementById('bookingDate').value, inspector: document.getElementById('bookingInspector').value,
+                        text: document.getElementById('noteText').value,
+                    };
+                }
+
+                if (id) {
+                    const index = bookings.findIndex(b => b.id == id);
+                    if (entryData.type === 'booking' && !entryData.password) {
+                        entryData.password = bookings[index].password;
+                    }
+                    bookings[index] = { ...bookings[index], ...entryData };
+                    showToast('Entry updated successfully.');
+                } else {
+                    entryData.id = Date.now();
+                    bookings.push(entryData);
+                    showToast('Entry created successfully.');
+                }
+                saveBookings();
+                bookingModal.classList.add('hidden');
+                renderGrid();
             }
 
             function confirmAction(action) {
-                // ... (unchanged)
+                const entry = bookings.find(b => b.id == activeBookingId);
+                if (!entry) return;
+
+                const t = translations[currentLanguage];
+                if (isAdmin) {
+                    if (confirm(t.actionConfirm(action))) {
+                        performAction(action, entry);
+                    }
+                } else {
+                    const password = prompt(t.pinConfirm(action));
+                    if (password === entry.password) {
+                        performAction(action, entry);
+                    } else if (password !== null) {
+                        showToast(t.incorrectPin, false);
+                    }
+                }
             }
 
             function performAction(action, entry) {
-                // ... (unchanged)
+                detailsModal.classList.add('hidden');
+                if (action === 'edit') {
+                    const dateParts = entry.date.split('-').map(Number);
+                    openBookingModal(dateParts[2], entry.inspector, entry.id);
+                } else if (action === 'delete') {
+                    bookings = bookings.filter(b => b.id != entry.id);
+                    saveBookings();
+                    renderGrid();
+                    showToast('Entry deleted successfully.');
+                }
             }
             
             function addDragListeners() {
-                // ... (unchanged)
+                if (!isAdmin) return;
+                document.querySelectorAll('[draggable="true"]').forEach(item => {
+                    item.addEventListener('dragstart', e => {
+                        draggedBookingId = e.target.closest('[data-booking-id]').dataset.bookingId;
+                        e.dataTransfer.effectAllowed = 'move';
+                        setTimeout(() => e.target.closest('[data-booking-id]').style.opacity = '0.5', 0);
+                    });
+                    item.addEventListener('dragend', e => {
+                         const draggedElement = document.querySelector(`[data-booking-id="${draggedBookingId}"]`);
+                         if(draggedElement) draggedElement.style.opacity = '1';
+                         draggedBookingId = null;
+                    });
+                });
             }
 
             function handleDrop(e) {
-                // ... (unchanged)
+                e.preventDefault();
+                const targetCell = e.target.closest('[data-date]');
+                targetCell.classList.remove('bg-green-900');
+                if (!targetCell || targetCell.dataset.bookingId) return;
+
+                const dateString = targetCell.dataset.date;
+                const inspector = targetCell.dataset.inspector;
+                const isHoliday = holidays.find(h => h.date === dateString && (h.inspector === 'all' || h.inspector === inspector));
+                const isLeaveDay = leaveDays.find(l => l.date === dateString && l.inspector === inspector);
+                if (isHoliday || isLeaveDay) return;
+
+                const booking = bookings.find(b => b.id == draggedBookingId);
+                if (booking) {
+                    booking.date = dateString;
+                    booking.inspector = inspector;
+                    saveBookings();
+                    renderGrid();
+                    showToast('Booking moved successfully.');
+                }
             }
             
             function openSettingsModal() {
                 renderInspectorList();
-                // ... (rest of the function is unchanged)
+                renderDisplaySettingsList();
+                renderHolidayList();
+                renderLeaveList();
+                settingsModal.classList.remove('hidden');
             }
 
             function renderInspectorList() {
-                // ... (unchanged)
+                inspectorList.innerHTML = '';
+                inspectors.forEach((name, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between bg-gray-700 p-2 rounded';
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = name;
+                    div.appendChild(nameSpan);
+                    
+                    const controls = document.createElement('div');
+                    controls.className = 'flex items-center gap-2';
+
+                    const upBtn = document.createElement('button');
+                    upBtn.innerHTML = '&#9650;';
+                    upBtn.className = 'px-2';
+                    upBtn.disabled = index === 0;
+                    upBtn.onclick = () => moveInspector(index, 'up');
+                    
+                    const downBtn = document.createElement('button');
+                    downBtn.innerHTML = '&#9660;';
+                    downBtn.className = 'px-2';
+                    downBtn.disabled = index === inspectors.length - 1;
+                    downBtn.onclick = () => moveInspector(index, 'down');
+
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Edit';
+                    editBtn.className = 'text-blue-400';
+                    editBtn.onclick = () => editInspector(index);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'text-red-400';
+                    deleteBtn.onclick = () => deleteInspector(index);
+
+                    controls.appendChild(upBtn);
+                    controls.appendChild(downBtn);
+                    controls.appendChild(editBtn);
+                    controls.appendChild(deleteBtn);
+                    div.appendChild(controls);
+                    inspectorList.appendChild(div);
+                });
             }
 
             function addInspector() {
-                // ... (unchanged)
+                const newNameInput = document.getElementById('newInspectorName');
+                const newName = newNameInput.value.trim();
+                if (newName && !inspectors.includes(newName)) {
+                    inspectors.push(newName);
+                    saveInspectors();
+                    openSettingsModal();
+                    renderGrid();
+                    renderMobileFilter();
+                    newNameInput.value = '';
+                }
             }
 
             function deleteInspector(index) {
-                // ... (unchanged)
+                const t = translations[currentLanguage];
+                if (confirm(t.deleteConfirm(inspectors[index]))) {
+                    inspectors.splice(index, 1);
+                    saveInspectors();
+                    openSettingsModal();
+                    renderGrid();
+                    renderMobileFilter();
+                }
             }
 
             function editInspector(index) {
-                // ... (unchanged)
+                const t = translations[currentLanguage];
+                const oldName = inspectors[index];
+                const newName = prompt(t.enterNewName, oldName);
+                if (newName && newName.trim() !== '' && !inspectors.includes(newName)) {
+                    inspectors[index] = newName.trim();
+                    bookings.forEach(b => { if (b.inspector === oldName) b.inspector = newName; });
+                    holidays.forEach(h => { if (h.inspector === oldName) h.inspector = newName; });
+                    leaveDays.forEach(l => { if (l.inspector === oldName) l.inspector = newName; });
+                    saveInspectors();
+                    saveBookings();
+                    saveHolidays();
+                    saveLeaveDays();
+                    openSettingsModal();
+                    renderGrid();
+                    renderMobileFilter();
+                }
             }
 
             function moveInspector(index, direction) {
-                // ... (unchanged)
+                if (direction === 'up' && index > 0) {
+                    [inspectors[index], inspectors[index - 1]] = [inspectors[index - 1], inspectors[index]];
+                } else if (direction === 'down' && index < inspectors.length - 1) {
+                    [inspectors[index], inspectors[index + 1]] = [inspectors[index + 1], inspectors[index]];
+                }
+                saveInspectors();
+                openSettingsModal();
+                renderGrid();
+                renderMobileFilter();
+            }
+            
+            function renderDisplaySettingsList() {
+                displaySettingsList.innerHTML = '';
+                const fields = { equipmentNo: 'Equipment No.', siteName: 'Site Name', peName: 'PE Name', productLine: 'Product Line', province: 'Province' };
+                Object.keys(fields).forEach(key => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `display_${key}`;
+                    checkbox.checked = displaySettings[key];
+                    checkbox.className = 'h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500';
+                    checkbox.addEventListener('change', (e) => {
+                        displaySettings[key] = e.target.checked;
+                        saveDisplaySettings();
+                        renderGrid();
+                    });
+                    const label = document.createElement('label');
+                    label.htmlFor = `display_${key}`;
+                    label.textContent = fields[key];
+                    label.className = 'ml-3 block text-sm font-medium text-gray-300';
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    displaySettingsList.appendChild(div);
+                });
+            }
+
+            function renderHolidayList() {
+                holidayList.innerHTML = '';
+                holidays.forEach(holiday => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
+                    div.innerHTML = `<span>${holiday.date} - ${holiday.inspector}</span>`;
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = `&times;`;
+                    deleteBtn.className = 'text-red-500 font-bold px-2';
+                    deleteBtn.onclick = () => {
+                        holidays = holidays.filter(h => !(h.date === holiday.date && h.inspector === holiday.inspector));
+                        saveHolidays();
+                        renderHolidayList();
+                        renderGrid();
+                    };
+                    div.appendChild(deleteBtn);
+                    holidayList.appendChild(div);
+                });
+            }
+            
+            function renderLeaveList() {
+                leaveList.innerHTML = '';
+                leaveDays.forEach(leave => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
+                    div.innerHTML = `<span>${leave.date} - ${leave.inspector}</span>`;
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = `&times;`;
+                    deleteBtn.className = 'text-red-500 font-bold px-2';
+                    deleteBtn.onclick = () => {
+                        leaveDays = leaveDays.filter(l => !(l.date === leave.date && l.inspector === leave.inspector));
+                        saveLeaveDays();
+                        renderLeaveList();
+                        renderGrid();
+                    };
+                    div.appendChild(deleteBtn);
+                    leaveList.appendChild(div);
+                });
             }
             
             function renderMobileFilter() {
@@ -492,6 +830,61 @@
                     option.textContent = name;
                     mobileInspectorFilter.appendChild(option);
                 });
+            }
+            
+            function setLanguage(lang) {
+                currentLanguage = lang;
+                localStorage.setItem('qcLanguage', lang);
+                const t = translations[lang];
+
+                document.title = t.dashboardTitle;
+                document.getElementById('dashboardTitle').textContent = t.dashboardTitle;
+                document.getElementById('adminModeLabel').textContent = t.adminMode;
+                prevMonthBtn.innerHTML = t.prevMonth;
+                nextMonthBtn.innerHTML = t.nextMonth;
+                searchInput.placeholder = t.searchPlaceholder;
+                
+                detailsModalTitle.textContent = t.detailsTitle;
+                closeDetailsBtn.textContent = t.close;
+                customTextBtn.textContent = t.customText;
+                deleteDetailsBtn.textContent = t.delete;
+                editDetailsBtn.textContent = t.edit;
+                
+                modalTitle.textContent = t.bookingTitle;
+                typeQcBtn.textContent = t.saisInspection;
+                typeNoteBtn.textContent = t.generalTask;
+                
+                document.querySelector('label[for="equipmentNo"]').textContent = t.equipmentNo;
+                document.querySelector('label[for="productLine"]').textContent = t.productLine;
+                document.querySelector('label[for="siteName"]').textContent = t.siteName;
+                document.querySelector('label[for="provinceSelect"]').textContent = t.province;
+                document.querySelector('label[for="otherProvince"]').textContent = t.specifyProvince;
+                document.querySelector('label[for="peName"]').textContent = t.peName;
+                document.querySelector('label[for="forman"]').textContent = t.forman;
+                document.querySelector('label[for="tester"]').textContent = t.tester;
+                document.querySelector('label[for="gmapsUrl"]').textContent = t.gmapsUrl;
+                document.querySelector('label[for="qcNote"]').textContent = t.note;
+                document.querySelector('label[for="bookingPassword"]').textContent = t.pin;
+                document.querySelector('label[for="noteText"]').textContent = t.taskDetails;
+                
+                cancelBtn.textContent = t.cancel;
+                bookingForm.querySelector('button[type="submit"]').textContent = t.save;
+                
+                document.getElementById('settingsTitle').textContent = t.settings;
+                document.getElementById('inspectorManagementTitle').textContent = t.inspectorManagement;
+                document.getElementById('newInspectorName').placeholder = t.newInspectorPlaceholder;
+                addInspectorBtn.textContent = t.add;
+                document.getElementById('cardDisplaySettingsTitle').textContent = t.cardDisplaySettings;
+                document.getElementById('holidayManagementTitle').textContent = t.holidayManagement;
+                document.getElementById('leaveManagementTitle').textContent = t.leaveManagement;
+                addHolidayBtn.textContent = t.add;
+                addLeaveBtn.textContent = t.add;
+                closeSettingsBtn.textContent = t.close;
+                
+                langToggleBtn.textContent = lang === 'en' ? 'ไทย' : 'EN';
+                
+                renderGrid();
+                renderMobileFilter();
             }
 
             // --- EVENT LISTENERS ---
@@ -504,21 +897,22 @@
             window.addEventListener('resize', renderGrid);
             
             adminToggle.addEventListener('change', (e) => {
+                const t = translations[currentLanguage];
                 if (e.target.checked) {
-                    const password = prompt('Please enter Admin Password:');
+                    const password = prompt(t.pinConfirm('enter Admin Mode'));
                     if (password === 'admin1234') {
                         isAdmin = true;
                         settingsBtn.classList.remove('hidden');
-                        showToast('Admin mode enabled.');
+                        showToast(t.adminEnabled);
                     } else {
-                        showToast('Incorrect Password!', false);
+                        showToast(t.incorrectPass, false);
                         e.target.checked = false;
                         isAdmin = false;
                     }
                 } else {
                     isAdmin = false;
                     settingsBtn.classList.add('hidden');
-                    showToast('Admin mode disabled.');
+                    showToast(t.adminDisabled);
                 }
                 renderGrid();
             });
@@ -530,16 +924,53 @@
             deleteDetailsBtn.addEventListener('click', () => confirmAction('delete'));
             
             customTextBtn.addEventListener('click', () => {
-                // ... (unchanged)
+                const entry = bookings.find(b => b.id == activeBookingId);
+                if (!entry) return;
+                const t = translations[currentLanguage];
+                const currentText = entry.customDisplayText || '';
+                const newText = prompt(t.customTextPrompt, currentText);
+
+                if (newText !== null) { 
+                    if (newText.trim() === '') {
+                        delete entry.customDisplayText;
+                    } else {
+                        entry.customDisplayText = newText;
+                    }
+                    saveBookings();
+                    renderGrid();
+                    detailsModal.classList.add('hidden');
+                }
             });
 
             addInspectorBtn.addEventListener('click', addInspector);
             addHolidayBtn.addEventListener('click', () => {
-                // ... (unchanged)
+                const dateInput = document.getElementById('holidayDate').value;
+                const inspector = document.getElementById('holidayInspector').value;
+                if (dateInput) {
+                    const [year, month, day] = dateInput.split('-');
+                    const formattedDate = `${parseInt(year)}-${parseInt(month)}-${parseInt(day)}`;
+                    if (!holidays.some(h => h.date === formattedDate && h.inspector === inspector)) {
+                        holidays.push({ date: formattedDate, inspector: inspector });
+                        saveHolidays();
+                        openSettingsModal();
+                        renderGrid();
+                    }
+                }
             });
 
             addLeaveBtn.addEventListener('click', () => {
-                // ... (unchanged)
+                const dateInput = document.getElementById('leaveDate').value;
+                const inspector = document.getElementById('leaveInspector').value;
+                if (dateInput && inspector) {
+                    const [year, month, day] = dateInput.split('-');
+                    const formattedDate = `${parseInt(year)}-${parseInt(month)}-${parseInt(day)}`;
+                    if (!leaveDays.some(l => l.date === formattedDate && l.inspector === inspector)) {
+                        leaveDays.push({ date: formattedDate, inspector: inspector });
+                        saveLeaveDays();
+                        openSettingsModal();
+                        renderGrid();
+                    }
+                }
             });
             
             typeQcBtn.addEventListener('click', () => switchModalType('qc'));
@@ -552,10 +983,14 @@
                     otherProvinceContainer.classList.add('hidden');
                 }
             });
+            
+            langToggleBtn.addEventListener('click', () => {
+                const newLang = currentLanguage === 'en' ? 'th' : 'en';
+                setLanguage(newLang);
+            });
 
             // --- INITIAL RENDER ---
-            renderMobileFilter();
-            renderGrid();
+            setLanguage(currentLanguage);
         });
     </script>
 </body>
