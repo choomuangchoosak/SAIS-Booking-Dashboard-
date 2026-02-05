@@ -56,7 +56,7 @@
         .img-box img { width: 100%; height: auto; object-fit: contain; }
 
         .field { margin-bottom: 20px; }
-        label { display: block; font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #444; }
+        label { display: block; font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #444; line-height: 1.3; }
         input { 
             width: 100%; padding: 16px; border: 2px solid var(--input-border); border-radius: 12px; 
             font-size: 22px; font-weight: bold; box-sizing: border-box; outline: none; 
@@ -74,9 +74,10 @@
             width: 100%; padding: 20px; background-color: #0056b3; color: white;
             border: none; border-radius: 15px; font-size: 22px; font-weight: bold;
             cursor: pointer; margin: 10px 0; text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
         }
 
-        /* --- ส่วนแสดงผลที่แก้ไขใหม่ --- */
+        /* --- ส่วนแสดงผลสรุปตัวเลขใหญ่ --- */
         .status-row {
             padding: 20px; border-radius: 15px; margin-bottom: 15px;
             border: 3px solid transparent;
@@ -86,7 +87,6 @@
         
         .label-text { font-size: 1.1rem; font-weight: bold; display: block; margin-bottom: 5px; }
         
-        /* แก้ไขฟ้อนตัวเลขให้เป็นฟ้อนธรรมดา อ่านง่ายชัดเจน */
         .result-number { 
             font-size: 45px; 
             font-weight: 800; 
@@ -109,7 +109,7 @@
         .pass .status-badge-big { background-color: var(--pass-green); }
         .fail .status-badge-big { background-color: var(--fail-red); }
 
-        .error-hint { font-size: 1.1rem; font-weight: bold; margin-top: 10px; display: block; text-decoration: underline; }
+        .error-hint { font-size: 1.1rem; font-weight: bold; margin-top: 10px; display: block; }
 
         .a-result-box {
             text-align: center; padding: 25px; margin-top: 15px;
@@ -117,7 +117,6 @@
             border: 4px dashed #ccc; line-height: 1.4;
         }
 
-        /* Modal */
         .modal {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0;
             width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);
@@ -129,7 +128,7 @@
         .modal-header { background: var(--schindler-red); color: white; padding: 20px; font-weight: bold; text-align: center; font-size: 1.3rem; }
         .btn-close { background: var(--schindler-black); color: white; border: none; padding: 20px; font-size: 20px; font-weight: bold; width: 100%; cursor: pointer; }
 
-        .info-footer { font-size: 0.8rem; color: #555; padding: 15px; background: #eee; border-radius: 10px; margin-top: 20px; }
+        .info-footer { font-size: 0.8rem; color: #444; padding: 15px; background: #fafafa; border-radius: 10px; border: 1px solid #eee; margin-top: 20px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -142,47 +141,76 @@
     <div class="content">
         <div class="page">
             <div class="card">
-                <div class="img-box"><img src="image/layout-pit.jpeg" alt="Pit Layout"></div>
+                <div class="img-box">
+                    <img src="image/layout-pit.jpeg" alt="Pit Layout Diagram">
+                </div>
 
                 <div class="section-title">จอดลิฟต์ไม่เสมอชั้นแล้ววัดระยะ</div>
                 
                 <div class="field">
-                    <label>X (ระยะลิฟต์จอดไม่เสมอชั้น)</label>
-                    <input type="number" id="X" oninput="calculate()" placeholder="ห้ามเป็น 0">
+                    <label>X (ระยะลิฟต์จอดไม่เสมอชั้น วัดจากซิลประตูในถึงซิลประตูนอก)</label>
+                    <input type="number" id="X" oninput="calculate()" placeholder="ค่าต้องไม่เป็น0ลิฟต์ต้องไม่เสมอชั้น">
                 </div>
                 <div class="field">
-                    <label>HKP + X (วัดถึงเพลทบัฟเฟอร์)</label>
+                    <label>HKP + X (ระยะบัฟเฟอร์ลิฟต์วัดถึงเพลทบัฟเฟอร์ใต้ตู้ลิฟต์)</label>
                     <input type="number" id="HKPX" oninput="calculate()" placeholder="mm">
                 </div>
                 <div class="field">
-                    <label>HPHK (Buffer Stroke)</label>
+                    <label>HPHK (Buffer Stroke ดูจากเนมเพลทหรือตารางในแบบติดตั้ง)</label>
                     <input type="number" id="HPH" oninput="calculate()" placeholder="mm">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="field"><label>HKP Min (แบบ)</label><input type="number" id="HKP_Spec_Min" oninput="calculate()"></div>
-                    <div class="field"><label>HKP Max (แบบ)</label><input type="number" id="HKP_Spec_Max" oninput="calculate()"></div>
+                    <div class="field">
+                        <label>HKP ระยะรันบายลิฟต์ต่ำสุดในแบบ</label>
+                        <input type="number" id="HKP_Spec_Min" oninput="calculate()" placeholder="mm">
+                    </div>
+                    <div class="field">
+                        <label>HKP ระยะรันบายลิฟต์มากสุดในแบบ</label>
+                        <input type="number" id="HKP_Spec_Max" oninput="calculate()" placeholder="mm">
+                    </div>
                 </div>
 
                 <div class="value-display">
-                    <span class="label">ค่ารวม Total Y (HKP + X + HPHK)</span>
+                    <span class="label">Total Y (HKP + X + HPHK)</span>
                     <span class="number" id="outY">0.0</span>
                 </div>
 
                 <div class="section-title">ระยะปลอดภัย A , E , F , G </div>
-                <div class="field"><label>A (ซิลในถึงผนังบ่อ)</label><input type="number" id="A" oninput="calculate()"></div>
-                <div class="field"><label>E (Guide shoe ถึงพื้นบ่อ)</label><input type="number" id="E" oninput="calculate()"></div>
-                <div class="field"><label>F (กระบังซิลในถึงพื้นบ่อ)</label><input type="number" id="F" oninput="calculate()"></div>
-                <div class="field"><label>G (พื้นตู้ต่ำสุดถึงพื้นบ่อ)</label><input type="number" id="G" oninput="calculate()"></div>
+                
+                <div class="field">
+                    <label>A (ระยะจากขอบกระบังซิลประตูในวัดถึงผนังปล่องหรือแผงกั้นหน้าปล่องก้นบ่อ)</label>
+                    <input type="number" id="A" oninput="calculate()" placeholder="mm">
+                </div>
+                <div class="field">
+                    <label>E (ระยะจาก Guide shoe / Roller วัดถึงพื้นก้นบ่อลิฟต์หรือส่วนที่จะชน)</label>
+                    <input type="number" id="E" oninput="calculate()" placeholder="mm">
+                </div>
+                <div class="field">
+                    <label>F (ระยะจากขอบกระบังซิลประตูในถึงพื้นก้นบ่อหรือส่วนที่จะชน)</label>
+                    <input type="number" id="F" oninput="calculate()" placeholder="mm">
+                </div>
+                <div class="field">
+                    <label>G (ระยะจากส่วนที่ต่ำสุดของพื้นตู้วัดถึงพื้นบ่อหรือส่วนที่จะชน)</label>
+                    <input type="number" id="G" oninput="calculate()" placeholder="mm">
+                </div>
 
-                <button class="btn-calc" onclick="showPopup()">คำนวณและสรุปผล</button>
+                <button class="btn-calc" onclick="showPopup()">กดปุ่มนี้เพื่อคำนวณระยะ</button>
 
-                <div id="inlineSummary"></div>
+                <div id="inlineSummary" style="margin-top: 20px;"></div>
+
+                <div class="img-box" style="margin-top:20px;">
+                    <img src="image/layout-f.jpeg" alt="F Layout Diagram">
+                </div>
 
                 <div class="info-footer">
                     <b>Acceptance Criteria:</b><br>
-                    - E-Y &ge; 300 mm | G-Y &ge; 500 mm<br>
-                    - A > 150: F-Y &ge; 500 | 35-150: F-Y &ge; 100 | &le; 35: F-Y &ge; 30
+                    ระยะ HKP รันบายลิฟต์ต้องต่างกันไม่เกิน5mm และไม่น้อยหรือมากกว่าแบบระบุไว้<br>
+                    ระยะ E - Y ต้องการมากกว่าหรือเท่ากับ 300 mm<br>
+                    ระยะ G - Y ต้องการมากกว่าหรือเท่ากับ 500 mm<br>
+                    ถ้าระยะ A มากกว่า 150 : F-Y ต้องมากกว่าหรือเท่ากับ 500<br>
+                    ถ้าระยะ A อยู่ระหว่าง 35 ถึง 150: F-Y ต้องมากกว่าหรือเท่ากับ 100<br>
+                    ถ้าระยะ A น้อยกว่าหรือเท่ากับ 35: F-Y ต้องมากกว่าหรือเท่ากับ 30
                 </div>
             </div>
         </div>
@@ -190,9 +218,9 @@
 
     <div id="popModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">สรุปผลการตรวจสอบ</div>
-            <div id="modalBody" style="padding: 15px;"></div>
-            <button class="btn-close" onclick="closePop()">ปิดหน้าต่าง</button>
+            <div class="modal-header">สรุปผลการตรวจสอบ (Safety Result)</div>
+            <div id="modalBody" style="padding: 20px;"></div>
+            <button class="btn-close" onclick="closePop()">CLOSE (ปิด)</button>
         </div>
     </div>
 
@@ -200,4 +228,76 @@
         let results = {};
 
         function calculate() {
-            const v = (id)
+            const v = (id) => parseFloat(document.getElementById(id).value) || 0;
+            
+            const x = v('X'), hkpx = v('HKPX'), hph = v('HPH');
+            const hkpSpecMin = v('HKP_Spec_Min'), hkpSpecMax = v('HKP_Spec_Max');
+            const a = v('A'), e = v('E'), f = v('F'), g = v('G');
+
+            const hkp = hkpx - x;
+            const y = hkpx + hph;
+            const ey = e - y;
+            const gy = g - y;
+            const fy = f - y;
+
+            results = { hkp, y, ey, gy, fy, a, e, f, g, hkpSpecMin, hkpSpecMax };
+            document.getElementById('outY').innerText = y.toFixed(1);
+            renderSummary(document.getElementById('inlineSummary'));
+        }
+
+        function renderSummary(container) {
+            if (!results.y || results.y === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; font-size:0.9rem;">ใส่ระยะให้ครบแล้วกดปุ่มคำนวณ</p>';
+                return;
+            }
+
+            const getRow = (label, val, isPass, errorMsg = '') => `
+                <div class="status-row ${isPass ? 'pass' : 'fail'}">
+                    <span class="label-text">${label}</span>
+                    <span class="result-number">${val.toFixed(1)} <span style="font-size:1.2rem; font-weight:normal;">mm</span></span>
+                    <div class="status-badge-big">${isPass ? 'PASS (ผ่าน)' : 'FAIL (ไม่ผ่าน)'}</div>
+                    ${!isPass ? `<span class="error-hint">${errorMsg}</span>` : ''}
+                </div>`;
+
+            let hkpHtml = "";
+            if (results.hkpSpecMin > 0 || results.hkpSpecMax > 0) {
+                const min = results.hkpSpecMin || 0;
+                const max = results.hkpSpecMax || 9999;
+                const isPass = (results.hkp >= min && results.hkp <= max);
+                let err = "";
+                if (results.hkp < min) err = "ขาดอีก " + (min - results.hkp).toFixed(1);
+                if (results.hkp > max) err = "มากกว่าแบบ " + (results.hkp - max).toFixed(1);
+                hkpHtml = getRow('HKP Runby (Spec)', results.hkp, isPass, err);
+            }
+
+            let aMsg = "", aColor = "";
+            if (results.fy >= 500) { aMsg = "ระยะ A ผ่าน เพราะ F-Y มากกว่าหรือเท่ากับ 500 mm"; aColor = "#e6ffed"; }
+            else if (results.fy >= 100) {
+                if (results.a <= 150) { aMsg = "ระยะ A ไม่เกิน 150 ผ่าน เพราะ F-Y มากกว่าหรือเท่ากับ 100 mm"; aColor = "#e6ffed"; }
+                else { aMsg = "⚠️ จะต้องทำแผงกั้นหน้าปล่องก้นบ่อ ให้ระยะ A ไม่เกิน 150 mm"; aColor = "#fff5f5"; }
+            } else if (results.fy >= 30) {
+                if (results.a <= 35) { aMsg = "ระยะ A ไม่เกิน 35 ผ่าน เพราะ F-Y มากกว่าหรือ 30 mm)"; aColor = "#e6ffed"; }
+                else { aMsg = "⚠️ จะต้องแผงกั้นหน้าปล่องก้นบ่อให้ระยะ A น้อยกว่า 35 mm"; aColor = "#fff5f5"; }
+            } else { aMsg = "❌ ไม่ผ่าน: F-Y ต่ำกว่า 30 mm"; aColor = "#fff5f5"; }
+
+            container.innerHTML = `
+                ${hkpHtml}
+                ${getRow('E - Y (มากกว่าหรือเท่ากับ 300)', results.ey, results.ey >= 300, 'ต้องการอีก ' + Math.abs(300 - results.ey).toFixed(1))}
+                ${getRow('G - Y (มากกว่าหรือเท่ากับ 500)', results.gy, results.gy >= 500, 'ต้องการอีก ' + Math.abs(500 - results.gy).toFixed(1))}
+                ${getRow('F - Y (มากกว่าหรือเท่ากับ 30)', results.fy, results.fy >= 30, 'ต้องการอีก ' + Math.abs(30 - results.fy).toFixed(1))}
+                <div class="a-result-box" style="background:${aColor}; border-color:${results.fy < 30 ? '#ffa8a8' : '#ccc'}">
+                    ${aMsg}
+                </div>
+            `;
+        }
+
+        function showPopup() {
+            if (!results.y) { alert("ใส่ระยะให้ครบแล้วกดปุ่มคำนวณ"); return; }
+            renderSummary(document.getElementById('modalBody'));
+            document.getElementById('popModal').style.display = 'flex';
+        }
+
+        function closePop() { document.getElementById('popModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
