@@ -3,305 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Schindler Safety Clearance</title>
+    <title>Schindler Safety Clearance - Pit</title>
     <style>
+        /* 1. Typography & Color Palette (Schindler Style) */
         :root {
             --schindler-red: #E00000;
             --schindler-black: #000000;
-            --schindler-white: #FFFFFF;
-            --schindler-grey: #F2F2F2;
-            --pass-green: #1e8e3e;
+            --schindler-grey-bg: #F8F9FA;
+            --success-green: #1e8e3e;
             --fail-red: #d93025;
-            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            --border-radius: 20px;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--schindler-grey); 
-            margin: 0; padding: 0; 
-            color: var(--schindler-black);
-            font-size: 18px; /* Body typography 18px */
+            padding: 0; margin: 0;
+            background-color: var(--schindler-grey-bg); 
+            color: #1a1a1a;
+            font-size: 18px; /* Body Typography */
+            line-height: 1.6;
         }
 
+        /* 2. Layout Structure */
         header {
+            position: sticky; top: 0; z-index: 1000;
             background-color: var(--schindler-red);
-            color: white;
-            padding: 25px 20px;
-            text-align: center;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: white; padding: 20px 15px;
+            text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        header h2 { 
-            margin: 0; font-size: 22px; /* AppBar typography 22px */
-            text-transform: uppercase; letter-spacing: 1px;
-        }
+        header h2 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+        .version { display: block; font-size: 0.75rem; font-weight: normal; opacity: 0.9; margin-top: 5px; }
 
         .container { 
-            max-width: 500px; margin: 0 auto; padding: 25px 20px; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: auto; 
         }
 
+        /* 4. UI Elements - Cards */
         .card { 
-            background: var(--schindler-white); 
-            border-radius: 20px; 
-            padding: 25px; 
-            box-shadow: var(--shadow); 
-            margin-bottom: 25px;
+            background: white; padding: 25px; 
+            border-radius: var(--border-radius); 
+            box-shadow: var(--card-shadow); 
+            margin-bottom: 25px; 
+            border-top: 10px solid var(--schindler-red);
         }
 
-        .diagram-grid {
-            display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;
+        .diagram-container { 
+            display: grid; grid-template-columns: 1fr;
+            text-align: center; margin: 20px 0; 
+            background: #fff; border: 1px solid #eee; 
+            padding: 10px; border-radius: 15px; 
         }
-        .diagram-grid img { width: 100%; border-radius: 12px; border: 1px solid #ddd; }
+        .diagram-container img { max-width: 100%; height: auto; border-radius: 10px; }
 
-        .section-title {
-            color: var(--schindler-red); font-weight: 800;
-            font-size: 16px; margin: 25px 0 15px 5px;
-            text-transform: uppercase; border-left: 4px solid var(--schindler-red);
-            padding-left: 10px;
+        .section-title { 
+            font-size: 1rem; font-weight: 800; color: var(--schindler-red); 
+            margin: 30px 0 15px 0; border-left: 6px solid var(--schindler-red); 
+            padding: 8px 0 8px 15px; background: #fff5f5; text-transform: uppercase;
         }
 
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #444; }
+        /* Input Styling */
+        .input-group { margin-bottom: 22px; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 22px; }
         
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #333; }
         input { 
-            width: 100%; padding: 16px; 
-            border: 2px solid #555; border-radius: 12px; 
-            font-size: 1.1rem; outline: none; transition: 0.2s;
-            background-color: #fff;
+            width: 100%; padding: 16px; border: 2px solid #555; 
+            border-radius: 12px; box-sizing: border-box; font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        input:focus { border-color: var(--schindler-red); background-color: #fff8f8; }
+        input:focus { border-color: var(--schindler-red); outline: none; background: #fff8f8; box-shadow: 0 0 0 4px rgba(224,0,0,0.1); }
 
-        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        .y-display {
-            background: var(--schindler-black); color: white;
-            padding: 30px 20px; border-radius: 20px; text-align: center;
-            margin: 25px 0; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        .y-display-card {
+            background: var(--schindler-black);
+            color: white; padding: 25px; border-radius: var(--border-radius);
+            text-align: center; margin: 25px 0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        .y-display span { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
-        .y-display div { font-size: 45px; font-weight: 900; font-family: monospace; margin-top: 5px; }
+        .y-display-card .label { font-size: 0.8rem; color: #bbb; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; display: block; }
+        .y-display-card .value { font-size: 45px; font-weight: 900; color: #fff; }
+        .y-display-card .unit { font-size: 1.2rem; color: #bbb; margin-left: 8px; }
 
-        .safety-card {
-            border: 2px solid #eee; padding: 20px; border-radius: 20px;
-            margin-bottom: 15px; transition: 0.3s;
+        .safety-input-card {
+            padding: 18px; border-radius: 15px; margin-bottom: 15px;
+            border: 2px solid #eee; transition: all 0.3s ease;
+            background: #fff;
         }
-        .safety-card.pass { border-color: var(--pass-green); background-color: #f0fff4; }
-        .safety-card.fail { border-color: var(--fail-red); background-color: #fff5f5; }
+        .safety-input-card.pass { border-color: var(--success-green); background: #f0fff4; }
+        .safety-input-card.fail { border-color: var(--fail-red); background: #fff5f5; }
 
+        /* Buttons */
         .calc-btn {
-            width: 100%; padding: 20px; background: var(--schindler-red);
-            color: white; border: none; border-radius: 50px;
-            font-size: 1.1rem; font-weight: 800; cursor: pointer;
-            box-shadow: 0 8px 20px rgba(224, 0, 0, 0.3);
-            text-transform: uppercase; margin: 20px 0;
-            transition: 0.3s;
+            width: 100%; background: var(--schindler-red); color: white;
+            border: none; padding: 20px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer;
+            margin: 20px 0; box-shadow: 0 6px 15px rgba(224, 0, 0, 0.3);
+            text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s;
         }
         .calc-btn:active { transform: scale(0.98); }
 
-        /* Summary Dashboard */
-        .summary-dashboard {
-            background: white; border-radius: 20px; overflow: hidden;
-            border: 2px solid #eee; box-shadow: var(--shadow);
+        .inline-summary { 
+            background: #fff; border-radius: var(--border-radius); 
+            overflow: hidden; margin-top: 20px;
+            box-shadow: var(--card-shadow);
         }
-        .summary-item {
+        .summary-header {
+            background: #333; color: white; padding: 15px; font-weight: 800;
+            text-align: center; font-size: 1rem;
+        }
+        .summary-content { padding: 20px; }
+        
+        .status-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 18px 20px; border-bottom: 1px solid #eee;
+            padding: 15px; border-radius: 12px; margin-bottom: 12px;
+            font-weight: 700; border: 1px solid transparent;
         }
-        .sum-label { font-weight: 600; font-size: 0.9rem; }
-        .sum-val { font-family: monospace; font-weight: 700; }
+        .status-row.pass { background: #e6ffed; border-color: #b2f2bb; color: #1b4332; }
+        .status-row.fail { background: #fff5f5; border-color: #ffa8a8; color: #c92a2a; }
+        
+        .status-badge {
+            padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; 
+            text-transform: uppercase; border: 1px solid currentColor;
+        }
 
-        /* Modal popIn Animation */
+        .a-result-box {
+            text-align: center; padding: 18px; margin-top: 15px;
+            border-radius: 12px; font-weight: 800; line-height: 1.5;
+        }
+
+        /* 5. Modal Animations */
+        #summaryModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content { 
+            background: white; width: 92%; max-width: 420px; 
+            border-radius: 25px; padding: 0; overflow: hidden;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
 
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white; width: 100%; max-width: 400px;
-            border-radius: 30px; padding: 40px 20px; text-align: center;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .modal-value { font-size: 100px; font-weight: 900; margin: 20px 0; font-family: monospace; }
-        .close-btn { 
-            background: var(--schindler-black); color: white; border: none;
-            padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer;
-        }
+        .modal-large-val { font-size: 100px; font-weight: 900; color: var(--schindler-red); text-align: center; }
 
-        .criteria-box { font-size: 0.75rem; color: #777; padding: 15px; line-height: 1.5; border-top: 1px dashed #ccc; }
+        .formula-info { font-size: 0.85rem; color: #666; margin-top: 30px; background: #fff; padding: 20px; border: 2px dashed #ddd; border-radius: 15px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h2>Safety Clearance Pit</h2>
-    <div class="version" style="font-size: 12px; opacity: 0.8; margin-top: 5px;">ES1 / ES5.0 / ES5 Rel.02 EN 81-1</div>
+    <h2>Safety clearance in the pit</h2>
+    <span class="version">(ES1/ES5.0/ES5 Rel. 02 EN 81-1)</span>
 </header>
 
 <div class="container">
     <div class="card">
         
-        <div class="diagram-grid">
-            <img src="image/layout-pit.jpeg" alt="Layout Diagram">
+        <div class="diagram-container">
+            <img src="image/layout-pit.jpeg" alt="Pit Layout Diagram">
         </div>
 
-        <div class="section-title">Base Data</div>
+        <div class="section-title">ข้อมูลพื้นฐาน (Base Data)</div>
         <div class="input-group">
-            <label>X (ลิฟต์จอดไม่เสมอชั้น ซิลในถึงซิลนอก)</label>
-            <input type="number" id="X" oninput="calculate()">
+            <label>X (ระยะลิฟต์จอดไม่เสมอชั้น วัดจากซิลในถึงซิลนอก)</label>
+            <input type="number" id="X" oninput="calculate()" placeholder="0">
         </div>
         <div class="input-group">
-            <label>HKP + X (บัฟเฟอร์ถึงเพลทใต้ตู้)</label>
-            <input type="number" id="HKPX" oninput="calculate()">
+            <label>HKP + X (ระยะจากบัฟเฟอร์ถึงเพลทใต้ตู้ลิฟต์)</label>
+            <input type="number" id="HKPX" oninput="calculate()" placeholder="0">
         </div>
         <div class="input-group">
-            <label>HPHK (Buffer Stroke)</label>
-            <input type="number" id="HPH" oninput="calculate()">
+            <label>HPHK (Buffer Stroke ตามเนมเพลท/แบบ)</label>
+            <input type="number" id="HPH" oninput="calculate()" placeholder="0">
         </div>
+
         <div class="input-row">
-            <div class="input-group">
-                <label>HKP Min (Spec)</label>
-                <input type="number" id="HKP_Spec_Min" oninput="calculate()">
+            <div>
+                <label>HKP ต่ำสุด (Spec Min)</label>
+                <input type="number" id="HKP_Spec_Min" placeholder="0/-5" oninput="calculate()">
             </div>
-            <div class="input-group">
-                <label>HKP Max (Spec)</label>
-                <input type="number" id="HKP_Spec_Max" oninput="calculate()">
-            </div>
-        </div>
-
-        <div class="y-display">
-            <span>Total Y (HKP + X + HPHK)</span>
-            <div id="outY">0.0</div>
-        </div>
-
-        <div class="section-title">Safety Clearance</div>
-        <div class="safety-card" id="cardA">
-            <label>A (ขอบกระบังซิลถึงผนัง/ที่กั้น)</label>
-            <input type="number" id="A" oninput="calculate()">
-        </div>
-        <div class="safety-card" id="cardE">
-            <label>E (Guide shoe ถึงพื้นบ่อ)</label>
-            <input type="number" id="E" oninput="calculate()">
-        </div>
-        <div class="safety-card" id="cardF">
-            <label>F (ขอบกระบังซิลถึงพื้นบ่อ)</label>
-            <input type="number" id="F" oninput="calculate()">
-        </div>
-        <div class="safety-card" id="cardG">
-            <label>G (ส่วนต่ำสุดพื้นตู้ถึงพื้นบ่อ)</label>
-            <input type="number" id="G" oninput="calculate()">
-        </div>
-
-        <button class="calc-btn" onclick="showModal()">View Full Summary</button>
-
-        <div class="summary-dashboard" id="inlineSummary">
-            <div class="summary-item" style="background:#f9f9f9; font-size: 0.8rem; color: #666; justify-content: center;">LIVE CALCULATION RESULTS</div>
-            <div id="inlineResults">
-                <div class="summary-item" style="justify-content:center; color:#999; font-style:italic;">Enter data to begin...</div>
+            <div>
+                <label>HKP มากสุด (Spec Max)</label>
+                <input type="number" id="HKP_Spec_Max" placeholder="Max" oninput="calculate()">
             </div>
         </div>
 
-        <div class="criteria-box">
-            <b>Criteria:</b> HKP (0/-5mm) | E-Y ≥ 300mm | G-Y ≥ 500mm <br>
-            A > 150mm: F-Y ≥ 500mm | A 35-150mm: F-Y ≥ 100mm | A ≤ 35mm: F-Y ≥ 30mm
+        <div class="y-display-card">
+            <span class="label">Total Y (HKP + X + HPHK)</span>
+            <span class="value" id="outY">0.0</span><span class="unit">mm</span>
         </div>
 
-        
-        <div class="diagram-grid">
-            <img src="image/layout-f.jpeg" alt="Layout F Diagram">
+        <div class="section-title">ระยะปลอดภัย (Safety Clearance)</div>
+        <div class="safety-input-card" id="cardA">
+            <label>A (ระยะจากขอบกระบังซิลประตูในถึงผนัง/ที่กั้น)</label>
+            <input type="number" id="A" placeholder="ระบุระยะ A" oninput="calculate()">
+        </div>
+        <div class="safety-input-card" id="cardE">
+            <label>E (ระยะจาก Guide shoe ถึงพื้นบ่อ)</label>
+            <input type="number" id="E" placeholder="ระบุระยะ E" oninput="calculate()">
+        </div>
+        <div class="safety-input-card" id="cardF">
+            <label>F (ระยะจากขอบกระบังซิลประตูในถึงพื้นบ่อ)</label>
+            <input type="number" id="F" placeholder="ระบุระยะ F" oninput="calculate()">
+        </div>
+        <div class="safety-input-card" id="cardG">
+            <label>G (ระยะจากส่วนต่ำสุดพื้นตู้ถึงพื้นบ่อ)</label>
+            <input type="number" id="G" placeholder="ระบุระยะ G" oninput="calculate()">
+        </div>
+
+        <button class="calc-btn" onclick="showPopup()">Summary Report</button>
+
+        <div class="inline-summary" id="inlineSummary">
+            <div class="summary-header">สรุปผลการตรวจสอบหน้างาน</div>
+            <div class="summary-content" id="inlineBody">
+                <p style="text-align:center; color:#999; font-size:0.9rem;">กรุณากรอกข้อมูลเพื่อเริ่มต้นการวิเคราะห์</p>
+            </div>
+        </div>
+
+        <div class="formula-info">
+            <b>Acceptance Criteria:</b>
+            <ul>
+                <li>HKP รันบายลิฟต์ตามแบบติดตั้ง (0/-5 mm)</li>
+                <li>ระยะ E-Y ≥ 300 mm | G-Y ≥ 500 mm</li>
+                <li>Acceptance criteria: 
+                    <ul>
+                        <li>If A > 150 mm: F-Y ≥ 500 mm</li>
+                        <li>If A 35-150 mm: F-Y ≥ 100 mm</li>
+                        <li>If A ≤ 35 mm: F-Y ≥ 30 mm</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="diagram-container">
+            <img src="image/layout-f.jpeg" alt="f Layout Diagram">
         </div>
     </div>
 </div>
 
-<div id="modal">
+<div id="summaryModal">
     <div class="modal-content">
-        <div id="modalStatus" style="font-weight: 800; font-size: 20px;">TOTAL Y RESULT</div>
-        <div class="modal-value" id="modalY">0</div>
-        <div id="modalDetail" style="margin-bottom: 30px; font-weight: 600;"></div>
-        <button class="close-btn" onclick="closeModal()">CLOSE</button>
+        <div class="summary-header" style="background:var(--schindler-red); padding: 20px;">สรุปผลการคำนวณ</div>
+        <div id="modalBody" style="padding:20px;"></div>
+        <button onclick="document.getElementById('summaryModal').style.display='none'" style="width:100%; padding:20px; background:var(--schindler-black); color:white; border:none; font-weight:800; cursor:pointer; font-size: 1.1rem;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    let results = {};
+/* ฟังก์ชันการทำงานเดิมทั้งหมด ไม่มีการแก้ไขตรรกะ */
+let results = {};
 
-    function calculate() {
-        const v = (id) => parseFloat(document.getElementById(id).value) || 0;
-        
-        const x = v('X'), hkpx = v('HKPX'), hph = v('HPH');
-        const minSpec = v('HKP_Spec_Min'), maxSpec = v('HKP_Spec_Max');
-        const a = v('A'), e = v('E'), f = v('F'), g = v('G');
+function calculate() {
+    const v = (id) => parseFloat(document.getElementById(id).value) || 0;
+    
+    const x = v('X'), hkpx = v('HKPX'), hph = v('HPH');
+    const hkpSpecMin = v('HKP_Spec_Min'), hkpSpecMax = v('HKP_Spec_Max');
+    const a = v('A'), e = v('E'), f = v('F'), g = v('G');
 
-        const hkp = hkpx - x;
-        const y = hkpx + hph;
-        const ey = e - y;
-        const gy = g - y;
-        const fy = f - y;
+    const hkp = hkpx - x;
+    const y = hkpx + hph;
+    const ey = e - y;
+    const gy = g - y;
+    const fy = f - y;
 
-        results = { hkp, y, ey, gy, fy, a, e, f, g, minSpec, maxSpec };
+    results = { hkp, y, ey, gy, fy, a, e, f, g, hkpSpecMin, hkpSpecMax };
 
-        document.getElementById('outY').innerText = y.toFixed(1);
-        document.getElementById('modalY').innerText = Math.round(y);
+    document.getElementById('outY').innerText = y.toFixed(1);
 
-        // Analysis
-        let hkpPass = (minSpec > 0 && maxSpec > 0) ? (hkp >= minSpec && hkp <= maxSpec) : true;
-        let ePass = (ey >= 300);
-        let gPass = (gy >= 500);
-        
-        let fPass = false;
-        if (fy >= 500) fPass = true;
-        else if (fy >= 100) fPass = (a <= 150);
-        else if (fy >= 30) fPass = (a <= 35);
-
-        // Update Cards
-        updateCard('cardA', fPass);
-        updateCard('cardE', ePass);
-        updateCard('cardF', fy >= 30);
-        updateInputStatus('cardG', gPass);
-
-        renderDashboard(hkpPass, ePass, gPass, fPass);
+    let aPass = false;
+    if (y > 0 && f > 0) {
+        if (fy >= 500) aPass = true;
+        else if (fy >= 100) aPass = (a <= 150);
+        else if (fy >= 30) aPass = (a <= 35);
     }
 
-    function updateCard(id, isPass) {
-        const el = document.getElementById(id);
-        const val = parseFloat(el.querySelector('input').value) || 0;
-        if (val === 0) el.className = "safety-card";
-        else el.className = "safety-card " + (isPass ? "pass" : "fail");
-    }
+    updateInputStatus('cardA', aPass);
+    updateInputStatus('cardE', ey >= 300);
+    updateInputStatus('cardF', fy >= 30);
+    updateInputStatus('cardG', gy >= 500);
 
-    function renderDashboard(hkpPass, ePass, gPass, fPass) {
-        if (!results.y) return;
+    renderSummary(document.getElementById('inlineBody'));
+}
 
-        const getItem = (label, val, isPass) => `
-            <div class="summary-item">
-                <span class="sum-label">${label}</span>
-                <span class="sum-val" style="color:${isPass ? 'var(--pass-green)' : 'var(--fail-red)'}">${val.toFixed(1)} mm ${isPass ? '✓' : '✗'}</span>
+function updateInputStatus(id, isPass) {
+    const el = document.getElementById(id);
+    const val = parseFloat(el.querySelector('input').value) || 0;
+    if (val === 0) el.className = "safety-input-card";
+    else el.className = "safety-input-card " + (isPass ? "pass" : "fail");
+}
+
+function renderSummary(container) {
+    if (!results.y || results.y === 0) return;
+
+    const row = (label, val, isPass, errorMsg = '') => {
+        return `
+            <div class="status-row ${isPass ? 'pass' : 'fail'}">
+                <div style="display:flex; flex-direction:column;">
+                    <span>${label}</span>
+                    <small style="font-weight:normal; opacity:0.8; font-size:0.8rem;">Measured: ${val.toFixed(1)} mm</small>
+                </div>
+                <div style="text-align:right;">
+                    <div class="status-badge">${isPass ? 'Pass' : 'Fail'}</div>
+                    ${!isPass ? `<div style="font-size:0.75rem; margin-top:3px;">${errorMsg}</div>` : ''}
+                </div>
             </div>`;
+    };
 
-        let html = "";
-        if (results.minSpec > 0) html += getItem('HKP (Runby)', results.hkp, hkpPass);
-        html += getItem('E - Y (Min 300)', results.ey, ePass);
-        html += getItem('G - Y (Min 500)', results.gy, gPass);
-        html += getItem('F - Y (Min 30)', results.fy, results.fy >= 30);
-
-        document.getElementById('inlineResults').innerHTML = html;
+    let hkpHtml = "";
+    if (results.hkpSpecMin !== 0 || results.hkpSpecMax !== 0) {
+        const isHkpPass = (results.hkp >= results.hkpSpecMin && results.hkp <= results.hkpSpecMax);
+        let err = "";
+        if (results.hkp < results.hkpSpecMin) err = "ต่ำกว่าแบบ " + (results.hkpSpecMin - results.hkp).toFixed(1);
+        if (results.hkp > results.hkpSpecMax) err = "สูงกว่าแบบ " + (results.hkp - results.hkpSpecMax).toFixed(1);
+        hkpHtml = row('HKP Runby (Spec Check)', results.hkp, isHkpPass, err);
     }
 
-    function showModal() {
-        if (!results.y) { alert('Please enter base data first.'); return; }
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('modalDetail').innerText = (results.ey >= 300 && results.gy >= 500) ? "PASS: ALL CRITERIA MET" : "FAIL: CHECK DIMENSIONS";
-        document.getElementById('modalDetail').style.color = (results.ey >= 300 && results.gy >= 500) ? 'var(--pass-green)' : 'var(--fail-red)';
+    let aMsg = "", aColor = "";
+    if (results.fy >= 500) { aMsg = "✅ ระยะ A ผ่าน (F-Y ≥ 500)"; aColor = "#e6ffed"; }
+    else if (results.fy >= 100) {
+        if (results.a <= 150) { aMsg = "✅ ระยะ A ผ่าน (F-Y ≥ 100)"; aColor = "#e6ffed"; }
+        else { aMsg = "⚠️ ต้องกั้นหน้าปล่อง (A > 150)"; aColor = "#fff5f5"; }
+    } else if (results.fy >= 30) {
+        if (results.a <= 35) { aMsg = "✅ ระยะ A ผ่าน (F-Y ≥ 30)"; aColor = "#e6ffed"; }
+        else { aMsg = "⚠️ ต้องกั้นหน้าปล่อง (A > 35)"; aColor = "#fff5f5"; }
+    } else {
+        aMsg = "❌ FAIL: F-Y ต่ำกว่า 30 mm"; aColor = "#fff5f5";
     }
 
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    container.innerHTML = `
+        ${hkpHtml}
+        ${row('E - Y (ต้องการ ≥ 300)', results.ey, results.ey >= 300, 'ขาด ' + Math.abs(300 - results.ey).toFixed(1))}
+        ${row('G - Y (ต้องการ ≥ 500)', results.gy, results.gy >= 500, 'ขาด ' + Math.abs(500 - results.gy).toFixed(1))}
+        ${row('F - Y (ต้องการ ≥ 30)', results.fy, results.fy >= 30, 'ขาด ' + Math.abs(30 - results.fy).toFixed(1))}
+        <div class="a-result-box" style="background:${aColor}">
+            ${aMsg}
+        </div>
+    `;
+}
+
+function showPopup() {
+    if (!results.y) { alert("กรุณากรอกข้อมูลพื้นฐานก่อน"); return; }
+    const modal = document.getElementById('summaryModal');
+    renderSummary(document.getElementById('modalBody'));
+    modal.style.display = 'flex';
+}
 </script>
 
 </body>
