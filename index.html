@@ -9,10 +9,10 @@
             --schindler-red: #E00000;
             --schindler-black: #000000;
             --schindler-grey: #F4F4F4;
-            --success-bg: #e6ffed;
-            --success-text: #28a745;
-            --fail-bg: #fff5f5;
-            --fail-text: #E00000;
+            --success-bg: #28a745;
+            --fail-bg: #E00000;
+            --success-light: #e6ffed;
+            --fail-light: #fff5f5;
         }
 
         body { 
@@ -55,7 +55,6 @@
             padding-left: 10px; background: #fdf2f2; padding-top: 5px; padding-bottom: 5px;
         }
 
-        /* Input Styles */
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; color: #555; }
         input { 
@@ -64,46 +63,45 @@
         }
         input:focus { border-color: var(--schindler-red); outline: none; background: #fff8f8; }
 
-        /* แยกกล่อง A E F G ตามสถานะ */
+        /* การจัดลำดับกล่องผลลัพธ์ใหม่ */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .info-box { 
+            padding: 15px; border-radius: 8px; text-align: center; color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: background 0.3s;
+        }
+        .bg-black { background: var(--schindler-black); }
+        .bg-neutral { background: #666; }
+        .info-label { font-size: 0.7rem; display: block; margin-bottom: 5px; color: rgba(255,255,255,0.8); }
+        .info-value { font-size: 1.3rem; font-weight: bold; font-family: monospace; }
+
         .safety-input-card {
             padding: 12px; border-radius: 8px; margin-bottom: 10px;
             border: 2px solid #eee; transition: 0.3s;
         }
-        .safety-input-card.pass { border-color: var(--success-text); background: var(--success-bg); }
-        .safety-input-card.fail { border-color: var(--fail-text); background: var(--fail-bg); }
+        .safety-input-card.pass { border-color: #28a745; background: var(--success-light); }
+        .safety-input-card.fail { border-color: var(--schindler-red); background: var(--fail-light); }
 
-        /* Result Styles */
-        .y-banner {
-            background: var(--schindler-black); color: white;
-            padding: 15px; border-radius: 8px; text-align: center;
-            margin-bottom: 20px;
-        }
-        .y-label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
-        .y-value { font-size: 1.5rem; font-weight: bold; font-family: monospace; display: block; }
-
-        /* Button Style */
         .calc-btn {
             width: 100%; background: var(--schindler-red); color: white;
             border: none; padding: 18px; border-radius: 8px;
             font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            margin: 10px 0 20px 0; box-shadow: 0 4px 10px rgba(224, 0, 0, 0.3);
+            margin: 10px 0; box-shadow: 0 4px 10px rgba(224, 0, 0, 0.3);
         }
 
-        .analysis-box { 
-            background: #fff; color: #333; padding: 15px; border-radius: 8px; 
-            margin-top: 15px; border: 3px solid #eee; text-align: center; 
+        .inline-summary { 
+            background: #fff; border: 2px solid #ddd; border-radius: 12px; 
+            padding: 15px; margin-top: 10px;
+        }
+        .sum-item { 
+            padding: 10px; border-radius: 8px; margin-bottom: 8px; 
+            font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Modal Pop-up */
         #summaryModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;
         }
-        .modal-content {
-            background: white; width: 85%; max-width: 400px; border-radius: 12px;
-            padding: 20px; position: relative;
-        }
-        .modal-item { margin-bottom: 10px; padding: 12px; border-radius: 8px; font-size: 0.9rem; border-left: 6px solid #ccc; }
+        .modal-content { background: white; width: 85%; max-width: 400px; border-radius: 12px; padding: 20px; }
         
         .formula-info { font-size: 0.8rem; color: #888; margin-top: 20px; background: #fff; padding: 10px; border: 1px dashed #ccc; border-radius: 6px; }
     </style>
@@ -125,50 +123,56 @@
         <div class="section-title">ใส่ค่า (X, HKP+X, HPHK)</div>
         <div class="input-group">
             <label>X (ระยะลิฟต์จอดไม่เสมอชั้น วัดระยะจากซิลประตูในถึงซิลประตูนอก)</label>
-            <input type="number" id="X" placeholder="ค่าต้องไม่เป็น 0" oninput="calculate()">
+            <input type="number" id="X" oninput="calculate()">
         </div>
         <div class="input-group">
             <label>HKP + X (ระยะจากบัฟเฟอร์ถึงเพลทใต้ตู้ลิฟต์)</label>
-            <input type="number" id="HKPX" placeholder="mm" oninput="calculate()">
+            <input type="number" id="HKPX" oninput="calculate()">
         </div>
         <div class="input-group">
             <label>HPHK (Buffer Stroke ตามเนมเพลท/แบบ)</label>
-            <input type="number" id="HPH" placeholder="mm" oninput="calculate()">
+            <input type="number" id="HPH" oninput="calculate()">
+        </div>
+        
+        <div class="input-group">
+            <label>HKP ต่ำสุดในแบบระบุ (เพื่อใช้ตรวจสอบ Runby)</label>
+            <input type="number" id="HKP_Spec" placeholder="ระบุค่าจากแบบติดตั้ง" oninput="calculate()">
         </div>
 
-        <div class="y-banner">
-            <span class="y-label">HKP (Runby): <span id="outHKP">-</span> mm</span>
-            <span class="y-label">Total Y (HKP+X+HPHK)</span>
-            <span class="y-value" id="outY">0.0 mm</span>
+        <div class="summary-grid">
+            <div class="info-box bg-black">
+                <span class="info-label">TOTAL Y</span>
+                <span class="info-value" id="outY">0.0</span>
+            </div>
+            <div class="info-box bg-neutral" id="boxHKP">
+                <span class="info-label">HKP (Runby)</span>
+                <span class="info-value" id="outHKP">0.0</span>
+            </div>
         </div>
 
         <div class="section-title">ระยะปลอดภัย (Safety Clearance)</div>
-        
         <div class="safety-input-card" id="cardA">
-            <label>A (ระยะจากขอบกระบังซิลประตูในวัดถึงผนังปล่องหรือที่กั้นหน้าปล่อง)</label>
-            <input type="number" id="A" placeholder="mm" oninput="calculate()">
+            <label>A (ระยะจากขอบกระบังซิลประตูในถึงผนัง/ที่กั้น)</label>
+            <input type="number" id="A" oninput="calculate()">
         </div>
-
         <div class="safety-input-card" id="cardE">
-            <label>E (ระยะจาก Guide shoeหรือRollerใต้ตู้ลิฟต์วัดถึงพื้นบ่อหรือส่วนที่จะชน)</label>
-            <input type="number" id="E" placeholder="mm" oninput="calculate()">
+            <label>E (ระยะจาก Guide shoe ถึงพื้นบ่อ)</label>
+            <input type="number" id="E" oninput="calculate()">
         </div>
-
         <div class="safety-input-card" id="cardF">
-            <label>F (ระยะจากขอบกระบังซิลประตูในวัดถึงพื้นบ่อหรือส่วนที่จะชน)</label>
-            <input type="number" id="F" placeholder="mm" oninput="calculate()">
+            <label>F (ระยะจากขอบกระบังซิลประตูในถึงพื้นบ่อ)</label>
+            <input type="number" id="F" oninput="calculate()">
         </div>
-
         <div class="safety-input-card" id="cardG">
-            <label>G (ระยะจากส่วนที่ต่ำที่สุดของพื้นตู้ลิฟต์วัดถึงพื้นบ่อหรือส่วนที่จะชน)</label>
-            <input type="number" id="G" placeholder="mm" oninput="calculate()">
+            <label>G (ระยะจากส่วนต่ำสุดพื้นตู้ถึงพื้นบ่อ)</label>
+            <input type="number" id="G" oninput="calculate()">
         </div>
 
-        <button class="calc-btn" onclick="showPopup()">CALCULATE (ดูสรุปผล)</button>
+        <button class="calc-btn" onclick="showPopup()">CALCULATE (ดูสรุปผลแบบ POP-UP)</button>
 
-        <div class="analysis-box" id="analysisBox">
-            <div style="font-size: 0.8rem; font-weight: bold; color: #666; margin-bottom: 8px;">วิเคราะห์ความปลอดภัยระยะ A:</div>
-            <div id="guardResult" style="font-size: 1.1rem; font-weight: bold;">รอข้อมูลการคำนวณ...</div>
+        <div class="inline-summary" id="inlineSummary">
+            <h4 style="margin:0 0 10px 0; color:var(--schindler-red); text-align:center;">สรุปผลการตรวจสอบหน้างาน</h4>
+            <div id="inlineBody">กรุณากรอกข้อมูลเพื่อดูสรุปผล</div>
         </div>
 
         <div class="formula-info">
@@ -190,7 +194,7 @@
 
 <div id="summaryModal">
     <div class="modal-content">
-        <h3 style="color: var(--schindler-red); border-bottom: 2px solid var(--schindler-red); padding-bottom: 10px;">สรุปผลการคำนวณ</h3>
+        <h3 style="color:var(--schindler-red); border-bottom:2px solid var(--schindler-red); padding-bottom:10px;">สรุปผลการคำนวณ</h3>
         <div id="modalBody"></div>
         <button onclick="document.getElementById('summaryModal').style.display='none'" style="width:100%; padding:12px; background:var(--schindler-black); color:white; border:none; border-radius:6px; margin-top:15px; font-weight:bold;">ปิดหน้าต่าง</button>
     </div>
@@ -202,7 +206,7 @@ let results = {};
 function calculate() {
     const v = (id) => parseFloat(document.getElementById(id).value) || 0;
     
-    const x = v('X'), hkpx = v('HKPX'), hph = v('HPH');
+    const x = v('X'), hkpx = v('HKPX'), hph = v('HPH'), hkpSpec = v('HKP_Spec');
     const a = v('A'), e = v('E'), f = v('F'), g = v('G');
 
     const hkp = hkpx - x;
@@ -211,83 +215,87 @@ function calculate() {
     const gy = g - y;
     const fy = f - y;
 
-    results = { hkp, y, ey, gy, fy, a, e, f, g };
+    results = { hkp, y, ey, gy, fy, a, e, f, g, hkpSpec };
 
     document.getElementById('outHKP').innerText = hkp.toFixed(1);
-    document.getElementById('outY').innerText = y.toFixed(1) + " mm";
+    document.getElementById('outY').innerText = y.toFixed(1);
 
-    // Logic วิเคราะห์หน้าปล่องเพื่อใช้ในกล่อง A และ F
-    let aPass = false;
-    let aStatusMsg = "";
-
-    if (y > 0 && f > 0) {
-        if (fy >= 500) { aPass = true; } 
-        else if (fy >= 100) { aPass = (a <= 150); } 
-        else if (fy >= 30) { aPass = (a <= 35); }
+    // ตรวจสอบเกณฑ์ HKP และเปลี่ยนสีกล่อง HKP
+    const boxHKP = document.getElementById('boxHKP');
+    if (hkpSpec > 0) {
+        const isHkpPass = (hkp >= hkpSpec - 5 && hkp <= hkpSpec);
+        boxHKP.style.background = isHkpPass ? "var(--success-bg)" : "var(--fail-bg)";
+    } else {
+        boxHKP.style.background = "#666";
     }
 
-    // Update Status Colors
+    // วิเคราะห์ระยะ A
+    let aPass = false;
+    if (y > 0 && f > 0) {
+        if (fy >= 500) aPass = true;
+        else if (fy >= 100) aPass = (a <= 150);
+        else if (fy >= 30) aPass = (a <= 35);
+    }
+
     updateInputStatus('cardA', aPass);
     updateInputStatus('cardE', ey >= 300);
-    updateInputStatus('cardF', fy >= 30); // F-Y ขั้นต่ำ 30mm
+    updateInputStatus('cardF', fy >= 30);
     updateInputStatus('cardG', gy >= 500);
 
-    // Analysis Box Logic
-    const gRes = document.getElementById('guardResult');
-    const aBox = document.getElementById('analysisBox');
-    let guardMsg = "รอข้อมูล...";
-    let statusClass = "none";
-
-    if (hkpx > 0 && f > 0) {
-        if (fy >= 500) { guardMsg = "✅ ระยะ A ผ่าน<br>(ไม่ต้องทำที่กั้นหน้าปล่อง เพราะ F-Y ≥ 500)"; statusClass = "pass"; } 
-        else if (fy >= 100) {
-            if (a <= 150) { guardMsg = "✅ ระยะ A ผ่าน<br>(ไม่ต้องทำที่กั้นหน้าปล่อง F-Y ≥ 100)"; statusClass = "pass"; } 
-            else { guardMsg = "⚠️ ต้องทำที่กั้นหน้าปล่อง<br>(เพื่อให้ A ≤ 150 mm)"; statusClass = "fail"; }
-        } else if (fy >= 30) {
-            if (a <= 35) { guardMsg = "✅ ระยะ A ผ่าน<br>(ไม่ต้องทำที่กั้นหน้าปล่อง F-Y ≥ 30)"; statusClass = "pass"; } 
-            else { guardMsg = "⚠️ ต้องทำที่กั้นหน้าปล่อง<br>(เพื่อให้ A ≤ 35 mm)"; statusClass = "fail"; }
-        } else {
-            guardMsg = "❌ FAIL: ระยะ F-Y ต่ำกว่า 30 mm"; statusClass = "fail";
-        }
-    }
-    gRes.innerHTML = guardMsg;
-    gRes.style.color = statusClass === "pass" ? "var(--success-text)" : (statusClass === "fail" ? "var(--fail-text)" : "#333");
-    aBox.style.borderColor = statusClass === "pass" ? "var(--success-text)" : (statusClass === "fail" ? "var(--fail-text)" : "#eee");
+    renderSummary(document.getElementById('inlineBody'));
 }
 
 function updateInputStatus(id, isPass) {
     const el = document.getElementById(id);
     const val = parseFloat(el.querySelector('input').value) || 0;
-    if (val === 0) {
-        el.className = "safety-input-card";
-    } else {
-        el.className = "safety-input-card " + (isPass ? "pass" : "fail");
-    }
+    if (val === 0) el.className = "safety-input-card";
+    else el.className = "safety-input-card " + (isPass ? "pass" : "fail");
 }
 
-function showPopup() {
-    if (!results.y) { alert("กรุณากรอกข้อมูลก่อนคำนวณ"); return; }
-    const modal = document.getElementById('summaryModal');
-    const body = document.getElementById('modalBody');
-    modal.style.display = 'flex';
+function renderSummary(container) {
+    if (!results.y || results.y === 0) {
+        container.innerHTML = "รอข้อมูลการคำนวณ...";
+        return;
+    }
 
     const check = (val, target, label) => {
         const isPass = val >= target;
         const diff = target - val;
-        return `<div class="modal-item" style="background:${isPass ? '#e6ffed' : '#fff5f5'}; border-color:${isPass ? '#28a745' : '#e00000'}">
-            <b>${label}</b>: ${val.toFixed(1)} mm<br>
-            สถานะ: ${isPass ? '✅ ผ่าน' : '❌ ไม่ผ่าน (ขาด '+Math.abs(diff).toFixed(1)+' mm)'}
+        return `<div class="sum-item" style="background:${isPass ? '#e6ffed' : '#fff5f5'}; border-left: 4px solid ${isPass ? '#28a745' : '#e00000'}">
+            <span><b>${label}</b></span>
+            <span>${val.toFixed(1)} mm ${isPass ? '✅' : '❌ ขาด '+Math.abs(diff).toFixed(1)}</span>
         </div>`;
     };
 
-    body.innerHTML = `
-        ${check(results.ey, 300, 'E - Y (ต้องการ 300)')}
-        ${check(results.gy, 500, 'G - Y (ต้องการ 500)')}
-        ${check(results.fy, 30, 'F - Y (ต้องการ 30)')}
-        <div style="margin-top:10px; padding:10px; border:1px solid #ddd; border-radius:8px;">
-            <b>สรุปวิเคราะห์ระยะ A:</b><br>${document.getElementById('guardResult').innerText}
-        </div>
+    let hkpTxt = "";
+    if (results.hkpSpec > 0) {
+        const isHkpPass = (results.hkp >= results.hkpSpec - 5 && results.hkp <= results.hkpSpec);
+        hkpTxt = `<div class="sum-item" style="background:${isHkpPass ? '#e6ffed' : '#fff5f5'}; border-left: 4px solid ${isHkpPass ? '#28a745' : '#e00000'}">
+            <span><b>HKP vs Spec</b></span>
+            <span>${results.hkp.toFixed(1)} / ${results.hkpSpec} ${isHkpPass ? '✅ Pass' : '❌ Fail'}</span>
+        </div>`;
+    }
+
+    let aMsg = "ข้อมูลไม่เพียงพอ";
+    if (results.fy >= 500) aMsg = "✅ ระยะ A ผ่าน (F-Y ≥ 500)";
+    else if (results.fy >= 100) aMsg = (results.a <= 150) ? "✅ ระยะ A ผ่าน" : "⚠️ ต้องกั้นหน้าปล่อง (A > 150)";
+    else if (results.fy >= 30) aMsg = (results.a <= 35) ? "✅ ระยะ A ผ่าน" : "⚠️ ต้องกั้นหน้าปล่อง (A > 35)";
+    else aMsg = "❌ FAIL: F-Y < 30mm";
+
+    container.innerHTML = `
+        ${hkpTxt}
+        ${check(results.ey, 300, 'E - Y (Min 300)')}
+        ${check(results.gy, 500, 'G - Y (Min 500)')}
+        ${check(results.fy, 30, 'F - Y (Min 30)')}
+        <div style="text-align:center; padding-top:10px; font-weight:bold; color:var(--schindler-red); border-top:1px solid #ddd;">${aMsg}</div>
     `;
+}
+
+function showPopup() {
+    if (!results.y) { alert("กรุณากรอกข้อมูลก่อน"); return; }
+    const modal = document.getElementById('summaryModal');
+    renderSummary(document.getElementById('modalBody'));
+    modal.style.display = 'flex';
 }
 </script>
 
