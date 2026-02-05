@@ -21,15 +21,34 @@
             color: #333;
         }
 
-        /* App Bar Style */
-        .app-bar { 
-            background: #E00000; padding: 20px; text-align: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-            position: sticky; top: 0; z-index: 1000; 
-            border-bottom: 4px solid var(--schindler-red);
-        }
-        .app-bar h1 { font-size: 20px; margin: 0; color: var(--schindler-black); font-weight: bold; text-transform: uppercase; }
-        .version { display: block; font-size: 0.7rem; font-weight: normal; color: #666; margin-top: 4px; }
+        /* App Bar Style ใหม่ */
+.app-bar { 
+    background: var(--schindler-red); /* เปลี่ยนพื้นหลังเป็นสีแดง */
+    padding: 20px; 
+    text-align: center; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* เพิ่มเงาให้ดูมีมิติ */
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+    border-bottom: none; /* เอาเส้นขอบล่างออกเพราะพื้นหลังเด่นแล้ว */
+}
+
+.app-bar h1 { 
+    font-size: 20px; 
+    margin: 0; 
+    color: #ffffff; /* เปลี่ยนตัวหนังสือเป็นสีขาว */
+    font-weight: bold; 
+    text-transform: uppercase; 
+}
+
+.version { 
+    display: block; 
+    font-size: 0.7rem; 
+    font-weight: normal; 
+    color: rgba(255, 255, 255, 0.85); /* สีขาวแบบโปร่งแสงเล็กน้อย */
+    margin-top: 4px; 
+}
+
 
         .content { padding: 15px; display: flex; justify-content: center; }
         .page { width: 100%; max-width: 500px; }
@@ -134,7 +153,7 @@
                     <img src="image/layout-pit.jpeg" alt="Pit Layout Diagram">
                 </div>
 
-                <div class="section-title">จอดลิฟต์ไม่เสมอชั้นแล้ววัดระยะ (หน่วยเป็น mm)</div>
+                <div class="section-title">จอดลิฟต์ไม่เสมอชั้นแล้ววัดระยะ</div>
                 
                 <div class="field">
                     <label>X (ระยะลิฟต์จอดไม่เสมอชั้น วัดจากซิลประตูในถึงซิลประตูนอก)</label>
@@ -166,7 +185,7 @@
                     <span class="unit">mm</span>
                 </div>
 
-                <div class="section-title">ระยะปลอดภัย (Safety Clearance)</div>
+                <div class="section-title">ระยะปลอดภัย A , E , F , G </div>
                 
                 <div class="field">
                     <label>A (ระยะจากขอบกระบังซิลประตูในวัดถึงผนังปล่องหรือแผงกั้นหน้าปล่องก้นบ่อ)</label>
