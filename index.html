@@ -265,9 +265,9 @@
                 const max = results.hkpSpecMax || 9999;
                 const isPass = (results.hkp >= min && results.hkp <= max);
                 let err = "";
-                if (results.hkp < min) err = "ขาดอีก " + (min - results.hkp).toFixed(1);
-                if (results.hkp > max) err = "มากกว่าแบบ " + (results.hkp - max).toFixed(1);
-                hkpHtml = getRow('HKP Runby (Spec)', results.hkp, isPass, err);
+                if (results.hkp < min) err = "ต้องการระยะรันบายลิฟต์อีก" + (min - results.hkp).toFixed(1);
+                if (results.hkp > max) err = "ลดระยะรันบายลิฟต์ลงอีก " + (results.hkp - max).toFixed(1);
+                hkpHtml = getRow('HKP ระยะรันบายลิฟต์', results.hkp, isPass, err);
             }
 
             let aMsg = "", aColor = "";
