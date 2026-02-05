@@ -2,314 +2,85 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Schindler Safety Tools</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schindler Inspector Tools</title>
     <style>
         :root {
-            --schindler-red: #E00000;
-            --schindler-black: #000000;
-            --schindler-gray: #F4F4F4;
+            --schindler-red: #e0001a;
+            --bg-gray: #f4f4f4;
         }
-
-        body, html {
-            margin: 0;
-            padding: 0;
+        body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--schindler-gray);
+            margin: 0;
+            background-color: var(--bg-gray);
+            display: flex;
+            justify-content: center;
         }
-
-        /* Dashboard Styles */
-        #dashboard {
-            padding: 20px;
-            text-align: center;
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            min-height: 100vh;
         }
-
-        .db-header {
+        .app-bar {
             background: var(--schindler-red);
             color: white;
-            padding: 30px 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            padding: 15px 20px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
-        .menu-container {
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: 1fr;
             gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+            padding: 20px;
         }
-
-        .menu-card {
-            background: white;
-            border-radius: 15px;
+        .tool-link {
+            text-decoration: none;
+            color: #333;
+        }
+        .tool-card {
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.2s;
+            background: white;
+            transition: 0.2s;
         }
-
-        .menu-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .menu-card img {
+        .tool-card img {
             width: 100%;
-            height: 200px;
+            height: 180px;
             object-fit: cover;
-            background: #eee;
+            display: block;
         }
-
-        .menu-card h3 {
+        .tool-card h3 {
             padding: 15px;
             margin: 0;
-            color: var(--schindler-black);
-            font-size: 1.1rem;
-        }
-
-        /* Navigation Button */
-        .back-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--schindler-black);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            z-index: 3000;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            display: none;
-            text-transform: uppercase;
-        }
-
-        .view-section {
-            display: none;
-        }
-
-        .active {
-            display: block !important;
+            font-size: 18px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-
-    <button id="backBtn" class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
-
-    <div id="dashboard" class="view-section active">
-        <div class="db-header">
-            <h1>SCHINDLER INSPECTION TOOLS</h1>
-            <p>Technical & Field Support</p>
-        </div>
-
-        <div class="menu-container">
-            <div class="menu-card" onclick="showPage('page1')">
-                <img src="image/layout-pit.jpeg" alt="Safety Clearance Pit">
-                <h3>1. Safety Clearance Pit (EN 81-1)</h3>
-            </div>
-            <div class="menu-card" onclick="showPage('page2')">
-                <img src="image/layout-mr.jpeg" alt="Headroom MR/MRL">
-                <h3>2. Safety Clearance Headroom (MR/MRL)</h3>
-            </div>
-            <div class="menu-card" onclick="showPage('page3')">
-                <img src="image/layout-f.jpeg" alt="Safety Clearance Pit">
-                <h3>3. Safety Clearance Pit (Alternative View)</h3>
-            </div>
-        </div>
-    </div>
-
-    <div id="page1" class="view-section">
-        <style>
-            /* คงเดิมตามต้นฉบับ */
-            #page1 .app-bar { background: #E00000; padding: 20px; text-align: center; color: white; }
-            #page1 .content { padding: 15px; display: flex; justify-content: center; }
-            #page1 .page { width: 100%; max-width: 500px; }
-            #page1 .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-            #page1 .section-title { font-size: 1.1rem; font-weight: 800; color: #E00000; margin: 10px 0 20px 0; border-left: 6px solid #E00000; padding-left: 12px; text-transform: uppercase; }
-            #page1 .img-box { background: #fff; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; margin-bottom: 20px; }
-            #page1 .img-box img { width: 100%; height: auto; }
-            #page1 .field { margin-bottom: 20px; }
-            #page1 label { display: block; font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #444; }
-            #page1 input { width: 100%; padding: 16px; border: 2px solid #555555; border-radius: 12px; font-size: 22px; font-weight: bold; box-sizing: border-box; }
-            #page1 .value-display { background: #000000; border-radius: 15px; padding: 25px; text-align: center; margin: 20px 0; color: #fff; }
-            #page1 .value-display .number { font-size: 60px; font-weight: 900; display: block; }
-            #page1 .btn-calc { width: 100%; padding: 20px; background-color: #0056b3; color: white; border: none; border-radius: 15px; font-size: 22px; font-weight: bold; cursor: pointer; }
-            #page1 .status-row { padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 3px solid transparent; }
-            #page1 .status-row.pass { background: #e6ffed; border-color: #1e8e3e; color: #1b4332; }
-            #page1 .status-row.fail { background: #fff5f5; border-color: #d93025; color: #c92a2a; }
-            #page1 .result-number { font-size: 45px; font-weight: 800; display: block; }
-            #page1 .status-badge-big { display: inline-block; padding: 8px 20px; border-radius: 10px; font-size: 1.2rem; font-weight: 900; color: white; margin-top: 5px; }
-            #page1 .pass .status-badge-big { background-color: #1e8e3e; }
-            #page1 .fail .status-badge-big { background-color: #d93025; }
-            #page1 .a-result-box { text-align: center; padding: 25px; margin-top: 15px; border-radius: 15px; font-weight: 800; border: 4px dashed #ccc; }
-            #page1 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
-            #page1 .modal-content { background-color: white; border-radius: 20px; width: 95%; max-width: 450px; overflow-y: auto; max-height: 90vh; }
-            #page1 .modal-header { background: #E00000; color: white; padding: 20px; font-weight: bold; text-align: center; }
-            #page1 .btn-close { background: #000000; color: white; border: none; padding: 20px; font-size: 20px; font-weight: bold; width: 100%; }
-        </style>
-
-        <div class="app-bar">
-            <h1>Safety Clearance Pit</h1>
-            <span class="version">Schindler (ES1/ES5.0/ES5) EN 81-1</span>
-        </div>
-        <div class="content">
-            <div class="page">
-                <div class="card">
-                    <div class="img-box"><img src="image/layout-pit.jpeg" alt="Pit Layout Diagram"></div>
-                    <div class="section-title">จอดลิฟต์ไม่เสมอชั้นแล้ววัดระยะ</div>
-                    <div class="field"><label>X (ระยะลิฟต์จอดไม่เสมอชั้น)</label><input type="number" id="X" oninput="calculateP1()" placeholder="ค่าต้องไม่เป็น0"></div>
-                    <div class="field"><label>HKP + X (ระยะบัฟเฟอร์ลิฟต์)</label><input type="number" id="HKPX" oninput="calculateP1()" placeholder="mm"></div>
-                    <div class="field"><label>HPHK (Buffer Stroke)</label><input type="number" id="HPH" oninput="calculateP1()" placeholder="mm"></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="field"><label>HKP Spec Min</label><input type="number" id="HKP_Spec_Min" oninput="calculateP1()"></div>
-                        <div class="field"><label>HKP Spec Max</label><input type="number" id="HKP_Spec_Max" oninput="calculateP1()"></div>
-                    </div>
-                    <div class="value-display"><span class="label">Total Y (HKP + X + HPHK)</span><span class="number" id="outY">0.0</span></div>
-                    <div class="section-title">ระยะปลอดภัย A , E , F , G </div>
-                    <div class="field"><label>A</label><input type="number" id="A_p1" oninput="calculateP1()"></div>
-                    <div class="field"><label>E</label><input type="number" id="E_p1" oninput="calculateP1()"></div>
-                    <div class="field"><label>F</label><input type="number" id="F_p1" oninput="calculateP1()"></div>
-                    <div class="field"><label>G</label><input type="number" id="G_p1" oninput="calculateP1()"></div>
-                    <button class="btn-calc" onclick="showPopupP1()">กดปุ่มนี้เพื่อคำนวณระยะ</button>
-                    <div id="inlineSummaryP1" style="margin-top: 20px;"></div>
-                </div>
-            </div>
-        </div>
-        <div id="popModalP1" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">สรุปผลการตรวจสอบ (Safety Result)</div>
-                <div id="modalBodyP1" style="padding: 20px;"></div>
-                <button class="btn-close" onclick="closePopP1()">CLOSE (ปิด)</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="page2" class="view-section">
-        <style>
-            #page2 .sticky-header { background: #E2001A; color: white; text-align: center; padding: 10px 0; }
-            #page2 .card { background: white; padding: 25px; margin-bottom: 20px; border-radius: 15px; width: 100%; max-width: 550px; margin: 20px auto; }
-            #page2 h2 { border-left: 5px solid #E2001A; padding-left: 12px; }
-            #page2 input, #page2 select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #D1D1D1; }
-            #page2 .resultBox { padding: 20px; border-radius: 12px; margin-bottom: 12px; color: white; text-align: center; font-weight: bold; }
-            #page2 .pass { background: #2ecc71; }
-            #page2 .fail-bg { background: #e74c3c; }
-            #page2 .layoutImg { width: 100%; border-radius: 12px; margin-top: 15px; display: none; }
-            #page2 .calc-btn { width: 100%; padding: 15px; background: #E2001A; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; }
-            #page2 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
-            #page2 .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; overflow: hidden; border: 2px solid #E2001A; }
-        </style>
+    <div class="container">
+        <div class="app-bar">Inspector Dashboard</div>
         
-        <div class="sticky-header"><h1>Safety Clearance Headroom</h1><small>(ES1 / ES5.0 / ES5)</small></div>
-        <div id="customAlertP2" class="modal-overlay">
-            <div class="modal-content">
-                <div id="modalHeaderP2" class="modal-header" style="padding:15px;color:white;font-weight:bold;">แจ้งเตือน</div>
-                <div id="modalBodyP2" class="modal-body" style="padding:25px;text-align:left;"></div>
-                <div class="modal-footer" style="padding:15px;background:#f4f4f4;"><button class="modal-btn" onclick="closeModalP2()" style="padding:10px 40px;cursor:pointer;">ตกลง</button></div>
-            </div>
-        </div>
+        <div class="dashboard-grid">
+            <a href="tool1.html" class="tool-link">
+                <div class="tool-card">
+                    <img src="path-to-your-image1.jpg" alt="Safety Clearance">
+                    <h3>Safety Clearance Calculator</h3>
+                </div>
+            </a>
 
-        <div class="card">
-            <h2>VKN & SKS</h2>
-            <select id="vkn_p2">
-                <option value="">-- เลือกความเร็ว --</option>
-                <option value="1.00">1.00</option><option value="1.60">1.60</option><option value="1.75">1.75</option>
-            </select>
-            <label>SKS (mm)</label><input id="sks_p2" readonly>
-        </div>
-        <div class="card">
-            <h2>MR/MRL</h2>
-            <select id="layoutSelectP2" onchange="showLayoutP2()">
-                <option value="">--เลือก--</option>
-                <option value="mr">MR</option><option value="mrl">MRL</option>
-            </select>
-            <img id="imgMR_p2" class="layoutImg" src="image/layout-mr.jpeg">
-            <img id="imgMRL_p2" class="layoutImg" src="image/layout-mrl.jpeg">
-        </div>
-        <div class="card">
-            <h2>วัดระยะ (mm)</h2>
-            <label>X</label><input id="x_p2" type="number">
-            <label>A</label><input id="a_p2" type="number">
-            <label>B</label><input id="b_p2" type="number">
-            <label>D</label><input id="d_p2" type="number">
-            <label>HGP</label><input id="hgp_p2" type="number">
-            <label>HPHG</label><input id="hphg_p2" type="number">
-        </div>
-        <div style="text-align:center"><button class="calc-btn" onclick="calculateP2(true)" style="max-width:550px">CALCULATE</button></div>
-        <div class="card">
-            <h2>ผลลัพธ์</h2>
-            <div id="resA_p2"></div><div id="resB_p2"></div><div id="resD_p2"></div><div id="resAll_p2"></div>
+            <a href="tool2.html" class="tool-link">
+                <div class="tool-card">
+                    <img src="path-to-your-image2.jpg" alt="OIL">
+                    <h3>OIL Management System</h3>
+                </div>
+            </a>
         </div>
     </div>
-
-    <div id="page3" class="view-section">
-        <div class="app-bar"><h1>Safety Clearance Pit (ALT)</h1></div>
-        <div class="content">
-            <div class="page"><div class="card"><h3>ใช้ฟังก์ชันคำนวณเหมือนหน้าแรก</h3><p>สำหรับการดูผัง F Layout โดยเฉพาะ</p>
-            <div class="img-box"><img src="image/layout-f.jpeg" alt="F Layout"></div>
-            </div></div>
-        </div>
-    </div>
-
-    <script>
-        // --- ระบบสลับหน้า ---
-        function showPage(pageId) {
-            document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            document.getElementById('backBtn').style.display = 'block';
-            window.scrollTo(0,0);
-        }
-
-        function showDashboard() {
-            document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
-            document.getElementById('dashboard').classList.add('active');
-            document.getElementById('backBtn').style.display = 'none';
-        }
-
-        // --- โค้ดฟังก์ชันหน้า 1 (รักษาบรรทัดและฟังก์ชันเดิม) ---
-        let resultsP1 = {};
-        function calculateP1() {
-            const v = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const x = v('X'), hkpx = v('HKPX'), hph = v('HPH');
-            const hkpSpecMin = v('HKP_Spec_Min'), hkpSpecMax = v('HKP_Spec_Max');
-            const a = v('A_p1'), e = v('E_p1'), f = v('F_p1'), g = v('G_p1');
-            const hkp = hkpx - x; const y = hkpx + hph; const ey = e - y; const gy = g - y; const fy = f - y;
-            resultsP1 = { hkp, y, ey, gy, fy, a, e, f, g, hkpSpecMin, hkpSpecMax };
-            document.getElementById('outY').innerText = y.toFixed(1);
-            renderSummaryP1(document.getElementById('inlineSummaryP1'));
-        }
-        function renderSummaryP1(container) {
-            if (!resultsP1.y) { container.innerHTML = ''; return; }
-            const getRow = (label, val, isPass) => `<div class="status-row ${isPass ? 'pass' : 'fail'}"><span class="label-text">${label}</span><span class="result-number">${val.toFixed(1)} mm</span><div class="status-badge-big">${isPass ? 'PASS' : 'FAIL'}</div></div>`;
-            container.innerHTML = getRow('E - Y', resultsP1.ey, resultsP1.ey >= 300) + getRow('G - Y', resultsP1.gy, resultsP1.gy >= 500);
-        }
-        function showPopupP1() { document.getElementById('popModalP1').style.display = 'flex'; renderSummaryP1(document.getElementById('modalBodyP1')); }
-        function closePopP1() { document.getElementById('popModalP1').style.display = 'none'; }
-
-        // --- โค้ดฟังก์ชันหน้า 2 (รักษาบรรทัดและฟังก์ชันเดิม) ---
-        const sksTableP2 = { "1.00": 35, "1.60": 90, "1.75": 108 };
-        function showLayoutP2() {
-            const l = document.getElementById("layoutSelectP2").value;
-            document.getElementById("imgMR_p2").style.display = (l === "mr") ? "block" : "none";
-            document.getElementById("imgMRL_p2").style.display = (l === "mrl") ? "block" : "none";
-        }
-        function closeModalP2() { document.getElementById("customAlertP2").style.display = "none"; }
-        function calculateP2(showPop) {
-            const vkn = document.getElementById("vkn_p2").value;
-            const SKS = sksTableP2[vkn] || 0; document.getElementById("sks_p2").value = SKS;
-            const HGP = parseFloat(document.getElementById("hgp_p2").value) || 0;
-            const HPHG = parseFloat(document.getElementById("hphg_p2").value) || 0;
-            const X = parseFloat(document.getElementById("x_p2").value) || 0;
-            const A = parseFloat(document.getElementById("a_p2").value) || 0;
-            const B = parseFloat(document.getElementById("b_p2").value) || 0;
-            const D = parseFloat(document.getElementById("d_p2").value) || 0;
-            const Y = SKS + HGP + HPHG + X;
-            const Ay = A - Y; const By = B - Y; const Dy = D - Y;
-            document.getElementById("resA_p2").innerHTML = "A-Y: " + Ay;
-            document.getElementById("resB_p2").innerHTML = "B-Y: " + By;
-            if (showPop) { document.getElementById("modalBodyP2").innerHTML = "คำนวณเรียบร้อย"; document.getElementById("customAlertP2").style.display = "flex"; }
-        }
-    </script>
 </body>
 </html>
