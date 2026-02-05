@@ -38,7 +38,7 @@
             color: var(--schindler-dark);
             margin: 0;
             padding: 20px;
-            padding-top: 80px;
+            padding-top: 80px; /* เว้นที่ให้ Header */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -77,6 +77,7 @@
             transition: all 0.2s;
         }
 
+        /* Focus เป็นสีฟ้า ไม่สับสนกับสีแดง */
         input:focus, select:focus {
             border-color: var(--focus-blue);
             outline: none;
@@ -150,7 +151,7 @@
             line-height: 1.6;
         }
 
-        /* Schindler Style Modal (Popup) */
+        /* Schindler Popup */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -168,27 +169,12 @@
             max-width: 400px;
             text-align: center;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             border: 2px solid var(--schindler-red);
         }
-        .modal-header {
-            background: var(--schindler-red);
-            color: white;
-            padding: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        .modal-body { padding: 25px; font-size: 1rem; line-height: 1.5; color: #333; }
-        .modal-footer { padding: 15px; background: #f9f9f9; }
-        .modal-btn {
-            background: var(--schindler-dark);
-            color: white;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .modal-header { padding: 15px; font-size: 1.2rem; font-weight: bold; color: white; background: var(--schindler-red); }
+        .modal-body { padding: 25px; font-size: 1rem; color: #333; text-align: left; }
+        .modal-footer { padding: 15px; background: #f4f4f4; text-align: center; }
+        .modal-btn { background: var(--schindler-dark); color: white; border: none; padding: 10px 40px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 
@@ -299,23 +285,17 @@
             document.getElementById("imgMRL").style.display = (layout === "mrl") ? "block" : "none";
         }
 
-        function showModal(title, message, isSuccess) {
-            const modal = document.getElementById("customAlert");
-            const header = document.getElementById("modalHeader");
-            const body = document.getElementById("modalBody");
-            
-            header.innerHTML = title;
-            header.style.background = isSuccess ? "#2ecc71" : "#E2001A";
-            body.innerHTML = message;
-            modal.style.display = "flex";
-        }
-
         function closeModal() {
             document.getElementById("customAlert").style.display = "none";
         }
 
         function calculate(showPop) {
             const vknValue = document.getElementById("vkn").value;
+            if (vknValue === "" && showPop) {
+                alert("กรุณาเลือก VKN ก่อนคำนวณ");
+                return;
+            }
+            
             const SKS = sksTable[vknValue] || 0;
             document.getElementById("sks").value = SKS;
 
@@ -344,20 +324,30 @@
                 `<strong>สูตร:</strong> Y = SKS + HGP + HPHG + X<br>` +
                 `Y = ${SKS} + ${HGP} + ${HPHG} + ${X} = <strong>${Y} mm</strong>`;
             
-            document.getElementById("a").className = (A !== 0 && Ay < 1000) ? "fail" : "";
-            document.getElementById("b").className = (B !== 0 && By < 300) ? "fail" : "";
-            document.getElementById("d").className = (D !== 0 && Dy < 100) ? "fail" : "";
+            // สีแดงเฉพาะเมื่อคำนวณแล้วไม่ผ่าน
+            document.getElementById("a").className = Ay < 1000 ? "fail" : "";
+            document.getElementById("b").className = By < 300 ? "fail" : "";
+            document.getElementById("d").className = Dy < 100 ? "fail" : "";
 
             if (showPop) {
+                const modal = document.getElementById("customAlert");
+                const header = document.getElementById("modalHeader");
+                const body = document.getElementById("modalBody");
+                
                 if (overall) {
-                    showModal("✅ ตรวจสอบสำเร็จ", "ผลการตรวจสอบ: ผ่านเกณฑ์ความปลอดภัยทั้งหมด", true);
+                    header.style.background = "#2ecc71";
+                    header.innerHTML = "✅ ตรวจสอบสำเร็จ";
+                    body.innerHTML = "ผลการตรวจสอบ: ผ่านเกณฑ์ความปลอดภัยทั้งหมด";
                 } else {
+                    header.style.background = "#E2001A";
+                    header.innerHTML = "❌ ไม่ผ่านเกณฑ์";
                     let msg = "พบจุดที่ไม่ผ่านเกณฑ์:<br>";
                     if (Ay < 1000) msg += "• ระยะ A (Headroom) ไม่พอ<br>";
                     if (By < 300) msg += "• ระยะ B (ราวกันตก) ไม่พอ<br>";
                     if (Dy < 100) msg += "• ระยะ D (ปลายราง) ไม่พอ<br>";
-                    showModal("❌ ไม่ผ่านเกณฑ์", msg, false);
+                    body.innerHTML = msg;
                 }
+                modal.style.display = "flex";
             }
 
             const analysisCard = document.getElementById("analysisCard");
@@ -376,7 +366,7 @@
             
             let html = "<strong>💡 แนวทางการแก้ไขที่แนะนำ:</strong><br>";
             
-            // วิเคราะห์เฉพาะ A และ B ที่เกี่ยวกับ Hook/Beam
+            // ระยะ D ไม่เกี่ยวกับ Hook/Beam
             if (Ay < 1000 || By < 300) {
                 if (hook > 0) {
                     html += `• หากทำการตัดหรือย้าย Hook/Beam (หนา ${hook} mm) ออก จะทำให้ระยะ A และ B เพิ่มขึ้นทันที <strong>${hook} mm</strong><br>`;
@@ -385,15 +375,33 @@
                 }
             }
 
-            // ระยะรันบายช่วยได้ทั้ง A, B และ D
             if (hgpMin > 0 && currentHGP > hgpMin) {
                 const reducible = currentHGP - hgpMin;
-                html += `• ระยะ HGP ปัจจุบัน (${currentHGP}) สามารถลดได้อีกสูงสุด <strong>${reducible} mm</strong> ซึ่งจะช่วยเพิ่มระยะปลอดภัยได้<br>`;
+                html += `• ระยะ HGP ปัจจุบัน (${currentHGP}) สามารถลดได้อีกสูงสุด <strong>${reducible} mm</strong> ซึ่งจะช่วยเพิ่มระยะปลอดภัยได้ทั้งหมด (A, B, D)<br>`;
             }
 
             const maxDeficit = Math.max(Ay < 1000 ? 1000 - Ay : 0, By < 300 ? 300 - By : 0, Dy < 100 ? 100 - Dy : 0);
             html += `<br><strong>สรุป:</strong> ต้องหาระยะเพิ่มอย่างน้อย <strong>${maxDeficit} mm</strong> จึงจะผ่านทั้งหมด`;
             
-            // กรณี D ไม่ผ่าน แต่ A, B ผ่านแล้ว และลด HGP ไม่ได้แล้ว จะแจ้งเตือนแยก
+            // กรณี D ไม่ผ่านอย่างเดียว และลด HGP ไม่ได้แล้ว
             if (Dy < 100 && Ay >= 1000 && By >= 300 && (hgpMin === 0 || currentHGP <= hgpMin)) {
-                html = "<strong>💡 แนวทางการแก้ไขที่แนะนำ:</strong><br>• ระยะ D (ปลายราง) ไม่ผ่านเกณฑ์ และ
+                html = "<strong>💡 แนวทางการแก้ไขที่แนะนำ:</strong><br>• ระยะ D (ปลายราง) ไม่ผ่านเกณฑ์ กรุณาตรวจสอบการต่อรางลิฟต์ หรือลดระยะรันบาย (ถ้าทำได้)";
+            }
+
+            suggestionArea.innerHTML = html;
+        }
+
+        function updateResult(id, val, limit, label) {
+            const el = document.getElementById(id);
+            const isPass = val >= limit;
+            const diff = val - limit;
+            el.className = isPass ? "resultBox pass" : "resultBox fail-bg";
+            if (isPass) {
+                el.innerHTML = `${label} : ผ่าน ✔ (${val} / ${limit} mm)<br><span class="green-text">เหลือ : +${diff} mm</span>`;
+            } else {
+                el.innerHTML = `${label} : ไม่ผ่าน ✖ (${val} / ${limit} mm)<br><span class="white-text">ขาดไป : ${Math.abs(diff)} mm</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
