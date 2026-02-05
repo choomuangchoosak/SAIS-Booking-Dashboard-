@@ -38,7 +38,7 @@
             color: var(--schindler-dark);
             margin: 0;
             padding: 20px;
-            padding-top: 80px; /* เว้นที่ให้ Header */
+            padding-top: 80px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -77,7 +77,6 @@
             transition: all 0.2s;
         }
 
-        /* แก้ไข Focus ให้เป็นสีฟ้าเพื่อไม่ให้สับสน */
         input:focus, select:focus {
             border-color: var(--focus-blue);
             outline: none;
@@ -85,8 +84,6 @@
         }
 
         input[readonly] { background-color: #f9f9f9; color: var(--schindler-red); font-weight: bold; }
-
-        /* สีแดงเมื่อไม่ผ่านสำหรับการคำนวณเท่านั้น */
         input.fail { background-color: #ffcccc !important; border: 2px solid var(--danger) !important; }
 
         .resultBox {
@@ -101,8 +98,8 @@
 
         .pass { background: var(--success); }
         .fail-bg { background: var(--danger); }
-        .green-text { color: #aaffaa; font-weight: bold; }
-        .white-text { color: #ffffff; font-weight: bold; opacity: 0.9; }
+        .green-text { color: #eaffea; font-weight: bold; font-size: 0.9rem; }
+        .white-text { color: #ffffff; font-weight: bold; opacity: 0.9; font-size: 0.9rem; }
 
         .layoutImg {
             width: 100%;
@@ -112,7 +109,6 @@
             border: 1px solid #eee;
         }
 
-        /* ปุ่มคำนวณ */
         .calc-btn {
             width: 100%;
             max-width: 500px;
@@ -126,9 +122,7 @@
             cursor: pointer;
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(226, 0, 26, 0.3);
-            transition: background 0.2s;
         }
-        .calc-btn:hover { background: #b71c1c; }
 
         #formula {
             background: #222;
@@ -155,6 +149,46 @@
             font-size: 14px;
             line-height: 1.6;
         }
+
+        /* Schindler Style Modal (Popup) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid var(--schindler-red);
+        }
+        .modal-header {
+            background: var(--schindler-red);
+            color: white;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .modal-body { padding: 25px; font-size: 1rem; line-height: 1.5; color: #333; }
+        .modal-footer { padding: 15px; background: #f9f9f9; }
+        .modal-btn {
+            background: var(--schindler-dark);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -162,6 +196,16 @@
     <div class="sticky-header">
         <h1>Safety Clearance Headroom</h1>
         <small>(ES1 / ES5.0 / ES5 Rel. 02 EN 81-1)</small>
+    </div>
+
+    <div id="customAlert" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modalHeader" class="modal-header">แจ้งเตือน</div>
+            <div id="modalBody" class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+            </div>
+        </div>
     </div>
 
     <div class="card">
@@ -255,6 +299,21 @@
             document.getElementById("imgMRL").style.display = (layout === "mrl") ? "block" : "none";
         }
 
+        function showModal(title, message, isSuccess) {
+            const modal = document.getElementById("customAlert");
+            const header = document.getElementById("modalHeader");
+            const body = document.getElementById("modalBody");
+            
+            header.innerHTML = title;
+            header.style.background = isSuccess ? "#2ecc71" : "#E2001A";
+            body.innerHTML = message;
+            modal.style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("customAlert").style.display = "none";
+        }
+
         function calculate(showPop) {
             const vknValue = document.getElementById("vkn").value;
             const SKS = sksTable[vknValue] || 0;
@@ -285,21 +344,19 @@
                 `<strong>สูตร:</strong> Y = SKS + HGP + HPHG + X<br>` +
                 `Y = ${SKS} + ${HGP} + ${HPHG} + ${X} = <strong>${Y} mm</strong>`;
             
-            // แสดงขอบแดงเฉพาะกรณีคำนวณแล้วไม่ผ่าน
             document.getElementById("a").className = (A !== 0 && Ay < 1000) ? "fail" : "";
             document.getElementById("b").className = (B !== 0 && By < 300) ? "fail" : "";
             document.getElementById("d").className = (D !== 0 && Dy < 100) ? "fail" : "";
 
-            // Popup สรุปผล (เฉพาะตอนกดปุ่มคำนวณ)
             if (showPop) {
                 if (overall) {
-                    alert("✅ ผลการตรวจสอบ: ผ่านเกณฑ์ความปลอดภัยทั้งหมด");
+                    showModal("✅ ตรวจสอบสำเร็จ", "ผลการตรวจสอบ: ผ่านเกณฑ์ความปลอดภัยทั้งหมด", true);
                 } else {
-                    let msg = "❌ พบจุดที่ไม่ผ่านเกณฑ์:\n";
-                    if (Ay < 1000) msg += "- ระยะ A (Headroom) ไม่พอ\n";
-                    if (By < 300) msg += "- ระยะ B (ราวกันตก) ไม่พอ\n";
-                    if (Dy < 100) msg += "- ระยะ D (ปลายราง) ไม่พอ\n";
-                    alert(msg);
+                    let msg = "พบจุดที่ไม่ผ่านเกณฑ์:<br>";
+                    if (Ay < 1000) msg += "• ระยะ A (Headroom) ไม่พอ<br>";
+                    if (By < 300) msg += "• ระยะ B (ราวกันตก) ไม่พอ<br>";
+                    if (Dy < 100) msg += "• ระยะ D (ปลายราง) ไม่พอ<br>";
+                    showModal("❌ ไม่ผ่านเกณฑ์", msg, false);
                 }
             }
 
@@ -318,7 +375,17 @@
             const suggestionArea = document.getElementById("suggestionArea");
             
             let html = "<strong>💡 แนวทางการแก้ไขที่แนะนำ:</strong><br>";
-            if (hook > 0) html += `• หากทำการตัดหรือย้าย Hook/Beam (หนา ${hook} mm) ออก จะทำให้ระยะ A และ B เพิ่มขึ้นทันที <strong>${hook} mm</strong><br>`;
+            
+            // วิเคราะห์เฉพาะ A และ B ที่เกี่ยวกับ Hook/Beam
+            if (Ay < 1000 || By < 300) {
+                if (hook > 0) {
+                    html += `• หากทำการตัดหรือย้าย Hook/Beam (หนา ${hook} mm) ออก จะทำให้ระยะ A และ B เพิ่มขึ้นทันที <strong>${hook} mm</strong><br>`;
+                } else {
+                    html += `• ปัจจุบันระยะวัดถึงเพดาน/ส่วนที่ต่ำสุดแล้ว หากยังไม่ผ่าน ไม่สามารถเพิ่มระยะจากการตัดHookหรือBeamได้<br>`;
+                }
+            }
+
+            // ระยะรันบายช่วยได้ทั้ง A, B และ D
             if (hgpMin > 0 && currentHGP > hgpMin) {
                 const reducible = currentHGP - hgpMin;
                 html += `• ระยะ HGP ปัจจุบัน (${currentHGP}) สามารถลดได้อีกสูงสุด <strong>${reducible} mm</strong> ซึ่งจะช่วยเพิ่มระยะปลอดภัยได้<br>`;
@@ -326,20 +393,7 @@
 
             const maxDeficit = Math.max(Ay < 1000 ? 1000 - Ay : 0, By < 300 ? 300 - By : 0, Dy < 100 ? 100 - Dy : 0);
             html += `<br><strong>สรุป:</strong> ต้องหาระยะเพิ่มอย่างน้อย <strong>${maxDeficit} mm</strong> จึงจะผ่านทั้งหมด`;
-            suggestionArea.innerHTML = html;
-        }
-
-        function updateResult(id, val, limit, label) {
-            const el = document.getElementById(id);
-            const isPass = val >= limit;
-            const diff = val - limit;
-            el.className = isPass ? "resultBox pass" : "resultBox fail-bg";
-            if (isPass) {
-                el.innerHTML = `${label} : ผ่าน ✔ (${val} / ${limit} mm)<br><span class="green-text">เหลือ : +${diff} mm</span>`;
-            } else {
-                el.innerHTML = `${label} : ไม่ผ่าน ✖ (${val} / ${limit} mm)<br><span class="white-text">ขาดไป : ${Math.abs(diff)} mm</span>`;
-            }
-        }
-    </script>
-</body>
-</html>
+            
+            // กรณี D ไม่ผ่าน แต่ A, B ผ่านแล้ว และลด HGP ไม่ได้แล้ว จะแจ้งเตือนแยก
+            if (Dy < 100 && Ay >= 1000 && By >= 300 && (hgpMin === 0 || currentHGP <= hgpMin)) {
+                html = "<strong>💡 แนวทางการแก้ไขที่แนะนำ:</strong><br>• ระยะ D (ปลายราง) ไม่ผ่านเกณฑ์ และ
