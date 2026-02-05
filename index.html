@@ -81,7 +81,37 @@
             font-size: 20px; font-weight: bold; box-sizing: border-box; outline: none; 
             background: #fff; transition: border-color 0.2s;
         }
-        input:focus { border-color: var(--schindler-red); background: #fffcfc; }
+        /* กล่อง Input เมื่อคลิก (Focus) เป็นสีน้ำเงิน */
+input:focus { 
+    border-color: #0056b3; 
+    background-color: #f0f7ff; 
+    box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.2);
+    outline: none;
+    transition: all 0.2s;
+}
+
+/* ปุ่มกดคำนวณ เปลี่ยนเป็นสีน้ำเงิน Action */
+.btn-calc {
+    width: 100%; 
+    padding: 20px; 
+    background-color: #0056b3; /* เปลี่ยนจากแดงเป็นน้ำเงิน */
+    color: white;
+    border: none; 
+    border-radius: 15px; 
+    font-size: 20px; 
+    font-weight: bold;
+    cursor: pointer; 
+    margin: 10px 0; 
+    box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+    text-transform: uppercase;
+    transition: background 0.3s;
+}
+
+/* เอฟเฟกต์เมื่อเอาเมาส์วางหรือกดปุ่ม */
+.btn-calc:active {
+    background-color: #004494;
+    transform: scale(0.98);
+}
 
         /* Display Box (Black Style) */
         .value-display { 
@@ -164,17 +194,17 @@
                     <input type="number" id="HKPX" oninput="calculate()" placeholder="mm">
                 </div>
                 <div class="field">
-                    <label>HPHK (Buffer Stroke ดูจากเนมเพลท/แบบ)</label>
+                    <label>HPHK (Buffer Stroke ดูจากเนมเพลทหรือตารางในแบบติดตั้ง)</label>
                     <input type="number" id="HPH" oninput="calculate()" placeholder="mm">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="field">
-                        <label>HKP ระยะรันบายลิฟต์ต่ำสุดในแบบระบุ (Min)</label>
+                        <label>HKP ระยะรันบายลิฟต์ต่ำสุดในแบบ</label>
                         <input type="number" id="HKP_Spec_Min" oninput="calculate()" placeholder="mm">
                     </div>
                     <div class="field">
-                        <label>HKP ระยะรันบายลิฟต์มากสุดในแบบระบุ</label>
+                        <label>HKP ระยะรันบายลิฟต์มากสุดในแบบ</label>
                         <input type="number" id="HKP_Spec_Max" oninput="calculate()" placeholder="mm">
                     </div>
                 </div>
@@ -204,7 +234,7 @@
                     <input type="number" id="G" oninput="calculate()" placeholder="mm">
                 </div>
 
-                <button class="btn-calc" onclick="showPopup()">กดปุ่มนี้เพื่อคำนวณ</button>
+                <button class="btn-calc" onclick="showPopup()">กดปุ่มนี้เพื่อคำนวณระยะ</button>
 
                 <div id="inlineSummary" style="margin-top: 20px;">
                     </div>
@@ -215,9 +245,10 @@
 
                 <div class="info-footer">
                     <b>Acceptance Criteria:</b><br>
-E - Y ≥ 300 mm<br>
-G - Y ≥ 500 mm<br>
-If A > 150: F-Y ≥ 500<br>If A 35-150: F-Y ≥ 100<br>lf A ≤ 35: F-Y ≥ 30
+ระยะ HKP รันบายลิฟต์ต้องต่างกันไม่เกิน5mm และไม่น้อยหรือมากกว่าแบบระบุไว้<br>
+ระยะ E - Y ต้องการมากกว่าหรือเท่ากับ 300 mm<br>
+ระยะ G - Y ต้องการมากกว่าหรือเท่ากับ 500 mm<br>
+ถ้าระยะ A มากกว่า 150 : F-Y ต้องมากกว่าหรือเท่ากับ 500<br>ถ้าระยะ A อยู่ระหว่าง 35 ถึง 150: F-Y ต้องมากกว่าหรือเท่ากับ 100<br>ถ้าระยะ A น้อยกว่าหรือเท่ากับ 35: F-Y ต้องมากกว่าหรือเท่ากับ 30
                 </div>
             </div>
         </div>
@@ -261,7 +292,7 @@ If A > 150: F-Y ≥ 500<br>If A 35-150: F-Y ≥ 100<br>lf A ≤ 35: F-Y ≥ 30
 
             const row = (label, val, isPass, errorMsg = '') => {
                 return `
-                    <div class="status-row ${isPass ? 'pass' : 'fail'}">
+                    <div class="status-row ${isPass ? 'ผ่าน' : 'fail'}">
                         <div style="display:flex; flex-direction:column;">
                             <span>${label}</span>
                             <small style="font-weight:normal; opacity:0.8; font-size:0.75rem;">Measured: ${val.toFixed(1)} mm</small>
@@ -279,7 +310,7 @@ If A > 150: F-Y ≥ 500<br>If A 35-150: F-Y ≥ 100<br>lf A ≤ 35: F-Y ≥ 30
                 const max = results.hkpSpecMax || 9999;
                 const isHkpPass = (results.hkp >= min && results.hkp <= max);
                 let err = "";
-                if (results.hkp < min) err = "น้อยกว่าแบบ " + (min - results.hkp).toFixed(1);
+                if (results.hkp < min) err = "ขาดอีก " + (min - results.hkp).toFixed(1);
                 if (results.hkp > max) err = "มากกกว่าแบบ " + (results.hkp - max).toFixed(1);
                 hkpHtml = row('HKP Runby (Spec)', results.hkp, isHkpPass, err);
             }
@@ -287,10 +318,10 @@ If A > 150: F-Y ≥ 500<br>If A 35-150: F-Y ≥ 100<br>lf A ≤ 35: F-Y ≥ 30
             let aMsg = "", aColor = "";
             if (results.fy >= 500) { aMsg = "ระยะ A ผ่าน เพราะ F-Y มากกว่าหรือเท่ากับ 500 mm"; aColor = "#e6ffed"; }
             else if (results.fy >= 100) {
-                if (results.a <= 150) { aMsg = "ระยะ A ผ่าน เพราะ F-Y มากกว่าหรือเท่ากับ 100 mm"; aColor = "#e6ffed"; }
-                else { aMsg = "⚠️ จะต้องทำแผงกั้นหน้าปล่องก้นบ่อ (A > 150)"; aColor = "#fff5f5"; }
+                if (results.a <= 150) { aMsg = "ระยะ A ไม่เกิน 150 ผ่าน เพราะ F-Y มากกว่าหรือเท่ากับ 100 mm"; aColor = "#e6ffed"; }
+                else { aMsg = "⚠️ จะต้องทำแผงกั้นหน้าปล่องก้นบ่อ ให้ระยะ A ไม่เกิน 150 mm"; aColor = "#fff5f5"; }
             } else if (results.fy >= 30) {
-                if (results.a <= 35) { aMsg = "ระยะ A ผ่าน เพราะ F-Y มากกว่าหรือ 30 mm)"; aColor = "#e6ffed"; }
+                if (results.a <= 35) { aMsg = "ระยะ A ไม่เกิน 35 ผ่าน เพราะ F-Y มากกว่าหรือ 30 mm)"; aColor = "#e6ffed"; }
                 else { aMsg = "⚠️ จะต้องแผงกั้นหน้าปล่องก้นบ่อให้ระยะ A น้อยกว่า 35 mm"; aColor = "#fff5f5"; }
             } else {
                 aMsg = "❌ ไม่ผ่าน: F-Y ต่ำกว่า 30 mm"; aColor = "#fff5f5";
@@ -298,9 +329,9 @@ If A > 150: F-Y ≥ 500<br>If A 35-150: F-Y ≥ 100<br>lf A ≤ 35: F-Y ≥ 30
 
             container.innerHTML = `
                 ${hkpHtml}
-                ${row('E - Y (Min 300)', results.ey, results.ey >= 300, 'ขาด ' + Math.abs(300 - results.ey).toFixed(1))}
-                ${row('G - Y (Min 500)', results.gy, results.gy >= 500, 'ขาด ' + Math.abs(500 - results.gy).toFixed(1))}
-                ${row('F - Y (Min 30)', results.fy, results.fy >= 30, 'ขาด ' + Math.abs(30 - results.fy).toFixed(1))}
+                ${row('E - Y (มากกว่าหรือเท่ากับ300)', results.ey, results.ey >= 300, 'ต้องการอีก' + Math.abs(300 - results.ey).toFixed(1))}
+                ${row('G - Y (มากกว่าหรือเท่ากับ500)', results.gy, results.gy >= 500, 'ต้องการอีก ' + Math.abs(500 - results.gy).toFixed(1))}
+                ${row('F - Y (มากกว่าหรือเท่ากับ30)', results.fy, results.fy >= 30, 'ต้องการอีก ' + Math.abs(30 - results.fy).toFixed(1))}
                 <div class="a-result-box" style="background:${aColor}; border-color:${results.fy < 30 ? '#ffa8a8' : '#ccc'}">
                     ${aMsg}
                 </div>
