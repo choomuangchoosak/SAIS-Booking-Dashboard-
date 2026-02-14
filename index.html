@@ -5,428 +5,245 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SAIS schedule digital booking</title>
   
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
     :root { 
       --schindler-red: #D0021B; 
-      --bg-gray: #f4f4f4; 
-      --border-color: #dee2e6;
-      --date-width: 50px; /* ล็อคความกว้างวันที่ */
+      --date-col-width: 45px; /* ลดความกว้างวันที่ลงอีก */
+      --insp-col-width: 85px; /* ลดความกว้างคอลัมน์คนตรวจลงอย่างมาก */
     }
     
-    body { 
-      font-family: 'Sarabun', 'Roboto', sans-serif; 
-      background-color: var(--bg-gray); 
-      font-size: 13px;
-      margin: 0;
-      padding: 0;
-      overflow: hidden; /* บังคับให้ Scroll แค่ใน Container */
-    }
+    body { font-family: 'Sarabun', sans-serif; background-color: #fff; margin: 0; padding: 0; overflow: hidden; }
 
     /* Navbar */
-    .navbar { 
-      background-color: white !important; 
-      border-bottom: 3px solid var(--schindler-red); 
-      height: 55px;
-      padding: 0 15px;
-      display: flex;
-      align-items: center;
-      z-index: 1000;
-    }
-    .navbar-brand { 
-      color: var(--schindler-red) !important; 
-      font-weight: 700; 
-      font-family: 'Roboto', sans-serif; 
-      font-size: 0.9rem;
-      text-transform: uppercase;
-    }
-    .btn-schindler { background-color: var(--schindler-red); color: white; border: none; font-weight: 600; font-size: 11px; padding: 5px 12px; }
+    .navbar { background-color: white !important; border-bottom: 2.5px solid var(--schindler-red); height: 48px; padding: 0 10px; z-index: 1060; }
+    .navbar-brand { color: var(--schindler-red) !important; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Board Container - ตัวควบคุมการเลื่อน */
-    .board-container { 
-      position: absolute;
-      top: 55px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overflow: auto; /* เลื่อนได้ทั้ง X และ Y */
-      -webkit-overflow-scrolling: touch;
-      background: white;
-    }
+    /* Table Container */
+    .board-container { position: absolute; top: 48px; left: 0; right: 0; bottom: 0; overflow: auto; background: white; -webkit-overflow-scrolling: touch; }
+    .table-main { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: fixed; }
     
-    .table-custom { 
-      border-collapse: separate; 
-      border-spacing: 0;
-      width: max-content; /* สำคัญ: บังคับให้กว้างตามเนื้อหา ไม่โดนบีบ */
-      min-width: 100%;
-    }
-    
-    /* Header Row */
-    .table-custom th { 
-      background-color: var(--schindler-red); 
-      color: white; 
-      text-align: center; 
-      padding: 10px 8px; 
-      font-weight: 600; 
-      font-size: 11px; 
-      position: sticky; 
-      top: 0; 
-      z-index: 20; /* สูงกว่าข้อมูล */
-      border: 0.5px solid #b00015;
-      min-width: 130px; /* ความกว้างช่องคนตรวจ */
+    /* Headers */
+    .table-main th { 
+      background-color: var(--schindler-red); color: white; text-align: center; padding: 8px 2px; font-weight: 700; font-size: 9px;
+      position: sticky; top: 0; z-index: 20; border: 0.5px solid #b00015; width: var(--insp-col-width);
+      white-space: normal; word-break: break-word; line-height: 1;
     }
 
-    /* ช่องมุมซ้ายบนสุด (Month/Year) */
-    .table-custom th.sticky-header-date {
-      left: 0;
-      z-index: 30; /* สูงที่สุดเพื่อทับทั้งแนวตั้งและนอน */
-      background-color: #333 !important;
-      width: var(--date-width) !important;
-      min-width: var(--date-width) !important;
-      max-width: var(--date-width) !important;
-      font-size: 10px;
-      line-height: 1.2;
-      border: 0.5px solid #222;
+    .table-main th.corner-header {
+      left: 0; z-index: 40; background-color: #222 !important;
+      width: var(--date-col-width) !important; min-width: var(--date-col-width) !important; max-width: var(--date-col-width) !important;
+      font-size: 9px; line-height: 1; border: 1px solid #111;
     }
 
-    /* ตรึงคอลัมน์วันที่ (Sticky Date Column) */
     .col-date { 
-      position: sticky;
-      left: 0;
-      z-index: 10; 
-      background-color: #f8f9fa !important; 
-      width: var(--date-width) !important;
-      min-width: var(--date-width) !important;
-      max-width: var(--date-width) !important;
-      text-align: center; 
-      font-weight: bold; 
-      font-size: 16px; 
-      color: #333;
-      border-right: 2px solid #ccc !important;
-      border-bottom: 0.5px solid var(--border-color);
-      display: table-cell;
+      position: sticky; left: 0; z-index: 10; background-color: #f0f0f0 !important;
+      width: var(--date-col-width) !important; min-width: var(--date-col-width) !important; max-width: var(--date-col-width) !important;
+      text-align: center; font-weight: 800; font-size: 14px; color: #333;
+      border-right: 2px solid #888 !important; border-bottom: 0.5px solid #ddd !important;
       vertical-align: middle;
     }
     
-    .table-custom td { 
-      border: 0.5px solid var(--border-color); 
-      vertical-align: top; 
-      padding: 5px; 
-      height: 80px;
-      background-color: white;
-    }
+    .table-main td { border: 0.5px solid #eee; vertical-align: top; padding: 2px; height: 75px; width: var(--insp-col-width); overflow: hidden; }
+    .sunday-row td { background-color: #fff9f9; }
+    .sunday-row td.col-date { background-color: #ffeded !important; }
 
-    .sunday-row td { background-color: #fff5f5; }
-    .sunday-row td.col-date { background-color: #ffeaea !important; }
-
-    /* Job Card */
+    /* Card Design - บีบตัวอักษรให้เล็กที่สุดแต่ยังอ่านออก */
     .job-card { 
-      background: white; 
-      border: 1px solid #ddd; 
-      border-left: 4px solid #999; 
-      padding: 5px 8px; 
-      margin-bottom: 5px; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-      width: 100%;
+      background: white; border: 1px solid #ddd; border-left: 3px solid #999; 
+      padding: 3px 4px; margin-bottom: 3px; border-radius: 3px; cursor: pointer; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05); width: 100%;
     }
     .job-card.bkk { border-left-color: #222; }
-    .job-card.upc { border-left-color: #E91E63; background: #fff0f5; }
-    .job-card.re { border-left-color: #FFC107; background: #fffdf0; }
+    .job-card.upc { border-left-color: #E91E63; background: #fff2f7; }
+    .job-card.re { border-left-color: #FFC107; background: #fffef2; }
     
-    .job-card .equip-line { font-size: 11px; font-weight: 800; color: #000; margin-bottom: 2px; }
-    .job-card .site-line { font-size: 10px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-    .status-check { font-size: 10px; color: #28a745; float: right; }
+    .job-card .eq-line { font-size: 9px; font-weight: 800; color: #000; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+    .job-card .site-line { font-size: 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1; margin-top: 1px; }
 
-    /* Loading Overlay */
+    /* Modals & UI */
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-    
-    /* Modals */
-    .modal-dialog { margin: 10px auto; max-width: 500px; }
-    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 4px; border: 1px solid #ddd; margin-top: 10px; }
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .menu-item { height: 80px; border: 1px solid #ddd; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .menu-item i { font-size: 1.5rem; margin-bottom: 4px; color: var(--schindler-red); }
+    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
     .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
   </style>
 </head>
 <body>
 
 <div id="globalLoading" class="loading-overlay">
-  <div class="spinner-border text-danger" style="width: 2.5rem; height: 2.5rem;"></div>
-  <div class="mt-3 fw-bold text-secondary" id="loadingText">Connecting...</div>
+  <div class="spinner-border text-danger" style="width: 2rem; height: 2rem;"></div>
+  <div class="mt-3 fw-bold text-secondary small">FETCHING...</div>
 </div>
 
-<!-- Navbar -->
-<nav class="navbar fixed-top d-flex justify-content-between">
-  <div class="d-flex align-items-center">
-    <span class="navbar-brand">SAIS schedule <span style="font-weight:300;">digital booking</span></span>
-    <div id="userSection" class="ms-2 d-none d-sm-block"></div>
-  </div>
-  <div>
-    <span id="publicControls">
-        <button class="btn btn-sm btn-outline-dark" onclick="openLoginModal()">Login</button>
-    </span>
-    <span id="privateControls" style="display:none;">
-        <button class="btn btn-sm btn-schindler me-1" onclick="openMenuModal()">Menu</button>
-        <button class="btn btn-sm btn-light" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
-    </span>
-  </div>
+<nav class="navbar fixed-top d-flex justify-content-between shadow-sm">
+    <span class="navbar-brand">SAIS SCHEDULE <span style="font-weight:300;">DIGITAL BOOKING</span></span>
+    <div>
+      <span id="publicArea"><button class="btn btn-sm btn-outline-dark py-0" style="font-size:10px;" onclick="openLoginModal()">Login</button></span>
+      <span id="privateArea" style="display:none;">
+          <button class="btn btn-sm btn-schindler me-1 py-0" style="font-size:10px;" onclick="openMenuModal()">Menu</button>
+          <button class="btn btn-sm btn-light py-0" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
+      </span>
+    </div>
 </nav>
 
-<!-- Main Table Wrapper -->
 <div class="board-container">
-  <table class="table-custom" id="mainTable">
-    <thead>
-        <tr id="headerRow">
-            <!-- Header cells injected by JS -->
-        </tr>
-    </thead>
-    <tbody id="boardBody">
-            <!-- Body rows injected by JS -->
-    </tbody>
+  <table class="table-main" id="mainTable">
+    <thead><tr id="headerRow"></tr></thead>
+    <tbody id="boardBody"></tbody>
   </table>
 </div>
 
 <!-- ================= MODALS ================= -->
-<!-- 1. LOGIN -->
-<div class="modal fade" id="authModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div id="viewLogin">
-        <div class="modal-header bg-dark text-white"><h5 class="modal-title">Login</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-          <input type="text" id="loginUser" class="form-control mb-2" placeholder="Username">
-          <input type="password" id="loginPass" class="form-control mb-3" placeholder="Password">
-          <button class="btn btn-schindler w-100" onclick="handleLogin()">เข้าสู่ระบบ</button>
-          <div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิกใหม่</a></div>
-        </div>
-      </div>
-      <div id="viewRegister" style="display:none;">
-        <div class="modal-header bg-danger text-white"><h5 class="modal-title">Register</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-3">
-          <form id="regForm">
-            <input type="text" id="regUser" class="form-control mb-2" placeholder="Username *" required>
-            <input type="password" id="regPass" class="form-control mb-2" placeholder="Password *" required>
-            <input type="text" id="regName" class="form-control mb-2" placeholder="Full Name *" required>
-            <input type="text" id="regPE" class="form-control mb-2" placeholder="PE Code *" required>
-            <input type="text" id="regDept" class="form-control mb-2" placeholder="Dept *" required>
-            <input type="text" id="regPhone" class="form-control mb-2" placeholder="Phone *" required>
-            <input type="email" id="regEmail" class="form-control mb-2" placeholder="Email (@schindler.com) *" required>
-            <button type="submit" class="btn btn-schindler w-100 mt-2">ยืนยันสมัคร</button>
-          </form>
-          <div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">กลับหน้า Login</a></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Login -->
+<div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content">
+  <div id="viewLogin"><div class="modal-header bg-dark text-white p-2"><h6 class="modal-title">Login</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><input type="text" id="loginUser" class="form-control mb-2 form-control-sm" placeholder="Username"><input type="password" id="loginPass" class="form-control mb-3 form-control-sm" placeholder="Password"><button class="btn btn-schindler btn-sm w-100" onclick="handleLogin()">เข้าสู่ระบบ</button><div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิก</a></div></div></div>
+  <div id="viewRegister" style="display:none;"><div class="modal-header bg-danger text-white p-2"><h6 class="modal-title">Register</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="regForm"><input type="text" id="regUser" class="form-control mb-1 form-control-sm" placeholder="Username" required><input type="password" id="regPass" class="form-control mb-1 form-control-sm" placeholder="Password" required><input type="text" id="regName" class="form-control mb-1 form-control-sm" placeholder="Full Name" required><input type="text" id="regPE" class="form-control mb-1 form-control-sm" placeholder="PE Code" required><input type="text" id="regDept" class="form-control mb-1 form-control-sm" placeholder="Dept" required><input type="text" id="regPhone" class="form-control mb-1 form-control-sm" placeholder="Phone" required><input type="email" id="regEmail" class="form-control mb-2 form-control-sm" placeholder="Email (@schindler.com)" required><button type="submit" class="btn btn-schindler btn-sm w-100">ยืนยัน</button></form><div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">Back</a></div></div></div>
+</div></div></div>
 
-<!-- 2. MAIN MENU -->
-<div class="modal fade" id="menuModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-light"><h5 class="modal-title fw-bold text-danger">เมนูจัดการ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body p-4">
-        <div class="menu-grid">
-           <div class="menu-btn" onclick="openBookingModal()"><i class="fas fa-plus-circle"></i> จองงานตรวจ</div>
-           <div class="menu-btn" onclick="openHistoryModal()"><i class="fas fa-history"></i> ประวัติ</div>
-           <div class="menu-btn" onclick="openManualModal()"><i class="fas fa-book"></i> คู่มือ</div>
-           <div class="menu-btn" id="btnAdminMenu" style="display:none;" onclick="openAdminPanel()"><i class="fas fa-users-cog"></i> Admin</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Menu -->
+<div class="modal fade" id="menuModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header p-2"><h6 class="modal-title fw-bold text-danger">Main Menu</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="menu-grid">
+  <div class="menu-item" onclick="openBookingModal()"><i class="fas fa-plus-circle"></i>จองงาน</div><div class="menu-item" onclick="openHistoryModal()"><i class="fas fa-history"></i>ประวัติ</div><div class="menu-item" onclick="openManualModal()"><i class="fas fa-book-open"></i>คู่มือ</div><div class="menu-item" id="btnAdminMenu" style="display:none;" onclick="openAdminPanel()"><i class="fas fa-users-cog"></i>Admin</div>
+</div></div></div></div></div>
 
-<!-- 3. BOOKING FORM -->
-<div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-dark text-white"><h5 class="modal-title" id="modalTitle">ลงคิวตรวจ</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body p-4">
-        <form id="bookingForm" class="needs-validation" novalidate>
-          <input type="hidden" id="formRowId" value="">
-          <div class="mb-3"><label class="fw-bold small">Site Project Name *</label><input type="text" class="form-control" id="site" required></div>
-          <div class="row mb-3">
-            <div class="col-6"><label class="fw-bold small">Equip No. *</label><input type="text" class="form-control" id="equipNo" required pattern="[0-9]+"></div>
-            <div class="col-6"><label class="fw-bold small">Lift/ESC/MW No.</label><input type="text" class="form-control" id="unitNo"></div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-4"><label class="fw-bold small">วันที่ตรวจ *</label><input type="date" class="form-control" id="date" required onchange="validateDate(this)"></div>
-            <div class="col-4"><label class="fw-bold small">ประเภทงาน</label><select class="form-select" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div>
-            <div class="col-4"><label class="fw-bold small">Inspector</label><select class="form-select" id="inspectorName" required></select></div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-6"><label class="fw-bold small">Foreman</label><input type="text" class="form-control" id="foreman" required></div>
-            <div class="col-6"><label class="fw-bold small">Tel</label><input type="text" class="form-control" id="tel" required></div>
-          </div>
-          <div class="mb-2"><label class="fw-bold small">Map Link</label><input type="text" class="form-control" id="map" placeholder="Link..."></div>
-        </form>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-schindler" onclick="submitBooking()">Save</button></div>
-    </div>
-  </div>
-</div>
+<!-- Booking -->
+<div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white p-2"><h6>ลงคิวตรวจ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="bookingForm" class="needs-validation" novalidate><input type="hidden" id="formRowId">
+  <div class="mb-2"><label class="fw-bold" style="font-size:11px;">Site Name *</label><input type="text" class="form-control form-control-sm" id="site" required></div>
+  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:11px;">Equip No. *</label><input type="text" class="form-control form-control-sm" id="equipNo" required pattern="[0-9]+"></div><div class="col-6"><label class="fw-bold" style="font-size:11px;">Unit No.</label><input type="text" class="form-control form-control-sm" id="unitNo"></div></div>
+  <div class="row mb-2"><div class="col-4"><label class="fw-bold" style="font-size:11px;">วันที่ตรวจ *</label><input type="date" class="form-control form-control-sm" id="date" required onchange="validateDate(this)"></div><div class="col-4"><label class="fw-bold" style="font-size:11px;">ประเภท</label><select class="form-select form-select-sm" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div><div class="col-4"><label class="fw-bold" style="font-size:11px;">Inspector</label><select class="form-select form-select-sm" id="inspectorName" required></select></div></div>
+  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:11px;">Foreman</label><input type="text" class="form-control form-control-sm" id="foreman" required></div><div class="col-6"><label class="fw-bold" style="font-size:11px;">เบอร์โทร</label><input type="text" class="form-control form-control-sm" id="tel" required></div></div>
+  <div class="mb-1"><label class="fw-bold" style="font-size:11px;">Map Link</label><input type="text" class="form-control form-control-sm" id="map" placeholder="https://..."></div>
+</form></div><div class="modal-footer p-2"><button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-sm btn-schindler" onclick="submitBooking()">SAVE</button></div></div></div></div>
 
-<!-- 4. DETAIL MODAL -->
-<div class="modal fade" id="detailModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-light"><h5 class="modal-title fw-bold text-danger" id="detailSite">Site</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body p-4" id="detailModalBody"></div>
-      <div class="px-4 pb-3" id="actionArea"></div>
-      <div class="modal-footer bg-light"><small class="text-muted me-auto" id="detailCreatedBy"></small><div id="manageButtons"></div></div>
-    </div>
-  </div>
-</div>
+<!-- Detail -->
+<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light p-2"><h6 class="modal-title fw-bold text-danger" id="detailSite">Site</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" id="detailModalBody"></div><div class="px-3 pb-3" id="actionArea"></div><div class="modal-footer bg-light p-2"><small class="text-muted me-auto" id="detailCreatedBy" style="font-size:10px;"></small><div id="manageButtons"></div></div></div></div></div>
 
-<!-- 5. HISTORY & ADMIN -->
-<div class="modal fade" id="historyModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-secondary text-white"><h5 class="modal-title">ประวัติการใช้งาน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body"><div class="table-responsive" style="max-height:400px;"><table class="table table-sm table-striped"><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>Action</th><th>Detail</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
-    </div>
-  </div>
-</div>
-
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // 🔴 API URL
-  const API_URL = "https://script.google.com/macros/s/AKfycbxuNlvGX2r1YZFyerx9ykMJYQghdRL5HeRT8TWXQ5aIflmkHU23NOzTw24PNvFx1WF6Ig/exec";
+  // 🔴 API URL ตัวล่าสุดของคุณ
+  const API_URL = "https://script.google.com/macros/s/AKfycbzA12AZgUoP4Ayw0NB4KLwd0a7htVC8mpoGkeWpyZV8fIrBoMRrwf8JF5We9IoNdnbi/exec";
 
   let currentUser = null;
   let allJobs = [];
   let inspectorList = [];
   let currentJobId = null;
 
-  window.onload = function() { loadData(); };
+  window.onload = loadData;
 
   async function loadData() {
-    showLoading(true, "Loading SAIS Board...");
+    showLoading(true, "FETCHING...");
     try {
       const res = await fetch(`${API_URL}?action=getData`);
       const data = await res.json();
       if(data.success) {
         renderBoard(data);
-      } else {
-        Swal.fire("Backend Error", data.message, "error");
-      }
-    } catch(e) { 
-      Swal.fire("Error", "ไม่สามารถเชื่อมต่อ Server ได้ กรุณาตรวจสอบ Apps Script", "error"); 
-    }
+        checkNewJobsPopup(data.jobs); // แสดง Pop-up งานใหม่
+      } else { Swal.fire("Backend Error", data.message, "error"); }
+    } catch(e) { Swal.fire("Error", "Server Connection Failed", "error"); }
     showLoading(false);
   }
 
+  // --- ระบบแจ้งเตือน Pop-up งานใหม่ ---
+  function checkNewJobsPopup(jobs) {
+    const now = new Date().getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const newJobs = jobs.filter(j => (now - j.createdTime) < oneDay);
+
+    if (newJobs.length > 0) {
+      let list = '<div class="text-start small mt-2" style="font-size:11px;">';
+      newJobs.forEach(j => {
+        list += `<div class="mb-2 border-bottom pb-1 text-dark">📍 <b>${j.site}</b><br>⚙️ Equip: ${j.equipNo} | 👷 ${j.inspectorName}</div>`;
+      });
+      list += '</div>';
+
+      Swal.fire({
+        title: `📢 พบงานจองใหม่ (${newJobs.length} รายการ)`,
+        html: `สรุปรายการจองเข้ามาใน 24 ชม. ล่าสุด:${list}`,
+        icon: 'info',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#D0021B'
+      });
+    }
+  }
+
   function renderBoard(data) {
-    allJobs = data.jobs;
-    inspectorList = data.inspectors;
+    allJobs = data.jobs; 
+    inspectorList = data.inspectors; 
 
-    const today = new Date();
-    const monthAbbr = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][today.getMonth()];
-    const currentYear = today.getFullYear();
+    const now = new Date();
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const monthStr = months[now.getMonth()];
+    const yearStr = now.getFullYear();
 
-    // 1. Build Headers
+    // 1. Header (Dynamic & Compact)
     const header = document.getElementById('headerRow');
-    header.innerHTML = '';
-    
-    // First Cell (Month/Year Sticky)
-    const monthHeader = document.createElement('th');
-    monthHeader.className = 'sticky-header-date';
-    monthHeader.innerHTML = `${monthAbbr}<br>${currentYear}`;
-    header.appendChild(monthHeader);
-
-    // Inspector Names
-    inspectorList.forEach(name => {
-        const th = document.createElement('th');
-        th.innerText = name.toUpperCase();
-        header.appendChild(th);
+    header.innerHTML = `<th class="corner-header">${monthStr}<br>${yearStr}</th>`;
+    inspectorList.forEach(n => {
+        const th = document.createElement('th'); th.innerText = n.toUpperCase(); header.appendChild(th);
     });
 
-    // Update Select in Form
     const sel = document.getElementById('inspectorName');
     if(sel) sel.innerHTML = inspectorList.map(n => `<option value="${n}">${n}</option>`).join('');
 
-    // 2. Build Body
+    // 2. Body
     const tbody = document.getElementById('boardBody');
     tbody.innerHTML = '';
-    
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysCount = new Date(yearStr, now.getMonth() + 1, 0).getDate();
 
-    for(let i = 1; i <= daysInMonth; i++) {
-        const dateObj = new Date(today.getFullYear(), today.getMonth(), i);
-        const dateStr = dateObj.toISOString().split('T')[0];
-        const isSun = dateObj.getDay() === 0;
-
+    for(let d = 1; d <= daysCount; d++) {
+        const dateObj = new Date(yearStr, now.getMonth(), d);
+        const iso = dateObj.toISOString().split('T')[0];
         const tr = document.createElement('tr');
-        if(isSun) tr.className = 'sunday-row';
-        
-        // Sticky Date Cell
-        const dateTd = document.createElement('td');
-        dateTd.className = 'col-date';
-        dateTd.innerText = i;
-        tr.appendChild(dateTd);
-        
-        // Inspector Data Cells
+        if(dateObj.getDay() === 0) tr.className = 'sunday-row';
+
+        const tdDate = document.createElement('td'); tdDate.className = 'col-date'; tdDate.innerText = d;
+        tr.appendChild(tdDate);
+
         inspectorList.forEach(name => {
-           const td = document.createElement('td');
-           const filteredJobs = allJobs.filter(j => j.date === dateStr && j.inspectorName === name);
-           
-           filteredJobs.forEach(j => {
-             const cls = j.type==='upcountry'?'upc':(j.type==='reinspect'?'re':'bkk');
-             const check = j.emailStatus ? '<span class="status-check"><i class="fas fa-check-circle"></i></span>' : '';
-             
-             const card = document.createElement('div');
-             card.className = `job-card ${cls}`;
-             card.onclick = () => openDetail(j.rowId);
-             card.innerHTML = `${check}<div class="equip-line">${j.equipNo}</div><div class="site-line">${j.site}</div>`;
-             td.appendChild(card);
-           });
-           
-           tr.appendChild(td);
+            const tdJob = document.createElement('td');
+            const filtered = allJobs.filter(j => j.date === iso && j.inspectorName === name);
+            filtered.forEach(j => {
+                const cls = j.type==='upcountry'?'upc':(j.type==='reinspect'?'re':'bkk');
+                const card = document.createElement('div');
+                card.className = `job-card ${cls}`;
+                card.onclick = () => openDetail(j.rowId);
+                card.innerHTML = `<span class="eq-line">${j.equipNo}</span><span class="site-line">${j.site}</span>`;
+                tdJob.appendChild(card);
+            });
+            tr.appendChild(tdJob);
         });
-        
         tbody.appendChild(tr);
     }
   }
 
-  // --- ACTIONS & API ---
   async function callAPI(action, data = null) {
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action, data, user: currentUser ? currentUser.username : null })
-      });
-      return await response.json();
-    } catch (e) { return { success: false, message: "Connection lost" }; }
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data, user: currentUser ? currentUser.username : null }) });
+      return await res.json();
+    } catch (e) { return { success: false, message: "Lost Connection" }; }
   }
 
   async function handleLogin() {
     const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
-    showLoading(true, "Authenticating...");
-    const res = await callAPI('login', { username: u, password: p });
+    showLoading(true); const res = await callAPI('login', { username: u, password: p });
     showLoading(false);
-    if(res.success) {
-      currentUser = res.user; updateUI();
-      bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
-      openMenuModal();
-    } else Swal.fire("Error", res.message, "error");
+    if(res.success) { currentUser = res.user; updateUI(); bootstrap.Modal.getInstance(document.getElementById('authModal')).hide(); openMenuModal(); }
+    else Swal.fire("Error", res.message, "error");
   }
 
   function updateUI() {
-    const priv = document.getElementById('privateControls'), pub = document.getElementById('publicControls');
-    const uSec = document.getElementById('userSection');
     if(currentUser) {
-      priv.style.display = 'inline-block'; pub.style.display = 'none';
-      uSec.innerHTML = `<span class="user-pill"><i class="fas fa-user-circle"></i> ${currentUser.fullname}</span>`;
-      document.getElementById('btnAdminMenu').style.display = currentUser.role === 'Admin' ? 'flex' : 'none';
+      document.getElementById('privateArea').style.display = 'inline-block'; document.getElementById('publicArea').style.display = 'none';
+      document.getElementById('userSection').innerHTML = `<small class="badge bg-light text-dark border">${currentUser.fullname}</small>`;
     } else {
-      priv.style.display = 'none'; pub.style.display = 'inline-block'; uSec.innerHTML = '';
+      document.getElementById('privateArea').style.display = 'none'; document.getElementById('publicArea').style.display = 'inline-block';
     }
   }
 
@@ -435,41 +252,35 @@
     currentJobId = rowId;
     document.getElementById('detailSite').innerText = j.site;
     document.getElementById('detailCreatedBy').innerText = `Created by: ${j.createdBy || '-'}`;
-    
-    let mapHTML = j.map && j.map.length > 5 ? 
-      `<div class="mt-3"><a href="${j.map}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">Open Map Link</a><div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(j.map)}&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe></div></div>` : "";
-    
-    document.getElementById('detailModalBody').innerHTML = `
-      <div class="row g-2 small">
-        <div class="col-6"><strong>Inspector:</strong><br>${j.inspectorName}</div>
-        <div class="col-6"><strong>Equip No:</strong><br>${j.equipNo}</div>
-        <div class="col-6"><strong>Unit No:</strong><br>${j.unitNo || '-'}</div>
-        <div class="col-6"><strong>Date:</strong><br>${j.date}</div>
-        <div class="col-6"><strong>Foreman:</strong><br>${j.foreman}</div>
-        <div class="col-6"><strong>Tel:</strong><br>${j.tel}</div>
-      </div> ${mapHTML}`;
-
+    let mapHTML = j.map && j.map.length > 5 ? `<div class="mt-2"><div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(j.map)}&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe></div></div>` : "";
+    document.getElementById('detailModalBody').innerHTML = `<div class="row g-2 small" style="font-size:12px;"><div class="col-6"><strong>Insp:</strong><br>${j.inspectorName}</div><div class="col-6"><strong>Equip:</strong><br>${j.equipNo}</div><div class="col-6"><strong>Unit:</strong><br>${j.unitNo || '-'}</div><div class="col-6"><strong>Date:</strong><br>${j.date}</div><div class="col-6"><strong>Foreman:</strong><br>${j.foreman}</div><div class="col-6"><strong>Tel:</strong><br>${j.tel}</div></div> ${mapHTML}`;
     const area = document.getElementById('actionArea');
-    if(j.emailStatus) area.innerHTML = `<div class="alert alert-success py-2 text-center mt-3 small">เอกสารเรียบร้อย (${j.lastCheck})</div>`;
-    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-3" onclick="confirmDocs()">ยืนยันรับเอกสาร</button>`;
-
+    if(j.emailStatus) area.innerHTML = `<div class="alert alert-success py-1 text-center mt-2 small">RECEIVED</div>`;
+    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-2" onclick="confirmDocs()">ยืนยันรับเอกสาร</button>`;
     const btns = document.getElementById('manageButtons');
-    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? 
-      `<button class="btn btn-outline-danger btn-sm me-2" onclick="deleteJob()">Delete</button><button class="btn btn-dark btn-sm" onclick="switchToEdit()">Edit</button>` : "";
+    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? `<button class="btn btn-outline-danger btn-sm me-1 py-0" onclick="deleteJob()">Delete</button><button class="btn btn-dark btn-sm py-0" onclick="switchToEdit()">Edit</button>` : "";
     new bootstrap.Modal(document.getElementById('detailModal')).show();
   }
 
-  // --- Utils ---
-  function showLoading(s, m) { document.getElementById('globalLoading').style.display=s?'flex':'none'; document.getElementById('loadingText').innerText=m; }
-  function toggleAuthView(v) { document.getElementById('viewLogin').style.display=v==='login'?'block':'none'; document.getElementById('viewRegister').style.display=v==='register'?'block':'none'; }
+  async function submitBooking() {
+    const form = document.getElementById('bookingForm'); if(!form.checkValidity()) { form.classList.add('was-validated'); return; }
+    const formData = { rowId: document.getElementById('formRowId').value, site: document.getElementById('site').value, equipNo: document.getElementById('equipNo').value, unitNo: document.getElementById('unitNo').value, date: document.getElementById('date').value, type: document.getElementById('type').value, inspectorName: document.getElementById('inspectorName').value, foreman: document.getElementById('foreman').value, tel: document.getElementById('tel').value, map: document.getElementById('map').value };
+    showLoading(true); const res = await callAPI(formData.rowId ? 'updateBooking' : 'saveBooking', formData); showLoading(false);
+    if(res.success) { Swal.fire("สำเร็จ", res.message, "success"); bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide(); loadData(); } else Swal.fire("Error", res.message, "error");
+  }
+
   function handleLogout() { currentUser = null; updateUI(); Swal.fire("Logged out", "", "info"); }
+  async function confirmDocs() { if(!currentUser) return openLoginModal(); showLoading(true); await callAPI('confirmDocs', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
+  async function deleteJob() { if(!confirm("Delete?")) return; showLoading(true); await callAPI('deleteBooking', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
+  function switchToEdit() { const j = allJobs.find(x => x.rowId === currentJobId); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); document.getElementById('formRowId').value = j.rowId; document.getElementById('site').value = j.site; document.getElementById('equipNo').value = j.equipNo; document.getElementById('unitNo').value = j.unitNo; document.getElementById('date').value = j.date; document.getElementById('foreman').value = j.foreman; document.getElementById('tel').value = j.tel; document.getElementById('map').value = j.map; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
+  function toggleAuthView(v) { document.getElementById('viewLogin').style.display=v==='login'?'block':'none'; document.getElementById('viewRegister').style.display=v==='register'?'block':'none'; }
   function openLoginModal() { new bootstrap.Modal(document.getElementById('authModal')).show(); toggleAuthView('login'); }
   function openMenuModal() { new bootstrap.Modal(document.getElementById('menuModal')).show(); }
   function openManualModal() { new bootstrap.Modal(document.getElementById('manualModal')).show(); }
   function openBookingModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('menuModal')).hide(); document.getElementById('bookingForm').reset(); document.getElementById('formRowId').value=""; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
-  async function confirmDocs() { showLoading(true, "Updating..."); const res = await callAPI('confirmDocs', { rowId: currentJobId }); showLoading(false); if(res.success) { bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); } }
-  async function deleteJob() { if(!confirm("ลบงานนี้?")) return; showLoading(true, "Deleting..."); const res = await callAPI('deleteBooking', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
-  function validateDate(i) { const d=new Date(i.value),t=new Date(); d.setHours(0,0,0,0); t.setHours(0,0,0,0); const diff=(d-t)/864e5; i.setCustomValidity(diff<3||diff>60?'Invalid':''); }
+  function validateDate(i) { const d=new Date(i.value),t=new Date(); d.setHours(0,0,0,0); t.setHours(0,0,0,0); const diff=(d-t)/864e5; i.setCustomValidity((diff<3||diff>60)?'Invalid':''); }
+  function showLoading(s, m) { document.getElementById('globalLoading').style.display=s?'flex':'none'; if(m) document.getElementById('loadingText').innerText=m; }
+  async function openHistoryModal() { const res = await callAPI('getLogs'); if(res.success) document.getElementById('historyBody').innerHTML = res.logs.map(l => `<tr style="font-size:10px;"><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td><td>${l.detail}</td></tr>`).join(''); new bootstrap.Modal(document.getElementById('historyModal')).show(); }
 </script>
 </body>
 </html>
