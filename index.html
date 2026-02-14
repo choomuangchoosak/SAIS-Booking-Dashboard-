@@ -1,287 +1,565 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SAIS schedule digital booking</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <style>
-    :root { 
-      --schindler-red: #D0021B; 
-      --date-w: 42px; 
-      --insp-w: 78px; /* บีบคอลัมน์คนตรวจให้เล็กที่สุด */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAIS Professional Booking System</title>
+    <!-- React & Tailwind -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/umd/lucide.min.js"></script>
     
-    body { font-family: 'Sarabun', sans-serif; background-color: #fff; margin: 0; padding: 0; overflow: hidden; font-size: 10px; }
-
-    /* Navbar */
-    .navbar { background-color: white !important; border-bottom: 2.5px solid var(--schindler-red); height: 45px; padding: 0 10px; z-index: 1060; }
-    .navbar-brand { color: var(--schindler-red) !important; font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.2px; }
-
-    /* Board Container */
-    .board-container { position: absolute; top: 45px; left: 0; right: 0; bottom: 0; overflow: auto; background: white; -webkit-overflow-scrolling: touch; }
-    .table-main { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: fixed; }
-    
-    /* Headers */
-    .table-main th { 
-      background-color: var(--schindler-red); color: white; text-align: center; padding: 4px 1px; font-weight: 700; font-size: 8.5px;
-      position: sticky; top: 0; z-index: 20; border: 0.5px solid #b00015; width: var(--insp-w);
-      white-space: normal; line-height: 1; word-break: break-all;
-    }
-
-    .table-main th.corner-header {
-      left: 0; z-index: 40; background-color: #222 !important;
-      width: var(--date-w) !important; min-width: var(--date-w);
-      font-size: 8px; line-height: 1.1; border: 1px solid #111;
-    }
-
-    /* Sticky Date */
-    .col-date { 
-      position: sticky; left: 0; z-index: 10; background-color: #f2f2f2 !important;
-      width: var(--date-w) !important; min-width: var(--date-w);
-      text-align: center; font-weight: 800; font-size: 13px; color: #333;
-      border-right: 2px solid #999 !important; border-bottom: 0.5px solid #ddd !important;
-      vertical-align: middle;
-    }
-    
-    .table-main td { border: 0.5px solid #eee; vertical-align: top; padding: 1.5px; height: 70px; width: var(--insp-w); overflow: hidden; }
-    .sunday-row td { background-color: #fff8f8; }
-    .sunday-row td.col-date { background-color: #ffeded !important; }
-
-    /* Ultra Small Cards */
-    .job-card { 
-      background: white; border: 0.5px solid #ddd; border-left: 2.5px solid #999; 
-      padding: 2px 3px; margin-bottom: 2px; border-radius: 2px; cursor: pointer; 
-      box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 100%;
-    }
-    .job-card.bkk { border-left-color: #222; }
-    .job-card.upc { border-left-color: #E91E63; background: #fff2f7; }
-    .job-card.re { border-left-color: #FFC107; background: #fffef2; }
-    
-    .eq-line { font-size: 8.5px; font-weight: 800; color: #000; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1; }
-    .site-line { font-size: 7.5px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1; margin-top: 1px; }
-
-    /* Modals & UI */
-    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .menu-item { height: 75px; border: 1px solid #ddd; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; font-weight: bold; cursor: pointer; font-size: 11px; }
-    .menu-item i { font-size: 1.4rem; margin-bottom: 3px; color: var(--schindler-red); }
-    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; }
-    .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-  </style>
+    <style>
+        body { font-family: 'IBM Plex Sans Thai', sans-serif; background-color: #f8fafc; }
+        /* Grid System สำหรับตารางปฏิทิน */
+        .grid-main { display: grid; grid-template-columns: 80px repeat(auto-fill, minmax(130px, 1fr)); }
+        .schindler-gradient { background: linear-gradient(135deg, #D0021B 0%, #a50215 100%); }
+        /* Animation สำหรับการแจ้งเตือนเอกสาร */
+        .warning-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+        /* Custom Checkbox สำหรับ Admin */
+        .admin-checkbox:checked { background-color: #16a34a; border-color: #16a34a; }
+    </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<div id="globalLoading" class="loading-overlay">
-  <div class="spinner-border text-danger" style="width: 2rem; height: 2rem;"></div>
-  <div class="mt-3 fw-bold text-secondary small">FETCHING SAIS...</div>
-</div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-<nav class="navbar fixed-top d-flex justify-content-between shadow-sm">
-    <span class="navbar-brand">SAIS SCHEDULE <span style="font-weight:300;">DIGITAL BOOKING</span></span>
-    <div>
-      <span id="pubArea"><button class="btn btn-sm btn-outline-dark py-0 px-2" style="font-size:10px; height:24px;" onclick="openLoginModal()">Login</button></span>
-      <span id="privArea" style="display:none;">
-          <button class="btn btn-sm btn-schindler me-1 py-0 px-2" style="font-size:10px; height:24px;" onclick="openMenuModal()">Menu</button>
-          <button class="btn btn-sm btn-light py-0 px-1" style="height:24px;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
-      </span>
-    </div>
-</nav>
+        // ==========================================
+        // ตั้งค่าระบบ (URL จาก Google Apps Script)
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQUcxgT9TuHMVOqQJaUHAJRzdcDRf32uhJYF4d1J03houaV6uaJJrY9Df74ap_6DXk/exec"; 
+        const ADMIN_USERNAME = "jiraphong2227"; // User ที่เป็น Admin
 
-<div class="board-container">
-  <table class="table-main" id="mainTable">
-    <thead><tr id="headerRow"></tr></thead>
-    <tbody id="boardBody"></tbody>
-  </table>
-</div>
+        const App = () => {
+            // Database State
+            const [db, setDb] = useState({ bookings: [], users: [], history: [], inspectors: [] });
+            const [user, setUser] = useState(JSON.parse(localStorage.getItem('sais_user')) || null);
+            const [view, setView] = useState('calendar'); 
+            const [loading, setLoading] = useState(false);
+            const [modal, setModal] = useState(null); 
+            const [toast, setToast] = useState(null);
 
-<!-- ================= MODALS ================= -->
-<div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content">
-  <div id="viewLogin"><div class="modal-header bg-dark text-white p-2"><h6 class="modal-title">Login</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><input type="text" id="loginUser" class="form-control mb-2 form-control-sm" placeholder="Username"><input type="password" id="loginPass" class="form-control mb-3 form-control-sm" placeholder="Password"><button class="btn btn-schindler btn-sm w-100" onclick="handleLogin()">Login</button><div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิก</a></div></div></div>
-  <div id="viewRegister" style="display:none;"><div class="modal-header bg-danger text-white p-2"><h6>Register</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="regForm"><input type="text" id="regUser" class="form-control mb-1 form-control-sm" placeholder="Username" required><input type="password" id="regPass" class="form-control mb-1 form-control-sm" placeholder="Password" required><input type="text" id="regName" class="form-control mb-1 form-control-sm" placeholder="Full Name" required><input type="text" id="regPE" class="form-control mb-1 form-control-sm" placeholder="PE Code" required><input type="text" id="regDept" class="form-control mb-1 form-control-sm" placeholder="Dept" required><input type="email" id="regEmail" class="form-control mb-2 form-control-sm" placeholder="Email (@schindler.com)" required><button type="submit" class="btn btn-schindler btn-sm w-100">Submit</button></form><div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">Back</a></div></div></div>
-</div></div></div>
+            // ตรวจสอบสิทธิ์ Admin
+            const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME, [user]);
 
-<div class="modal fade" id="menuModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header p-2"><h6 class="modal-title fw-bold text-danger">Main Menu</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="menu-grid">
-  <div class="menu-item" onclick="openBookingModal()"><i class="fas fa-plus-circle"></i>จองงาน</div><div class="menu-item" onclick="openHistoryModal()"><i class="fas fa-history"></i>ประวัติ</div><div class="menu-item" onclick="openManualModal()"><i class="fas fa-book-open"></i>คู่มือ</div><div class="menu-item" id="btnAdminMenu" style="display:none;" onclick="openAdminPanel()"><i class="fas fa-users-cog"></i>Admin</div>
-</div></div></div></div></div>
+            // โหลดข้อมูลเมื่อเปิดเว็บ และ Auto Refresh ทุก 1 นาที
+            useEffect(() => {
+                fetchData();
+                const timer = setInterval(fetchData, 60000);
+                return () => clearInterval(timer);
+            }, []);
 
-<div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white p-2"><h6>ลงคิวตรวจ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="bookingForm" class="needs-validation" novalidate><input type="hidden" id="formRowId">
-  <div class="mb-2"><label class="fw-bold" style="font-size:10px;">Site Project Name *</label><input type="text" class="form-control form-control-sm" id="site" required></div>
-  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:10px;">Equip No. *</label><input type="text" class="form-control form-control-sm" id="equipNo" required pattern="[0-9]+"></div><div class="col-6"><label class="fw-bold" style="font-size:10px;">Unit No.</label><input type="text" class="form-control form-control-sm" id="unitNo"></div></div>
-  <div class="row mb-2"><div class="col-4"><label class="fw-bold" style="font-size:10px;">วันที่นัด *</label><input type="date" class="form-control form-control-sm" id="date" required onchange="validateDate(this)"></div><div class="col-4"><label class="fw-bold" style="font-size:10px;">ประเภท</label><select class="form-select form-select-sm" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div><div class="col-4"><label class="fw-bold" style="font-size:10px;">Inspector</label><select class="form-select form-select-sm" id="inspectorName" required></select></div></div>
-  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:10px;">Foreman</label><input type="text" class="form-control form-control-sm" id="foreman" required></div><div class="col-6"><label class="fw-bold" style="font-size:10px;">เบอร์โทร</label><input type="text" class="form-control form-control-sm" id="tel" required></div></div>
-  <div class="mb-1"><label class="fw-bold" style="font-size:10px;">Map Link</label><input type="text" class="form-control form-control-sm" id="map" placeholder="https://..."></div>
-</form></div><div class="modal-footer p-2"><button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-sm btn-schindler" onclick="submitBooking()">SAVE</button></div></div></div></div>
+            // ฟังก์ชันดึงข้อมูลจาก Google Sheets
+            const fetchData = async () => {
+                if (!SCRIPT_URL) return;
+                setLoading(true);
+                try {
+                    const res = await fetch(SCRIPT_URL);
+                    const data = await res.json();
+                    setDb(data);
+                } catch (e) { console.error("Error fetching data:", e); }
+                setLoading(false);
+            };
 
-<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light p-2"><h6 class="modal-title fw-bold text-danger" id="detailSite">Site</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" id="detailModalBody"></div><div class="px-3 pb-3" id="actionArea"></div><div class="modal-footer bg-light p-2"><small class="text-muted me-auto" id="detailCreatedBy" style="font-size:9px;"></small><div id="manageButtons"></div></div></div></div></div>
+            const showToast = (msg, type = 'success') => {
+                setToast({ msg, type });
+                setTimeout(() => setToast(null), 3000);
+            };
 
-<div class="modal fade" id="manualModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white p-2"><h6>คู่มือ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><h6>การจองงาน</h6><p>จองล่วงหน้า 3-60 วัน ห้ามเลขซ้ำ</p><h6>แจ้งเตือนงานใหม่</h6><p>ระบบจะเด้ง Pop-up สรุปงานจองใหม่ใน 24 ชม. ทันทีที่เข้าเว็บ</p></div></div></div></div>
+            // Logic: ตรวจสอบวันและเอกสาร (แจ้งเตือนล่วงหน้า 3 วัน)
+            const checkDocWarning = (bookingDate, docs) => {
+                const bDate = new Date(bookingDate);
+                const today = new Date();
+                const diffTime = bDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                // เช็คว่าสถานะเอกสารเป็น 'true' หรือยัง (เป็น String)
+                const missingDocs = docs.layout_doc !== 'true' || docs.wiring_doc !== 'true' || docs.precheck_doc !== 'true';
+                return (diffDays <= 3 && diffDays >= 0 && missingDocs);
+            };
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            const handleLogout = () => {
+                localStorage.removeItem('sais_user');
+                setUser(null);
+                setView('calendar');
+            };
 
-<script>
-  // 🔴 API URL จาก Google Apps Script ตัวล่าสุดของคุณ
-  const API_URL = "https://script.google.com/macros/s/AKfycbx2bAsOCKa0ftxmmC-M-_7Gt661p3q8y22QRDgpVvVEqIdzyr-F2AU_xoQ9yC1NOLK-/exec";
+            // ฟังก์ชันยิง API ไปยัง Google Apps Script
+            const apiAction = async (payload) => {
+                setLoading(true);
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await res.json();
+                    if (result.status === 'ok') {
+                        fetchData(); // โหลดข้อมูลใหม่ทันทีที่ทำรายการสำเร็จ
+                        return true;
+                    }
+                } catch (e) { showToast('การเชื่อมต่อขัดข้อง', 'error'); }
+                setLoading(false);
+                return false;
+            };
 
-  let currentUser = null;
-  let allJobs = [];
-  let inspectorList = [];
-  let currentJobId = null;
+            // --- Screen Components ---
 
-  window.onload = loadData;
+            const LoginView = () => (
+                <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl border">
+                    <div className="text-center mb-8">
+                        <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-8 mx-auto mb-4" alt="Schindler" />
+                        <h2 className="text-2xl font-bold text-slate-800">เข้าสู่ระบบ SAIS</h2>
+                    </div>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const fd = new FormData(e.target);
+                        // Login Logic
+                        const u = db.users.find(x => x.username === fd.get('username') && x.password === fd.get('password'));
+                        if (u) {
+                            setUser(u);
+                            localStorage.setItem('sais_user', JSON.stringify(u));
+                            setView('calendar');
+                            showToast('ยินดีต้อนรับกลับครับ');
+                        } else {
+                            showToast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
+                        }
+                    }} className="space-y-4">
+                        <input name="username" required className="w-full p-4 bg-slate-50 rounded-xl border-none outline-red-500 transition" placeholder="ชื่อผู้ใช้" />
+                        <input name="password" type="password" required className="w-full p-4 bg-slate-50 rounded-xl border-none outline-red-500 transition" placeholder="รหัสผ่าน" />
+                        <button className="w-full py-4 schindler-gradient text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">Login</button>
+                        <button type="button" onClick={() => setView('signup')} className="w-full text-slate-500 text-sm text-center block hover:text-red-600 transition">สมัครสมาชิกพนักงาน</button>
+                    </form>
+                </div>
+            );
 
-  async function loadData() {
-    showLoading(true);
-    try {
-      // ใช้ GET เพื่อความรวดเร็วและเลี่ยง Redirect Issues
-      const res = await fetch(`${API_URL}?action=getData`);
-      const data = await res.json();
-      if(data.success) {
-        renderBoard(data);
-        checkNewJobsAlert(data.jobs); // เรียกระบบแจ้งเตือนงานใหม่
-      } else { Swal.fire("Error", data.message, "error"); }
-    } catch(e) { Swal.fire("Error", "Server Connection Failed. กรุณารีเฟรชหน้าจอใหม่อีกครั้ง", "error"); }
-    showLoading(false);
-  }
+            const SignupView = () => (
+                <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-3xl shadow-xl border">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">ลงทะเบียนพนักงานใหม่</h2>
+                    <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        const fd = new FormData(e.target);
+                        const email = fd.get('email');
+                        // Validation Email
+                        if (!email.toLowerCase().endsWith('@schindler.com')) {
+                            return showToast('ต้องใช้ Email @schindler.com เท่านั้น', 'error');
+                        }
+                        const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
+                        if (ok) {
+                            showToast('สมัครสำเร็จ กรุณาเข้าสู่ระบบ');
+                            setView('login');
+                        }
+                    }} className="space-y-4">
+                        <input name="full_name" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="ชื่อ-นามสกุล (Project)" />
+                        <input name="phone" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="เบอร์โทรศัพท์" />
+                        <input name="email" type="email" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Email (@schindler.com)" />
+                        <input name="username" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Username" />
+                        <input name="password" type="password" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Password" />
+                        <button className="w-full py-4 schindler-gradient text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">ยืนยันการสมัคร</button>
+                        <button type="button" onClick={() => setView('login')} className="w-full text-slate-500 text-sm text-center block">กลับไปหน้า Login</button>
+                    </form>
+                </div>
+            );
 
-  // ระบบแจ้งเตือนงานใหม่ (ภายใน 24 ชม.)
-  function checkNewJobsAlert(jobs) {
-    const now = new Date().getTime();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const newItems = jobs.filter(j => (now - j.createdTime) < oneDay);
+            const CalendarView = () => {
+                // สร้าง array วันที่ 15 วัน (ย้อนหลัง 1, ล่วงหน้า 13)
+                const dates = useMemo(() => {
+                    const arr = [];
+                    const today = new Date();
+                    for (let i = -1; i < 14; i++) {
+                        const d = new Date(today);
+                        d.setDate(today.getDate() + i);
+                        arr.push({ full: d.toISOString().split('T')[0], day: d.getDate(), month: d.toLocaleDateString('th-TH', {month: 'short'}), w: d.toLocaleDateString('th-TH', {weekday: 'short'}) });
+                    }
+                    return arr;
+                }, []);
 
-    if (newItems.length > 0) {
-      let listHtml = '<div class="text-start" style="font-size:10px; max-height:200px; overflow-y:auto;">';
-      newItems.forEach(j => {
-        listHtml += `<div class="mb-1 border-bottom pb-1">📍 <b>${j.site}</b><br>⚙️ Equip: ${j.equipNo} | 👷 ${j.inspectorName}</div>`;
-      });
-      listHtml += '</div>';
+                return (
+                    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                        {/* Header Grid: แสดงรายชื่อ Inspector (Name) */}
+                        <div className="grid-main bg-slate-800 text-white sticky top-0 z-20">
+                            <div className="p-2 text-center text-[10px] uppercase font-bold opacity-50 border-r border-white/10 flex items-center justify-center">Date</div>
+                            {db.inspectors.map((ins, index) => (
+                                <div key={index} className="p-2 text-center border-r border-white/10">
+                                    <div className="text-xs font-bold truncate">{ins.name}</div>
+                                    <div className="text-[9px] opacity-60 italic">{ins.short}</div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Body Grid: ตารางวันและคิวงาน */}
+                        <div className="divide-y">
+                            {dates.map(d => (
+                                <div key={d.full} className="grid-main hover:bg-slate-50 transition">
+                                    {/* Column วันที่ */}
+                                    <div className="p-2 flex flex-col items-center justify-center border-r bg-slate-50/50">
+                                        <span className="text-base font-bold text-slate-700 leading-none">{d.day}</span>
+                                        <span className="text-[9px] text-slate-400 uppercase">{d.month}</span>
+                                        <span className="text-[9px] font-bold text-red-500 mt-1">{d.w}</span>
+                                    </div>
+                                    {/* Columns Inspector */}
+                                    {db.inspectors.map((ins, index) => {
+                                        // Filter คิวงานโดยใช้ชื่อ (Name)
+                                        const dayTasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
+                                        return (
+                                            <div 
+                                                key={`${d.full}-${index}`} 
+                                                className="p-1 min-h-[90px] border-r border-dashed last:border-0 relative group cursor-pointer"
+                                                onClick={() => {
+                                                    // คลิกช่องว่างเพื่อจอง
+                                                    if (!user) return setView('login');
+                                                    setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                }}
+                                            >
+                                                {dayTasks.map(b => {
+                                                    const isWarn = checkDocWarning(b.date, b);
+                                                    // ดึงเฉพาะตัวเลขจาก Eq. No
+                                                    const eqNum = b.equipment_no.replace(/\D/g, ''); 
+                                                    return (
+                                                        <div 
+                                                            key={b.id} 
+                                                            onClick={(e) => { e.stopPropagation(); setModal({ type: 'detail', data: b }); }}
+                                                            className={`p-1.5 mb-1 rounded-lg shadow-sm border transition-all hover:scale-[1.02] 
+                                                                ${isWarn ? 'bg-red-50 border-red-200 warning-pulse' : 'bg-white border-slate-100'}`}
+                                                        >
+                                                            {/* เวลา & แจ้งเตือน */}
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <span className={`text-[9px] font-bold px-1 rounded ${isWarn ? 'bg-red-200 text-red-800' : 'bg-slate-100 text-slate-600'}`}>
+                                                                    {b.time_slot}
+                                                                </span>
+                                                                {isWarn && <i data-lucide="alert-circle" className="w-3 h-3 text-red-500"></i>}
+                                                            </div>
+                                                            {/* ข้อมูลย่อ */}
+                                                            <div className="text-[10px] font-bold text-slate-800 truncate leading-tight mb-0.5">{b.site_name}</div>
+                                                            <div className="flex justify-between items-center text-[9px] text-slate-500 font-medium">
+                                                                <span className="truncate max-w-[45%]">Unit: {b.unit_no}</span>
+                                                                <span className="truncate font-mono">#{eqNum}</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {/* ปุ่ม + เมื่อ Hover */}
+                                                <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                    <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">+</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
 
-      Swal.fire({
-        title: `📢 พบงานใหม่ (${newItems.length} รายการ)`,
-        html: `งานที่มีการจองเข้ามาภายใน 24 ชม. ล่าสุด:${listHtml}`,
-        icon: 'info',
-        confirmButtonText: 'รับทราบ',
-        confirmButtonColor: '#D0021B'
-      });
-    }
-  }
+            const HistoryView = () => (
+                <div className="space-y-4 max-w-4xl mx-auto">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="history" className="w-5 h-5"></i> ประวัติการทำรายการ
+                    </h2>
+                    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase">
+                                <tr>
+                                    <th className="p-3">Time</th>
+                                    <th className="p-3">Action</th>
+                                    <th className="p-3">User</th>
+                                    <th className="p-3">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y text-xs">
+                                {[...db.history].reverse().map(h => (
+                                    <tr key={h.id} className="hover:bg-slate-50">
+                                        <td className="p-3 text-slate-500 whitespace-nowrap">{new Date(h.timestamp).toLocaleString('th-TH')}</td>
+                                        <td className="p-3">
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold 
+                                                ${h.action === 'CREATE' ? 'bg-green-100 text-green-700' : h.action === 'DELETE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                {h.action}
+                                            </span>
+                                        </td>
+                                        <td className="p-3 font-medium text-slate-700">{h.user}</td>
+                                        <td className="p-3 text-slate-600">{h.details}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
 
-  function renderBoard(data) {
-    allJobs = data.jobs; 
-    inspectorList = data.inspectors; 
+            // --- Main Layout ---
 
-    const now = new Date();
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    const mStr = months[now.getMonth()];
-    const yStr = now.getFullYear();
+            return (
+                <div className="pb-20 min-h-screen">
+                    {/* Top Bar */}
+                    <header className="schindler-gradient text-white p-3 sticky top-0 z-40 shadow-lg">
+                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white p-1 rounded-md">
+                                    <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-4" alt="logo" />
+                                </div>
+                                <h1 className="text-base font-bold tracking-tight">SAIS BOOKING v5</h1>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                {user ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="hidden md:block text-right">
+                                            <div className="text-[10px] font-bold">{user.full_name}</div>
+                                            <div className="text-[9px] opacity-70 uppercase">{isAdmin ? 'Admin' : 'Tech'}</div>
+                                        </div>
+                                        <button onClick={handleLogout} className="p-1.5 bg-white/10 rounded-full hover:bg-white/20">
+                                            <i data-lucide="log-out" className="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setView('login')} className="px-3 py-1.5 bg-white text-red-600 rounded-full font-bold text-xs shadow-lg">Login</button>
+                                )}
+                            </div>
+                        </div>
+                    </header>
 
-    // 1. Header (Dynamic Inspectors)
-    const header = document.getElementById('headerRow');
-    header.innerHTML = `<th class="corner-header">${mStr}<br>${yStr}</th>`;
-    inspectorList.forEach(n => {
-        const th = document.createElement('th'); th.innerText = n.toUpperCase(); header.appendChild(th);
-    });
+                    {/* Bottom Nav Bar */}
+                    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-6 py-2 rounded-full flex gap-6 z-50 shadow-2xl border border-white/10">
+                        <button onClick={() => setView('calendar')} className={`flex flex-col items-center gap-0.5 ${view === 'calendar' ? 'text-red-500' : 'opacity-60'}`}>
+                            <i data-lucide="calendar" className="w-5 h-5"></i>
+                            <span className="text-[9px] font-bold">ตาราง</span>
+                        </button>
+                        <button onClick={() => setView('history')} className={`flex flex-col items-center gap-0.5 ${view === 'history' ? 'text-red-500' : 'opacity-60'}`}>
+                            <i data-lucide="history" className="w-5 h-5"></i>
+                            <span className="text-[9px] font-bold">ประวัติ</span>
+                        </button>
+                        {isAdmin && (
+                            <button onClick={() => {
+                                const name = prompt('ชื่อผู้ตรวจใหม่:');
+                                const short = prompt('ตัวย่อ (เช่น ช.):');
+                                if(name && short) apiAction({ action: 'add_inspector', name, short });
+                            }} className="flex flex-col items-center gap-0.5 opacity-60 hover:opacity-100">
+                                <i data-lucide="user-plus" className="w-5 h-5"></i>
+                                <span className="text-[9px] font-bold">ผู้ตรวจ</span>
+                            </button>
+                        )}
+                        <button onClick={fetchData} className="flex flex-col items-center gap-0.5 opacity-60">
+                            <i data-lucide="refresh-cw" className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`}></i>
+                            <span className="text-[9px] font-bold">รีเฟรช</span>
+                        </button>
+                    </nav>
 
-    const sel = document.getElementById('inspectorName');
-    if(sel) sel.innerHTML = inspectorList.map(n => `<option value="${n}">${n}</option>`).join('');
+                    <main className="max-w-7xl mx-auto p-2 md:p-6">
+                        {view === 'calendar' && <CalendarView />}
+                        {view === 'history' && <HistoryView />}
+                        {view === 'login' && <LoginView />}
+                        {view === 'signup' && <SignupView />}
+                    </main>
 
-    // 2. Body
-    const tbody = document.getElementById('boardBody');
-    tbody.innerHTML = '';
-    const lastDay = new Date(yStr, now.getMonth() + 1, 0).getDate();
+                    {/* --- Modal จองคิว/แก้ไข --- */}
+                    {modal?.type === 'booking' && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+                            <div className="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in duration-200">
+                                <div className="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-800">ลงทะเบียนจองคิว</h2>
+                                        <p className="text-[10px] text-red-500 font-bold uppercase">ผู้ตรวจ: {modal.data.inspector_name} | {modal.data.date}</p>
+                                    </div>
+                                    <button onClick={() => setModal(null)} className="p-2 bg-slate-100 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const fd = new FormData(e.target);
+                                    const payload = {
+                                        action: modal.data.id ? 'update_booking' : 'create_booking',
+                                        ...Object.fromEntries(fd),
+                                        id: modal.data.id,
+                                        inspector_name: modal.data.inspector_name,
+                                        date: modal.data.date,
+                                        user: user.username,
+                                        updated_by: user.username
+                                    };
+                                    const ok = await apiAction(payload);
+                                    if(ok) { showToast('บันทึกข้อมูลเรียบร้อย'); setModal(null); }
+                                }} className="p-6 space-y-4">
+                                    
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Site Project Name</label>
+                                        <input name="site_name" defaultValue={modal.data.site_name} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 font-medium text-sm" />
+                                    </div>
 
-    for(let d = 1; d <= lastDay; d++) {
-        const dISO = `${yStr}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const dateObj = new Date(yStr, now.getMonth(), d);
-        const tr = document.createElement('tr');
-        if(dateObj.getDay() === 0) tr.className = 'sunday-row';
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Equipment No.</label>
+                                            <input name="equipment_no" defaultValue={modal.data.equipment_no} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Unit No.</label>
+                                            <input name="unit_no" defaultValue={modal.data.unit_no} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                                        </div>
+                                    </div>
 
-        const tdDate = document.createElement('td'); tdDate.className = 'col-date'; tdDate.innerText = d;
-        tr.appendChild(tdDate);
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Area</label>
+                                            <select name="area" defaultValue={modal.data.area} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm">
+                                                <option>BKK</option><option>CM</option><option>PK</option><option>Others</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Time Slot</label>
+                                            <select name="time_slot" defaultValue={modal.data.time_slot} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm">
+                                                <option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-        inspectorList.forEach(name => {
-            const tdJob = document.createElement('td');
-            const filtered = allJobs.filter(j => j.date === dISO && j.inspectorName === name);
-            filtered.forEach(j => {
-                const cls = j.type==='upcountry'?'upc':(j.type==='reinspect'?'re':'bkk');
-                const card = document.createElement('div');
-                card.className = `job-card ${cls}`;
-                card.onclick = () => openDetail(j.rowId);
-                card.innerHTML = `<span class="eq-line">${j.equipNo}</span><span class="site-line">${j.site}</span>`;
-                tdJob.appendChild(card);
-            });
-            tr.appendChild(tdJob);
-        });
-        tbody.appendChild(tr);
-    }
-  }
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Foreman</label>
+                                            <input name="foreman" defaultValue={modal.data.foreman} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Tel</label>
+                                            <input name="tel" defaultValue={modal.data.tel} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                                        </div>
+                                    </div>
 
-  async function callAPI(action, data = null) {
-    try {
-      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data, user: currentUser ? currentUser.username : null }) });
-      return await res.json();
-    } catch (e) { return { success: false, message: "Lost Connection" }; }
-  }
+                                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3">
+                                        <i data-lucide="info" className="w-5 h-5 text-amber-500 shrink-0"></i>
+                                        <div className="text-xs text-amber-800">
+                                            <strong className="block mb-1">การส่งเอกสาร (Layout, Wiring, Pre-check)</strong>
+                                            กรุณาส่งไฟล์เอกสารทาง Email ให้ Admin ตรวจสอบล่วงหน้า 3 วัน
+                                        </div>
+                                    </div>
 
-  async function handleLogin() {
-    const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
-    showLoading(true); const res = await callAPI('login', { username: u, password: p });
-    showLoading(false);
-    if(res.success) { currentUser = res.user; updateUI(); bootstrap.Modal.getInstance(document.getElementById('authModal')).hide(); openMenuModal(); }
-    else Swal.fire("Error", res.message, "error");
-  }
+                                    <button className="w-full py-4 schindler-gradient text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition disabled:opacity-50">
+                                        {modal.data.id ? 'อัปเดตข้อมูล' : 'ยืนยันการจอง'}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
 
-  function updateUI() {
-    if(currentUser) {
-      document.getElementById('privArea').style.display = 'inline-block'; document.getElementById('pubArea').style.display = 'none';
-      document.getElementById('btnAdminMenu').style.display = (currentUser.role === 'Admin') ? 'flex' : 'none';
-    } else {
-      document.getElementById('privArea').style.display = 'none'; document.getElementById('pubArea').style.display = 'inline-block';
-    }
-  }
+                    {/* --- Modal รายละเอียด (Admin Check) --- */}
+                    {modal?.type === 'detail' && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+                            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10">
+                                <div className="p-5 schindler-gradient text-white flex justify-between items-center">
+                                    <h2 className="font-bold">รายละเอียดการจอง</h2>
+                                    <button onClick={() => setModal(null)} className="p-1 bg-white/10 rounded-lg"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                <div className="p-6 space-y-5">
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Project</div>
+                                        <div className="text-xl font-bold text-slate-800 leading-tight">{modal.data.site_name}</div>
+                                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                            <i data-lucide="clock" className="w-3 h-3"></i> {modal.data.time_slot} น.
+                                        </div>
+                                    </div>
 
-  function openDetail(rowId) {
-    const j = allJobs.find(x => x.rowId === rowId); if(!j) return;
-    currentJobId = rowId;
-    document.getElementById('detailSite').innerText = j.site;
-    document.getElementById('detailCreatedBy').innerText = `By: ${j.createdBy || '-'}`;
-    let mapHTML = j.map && j.map.length > 5 ? `<div class="mt-2"><div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(j.map)}&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe></div></div>` : "";
-    document.getElementById('detailModalBody').innerHTML = `<div class="row g-1 small" style="font-size:11px;"><div class="col-6"><strong>Insp:</strong> ${j.inspectorName}</div><div class="col-6"><strong>Equip:</strong> ${j.equipNo}</div><div class="col-6"><strong>Unit:</strong> ${j.unitNo || '-'}</div><div class="col-6"><strong>Tel:</strong> ${j.tel}</div></div> ${mapHTML}`;
-    const area = document.getElementById('actionArea');
-    if(j.emailStatus) area.innerHTML = `<div class="alert alert-success py-1 text-center mt-2 small">RECEIVED</div>`;
-    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-2" onclick="confirmDocs()">รับเอกสาร</button>`;
-    const btns = document.getElementById('manageButtons');
-    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? `<button class="btn btn-outline-danger btn-sm me-1 py-0 px-2" onclick="deleteJob()">Del</button><button class="btn btn-dark btn-sm py-0 px-2" onclick="switchToEdit()">Edit</button>` : "";
-    new bootstrap.Modal(document.getElementById('detailModal')).show();
-  }
+                                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Eq. No</div><div className="text-sm font-bold">{modal.data.equipment_no}</div></div>
+                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Unit</div><div className="text-sm font-bold">{modal.data.unit_no}</div></div>
+                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Area</div><div className="text-sm font-bold">{modal.data.area}</div></div>
+                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Foreman</div><div className="text-sm font-bold truncate">{modal.data.foreman}</div></div>
+                                    </div>
 
-  async function submitBooking() {
-    const form = document.getElementById('bookingForm'); if(!form.checkValidity()) { form.classList.add('was-validated'); return; }
-    const formData = { rowId: document.getElementById('formRowId').value, site: document.getElementById('site').value, equipNo: document.getElementById('equipNo').value, unitNo: document.getElementById('unitNo').value, date: document.getElementById('date').value, type: document.getElementById('type').value, inspectorName: document.getElementById('inspectorName').value, foreman: document.getElementById('foreman').value, tel: document.getElementById('tel').value, map: document.getElementById('map').value };
-    showLoading(true); const res = await callAPI(formData.rowId ? 'updateBooking' : 'saveBooking', formData); showLoading(false);
-    if(res.success) { Swal.fire("สำเร็จ", res.message, "success"); bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide(); loadData(); } else Swal.fire("Error", res.message, "error");
-  }
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="text-xs font-bold text-slate-700 uppercase">สถานะเอกสาร (Documents)</h4>
+                                            {isAdmin && <span className="text-[9px] bg-slate-100 px-2 py-1 rounded text-slate-500">Admin Mode</span>}
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            {[
+                                                { id: 'layout_doc', label: 'Layout Drawing' },
+                                                { id: 'wiring_doc', label: 'Wiring Diagram' },
+                                                { id: 'precheck_doc', label: 'Pre-check Form' }
+                                            ].map(doc => (
+                                                <div key={doc.id} className="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm">
+                                                    <span className="text-xs font-medium text-slate-600">{doc.label}</span>
+                                                    
+                                                    {isAdmin ? (
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <span className="text-[10px] text-slate-400">{modal.data[doc.id] === 'true' ? 'อนุมัติแล้ว' : 'รอตรวจ'}</span>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500 admin-checkbox"
+                                                                checked={modal.data[doc.id] === 'true'}
+                                                                onChange={async (e) => {
+                                                                    // อัปเดต UI ทันที (Optimistic Update)
+                                                                    const newStatus = e.target.checked ? 'true' : 'false';
+                                                                    setModal(prev => ({ ...prev, data: { ...prev.data, [doc.id]: newStatus } }));
+                                                                    setDb(prev => ({
+                                                                        ...prev,
+                                                                        bookings: prev.bookings.map(b => b.id === modal.data.id ? { ...b, [doc.id]: newStatus } : b)
+                                                                    }));
+                                                                    // ส่งค่าไป Backend
+                                                                    await apiAction({ 
+                                                                        action: 'update_doc_status', 
+                                                                        id: modal.data.id, 
+                                                                        doc_type: doc.id, 
+                                                                        status: newStatus 
+                                                                    });
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    ) : (
+                                                        modal.data[doc.id] === 'true' ? 
+                                                            <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                                                <i data-lucide="check-circle" className="w-3 h-3"></i> ครบถ้วน
+                                                            </span> : 
+                                                            <span className="flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                                                                <i data-lucide="clock" className="w-3 h-3"></i> รอ Admin
+                                                            </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
 
-  function handleLogout() { currentUser = null; updateUI(); Swal.fire("Logged out", "", "info"); }
-  async function confirmDocs() { if(!currentUser) return openLoginModal(); showLoading(true); await callAPI('confirmDocs', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
-  async function deleteJob() { if(!confirm("Delete?")) return; showLoading(true); await callAPI('deleteBooking', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
-  function switchToEdit() { const j = allJobs.find(x => x.rowId === currentJobId); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); document.getElementById('formRowId').value = j.rowId; document.getElementById('site').value = j.site; document.getElementById('equipNo').value = j.equipNo; document.getElementById('unitNo').value = j.unitNo; document.getElementById('date').value = j.date; document.getElementById('foreman').value = j.foreman; document.getElementById('tel').value = j.tel; document.getElementById('map').value = j.map; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
-  function toggleAuthView(v) { document.getElementById('viewLogin').style.display=v==='login'?'block':'none'; document.getElementById('viewRegister').style.display=v==='register'?'block':'none'; }
-  function openLoginModal() { new bootstrap.Modal(document.getElementById('authModal')).show(); toggleAuthView('login'); }
-  function openMenuModal() { new bootstrap.Modal(document.getElementById('menuModal')).show(); }
-  function openManualModal() { new bootstrap.Modal(document.getElementById('manualModal')).show(); }
-  function openBookingModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('menuModal')).hide(); document.getElementById('bookingForm').reset(); document.getElementById('formRowId').value=""; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
-  function validateDate(i) { const d=new Date(i.value),t=new Date(); d.setHours(0,0,0,0); t.setHours(0,0,0,0); const diff=(d-t)/864e5; i.setCustomValidity((diff<3||diff>60)?'Invalid':''); }
-  function showLoading(s) { document.getElementById('globalLoading').style.display=s?'flex':'none'; }
-  async function openHistoryModal() { const res = await callAPI('getLogs'); if(res.success) document.getElementById('historyBody').innerHTML = res.logs.map(l => `<tr style="font-size:10px;"><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td></tr>`).join(''); new bootstrap.Modal(document.getElementById('historyModal')).show(); }
-</script>
+                                    {(isAdmin || user?.username === modal.data.created_by) && (
+                                        <div className="flex gap-3 pt-4 border-t mt-2">
+                                            <button 
+                                                onClick={() => {
+                                                    const b = modal.data;
+                                                    setModal({ type: 'booking', data: {...b, inspector_name: b.inspector_name} });
+                                                }}
+                                                className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl text-xs hover:bg-slate-700"
+                                            >
+                                                แก้ไขข้อมูล
+                                            </button>
+                                            <button 
+                                                onClick={async () => {
+                                                    if(confirm('ยืนยันลบคิวงานนี้หรือไม่?')) {
+                                                        await apiAction({ action: 'delete_booking', id: modal.data.id, user: user.username, target_name: modal.data.site_name });
+                                                        setModal(null);
+                                                    }
+                                                }}
+                                                className="flex-1 py-3 bg-red-50 text-red-600 font-bold rounded-xl text-xs border border-red-100 hover:bg-red-100"
+                                            >
+                                                ลบคิว
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {toast && (
+                        <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl text-white font-bold text-sm animate-in fade-in slide-in-from-top-4 
+                            ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                            {toast.msg}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+        setTimeout(() => lucide.createIcons(), 1000);
+    </script>
 </body>
 </html>
-
