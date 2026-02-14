@@ -1,563 +1,476 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Clearance Headroom Calculator MR/MRL (ES1/ES5/ES5.0)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SAIS schedule digital booking</title>
+  
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <style>
-        :root {
-            --schindler-red: #E2001A;
-            --schindler-dark: #333333;
-            --schindler-gray: #F4F4F4;
-            --schindler-border: #D1D1D1;
-            --focus-blue: #007bff;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --button-blue: #0056b3;
-        }
-
-        .sticky-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: var(--schindler-red);
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .sticky-header h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; }
-        .sticky-header small { display: block; font-size: 0.8rem; opacity: 0.9; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--schindler-gray);
-            color: var(--schindler-dark);
-            margin: 0;
-            padding: 20px;
-            padding-top: 80px;
-            padding-bottom: 40px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            margin-bottom: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 550px;
-            box-sizing: border-box;
-            border: 1px solid #eee;
-        }
-
-        h2.red-title { 
-            color: var(--schindler-red) !important; 
-            margin-top: 0; 
-            font-size: 1.2rem; 
-            border-left: 5px solid var(--schindler-red);
-            padding-left: 12px;
-        }
-
-        label { display: block; margin-top: 15px; font-weight: bold; color: #555; font-size: 0.9rem; }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--schindler-border);
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: all 0.2s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--focus-blue);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-        }
-
-        input[readonly] { background-color: #f9f9f9; color: var(--schindler-red); font-weight: bold; }
-        input.fail { background-color: #ffcccc !important; border: 2px solid var(--danger) !important; }
-
-        .resultBox {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            color: white;
-            font-size: 16px;
-            text-align: center;
-            font-weight: bold;
-            line-height: 1.4;
-        }
-
-        .pass { background: var(--success); }
-        .fail-bg { background: var(--danger); }
-
-        .layoutImg {
-            width: 100%;
-            border-radius: 12px;
-            margin-top: 15px;
-            display: none;
-            border: 1px solid #eee;
-        }
-
-        .calc-btn {
-            width: 100%;
-            max-width: 550px;
-            padding: 18px;
-            background: var(--button-blue);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
-            transition: transform 0.1s;
-        }
-        .calc-btn:active { transform: scale(0.98); }
-
-        #formula {
-            background: #222;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: monospace;
-            font-size: 14px;
-            color: #eee;
-            border-left: 5px solid var(--schindler-red);
-        }
-
-        #analysisCard {
-            display: none;
-            border: 2px solid var(--danger);
-            background: #fffafa;
-        }
-
-        .suggestion-box {
-            background: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 1px solid #eee;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        .analysis-item {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid #ccc;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .item-pass { border-left-color: var(--success); }
-        .item-fail { border-left-color: var(--danger); }
-
-        .sub-method {
-            margin-top: 8px;
-            margin-left: 10px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border-left: 3px solid #007bff;
-            font-size: 0.95em;
-        }
-        
-        .result-highlight {
-            font-weight: bold;
-            color: #0056b3;
-        }
-
-        /* Footer Counter */
-        .footer-counter {
-            width: 100%;
-            max-width: 550px; 
-            margin-top: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: flex-end; 
-            align-items: center;
-            gap: 6px;
-            font-family: sans-serif;
-            opacity: 0.6; 
-        }
-        
-        .footer-counter .icon {
-            font-size: 14px;
-        }
-        
-        .footer-counter .count {
-            font-size: 13px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 0;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            overflow: hidden;
-            border: 2px solid var(--schindler-red);
-        }
-        .modal-header { padding: 15px; font-size: 1.2rem; font-weight: bold; color: white; background: var(--schindler-red); }
-        .modal-body { padding: 25px; font-size: 1rem; color: #333; text-align: left; }
-        .modal-footer { padding: 15px; background: #f4f4f4; text-align: center; }
-        .modal-btn { background: var(--schindler-dark); color: white; border: none; padding: 10px 40px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-
-<body>
-    <div class="sticky-header">
-        <h1>Safety Clearance Headroom</h1>
-        <small>(ES1 / ES5.0 / ES5 Rel. 02 EN 81-1)</small>
-    </div>
-
-    <div id="customAlert" class="modal-overlay">
-        <div class="modal-content">
-            <div id="modalHeader" class="modal-header">แจ้งเตือน</div>
-            <div id="modalBody" class="modal-body"></div>
-            <div class="modal-footer">
-                <button class="modal-btn" onclick="closeModal()">ตกลง</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2 class="red-title">เลือก VKN เพื่อหาค่า SKS jump </h2>
-        <label>VKN (m/s)</label>
-        <select id="vkn">
-            <option value="">-- เลือกความเร็วลิฟต์ เช่น 1.00 m/s --</option>
-            <option value="0.63">0.63</option>
-            <option value="0.80">0.80</option>
-            <option value="1.00">1.00</option>
-            <option value="1.50">1.50</option>
-            <option value="1.60">1.60</option>
-            <option value="1.75">1.75</option>
-            <option value="2.00">2.00</option>
-            <option value="2.50">2.50</option>
-            <option value="3.00">3.00</option>
-        </select>
-        <label>SKS (mm) - ระยะกระโดด</label>
-        <input id="sks" readonly placeholder="คำนวณอัตโนมัติ">
-    </div>
-
-    <div class="card">
-        <h2 class="red-title">ใส่ค่า Buffer HGP,HPHG (mm) </h2>
-        <label>HGP =ระยะรันบายโครงเวท</label>
-        <input id="hgp" type="number" placeholder="ระยะรันบาโครงเวทที่วัดได้">
-
-        <label>HPHG =ระยะยุบของบัฟเฟอร์โครงเวท (mm)</label>
-        <input id="hphg" type="number" placeholder="ดูจากแบบติดตั้งในตารางระบุHPHG">
-    </div>
-
-    <div class="card">
-        <h2 class="red-title">ประเภทของลิฟต์ MR/MRL</h2>
-        <select id="layoutSelect" onchange="showLayout()">
-            <option value="">--เลือก MR/MRL--</option>
-            <option value="mr">MR Elevator (มีห้องเครื่อง)</option>
-            <option value="mrl">MRL Elevator (ไม่มีห้องเครื่อง)</option>
-        </select>
-        <img id="imgMR" class="layoutImg" src="image/layout-mr.jpeg" alt="MR Layout">
-        <img id="imgMRL" class="layoutImg" src="image/layout-mrl.jpeg" alt="MRL Layout">
-    </div>
-
-    <div class="card">
-        <h2 class="red-title">วัดระยะ X A B D จากรูปที่แสดงด้านบน (รูปซูมดูได้) </h2>
-        <label>X =ระยะลิฟต์จอดต่ำกว่าชั้นบนสุด วัดระยะต่างระดับจากซิลประตูในถึงซิลประตูนอก (mm)</label>
-        <input id="x" type="number" placeholder="ค่าไม่เท่ากับ0ลิฟต์ไม่Normalเสมอชั้น">
-        
-        <label>A =ระยะจากพื้นหลังคาลิฟต์ วัดถึงเพดานปล่องหรือส่วนที่ยื่นลงมาหรือฮุคที่จะชนหลังคา (mm)</label>
-        <input id="a" type="number">
-
-        <label>B =ระยะจากราวกันตก วัดถึงบริเวณที่ราวกันตกจะขึ้นไปชน (เพดานปล่องหรือส่วนที่ยื่นลงมาหรือฮุค) (mm)</label>
-        <input id="b" type="number">
-
-        <label>D ระยะจาก Guide shoe หรือ Roller วัดถึงปลายรางลิฟต์(mm)</label>
-        <input id="d" type="number">
-    </div>
-
-    <button class="calc-btn" onclick="calculate(true)">กดปุ่มนี้เพื่อคำนวณระยะ</button>
-
-    <div class="card">
-        <h2>ผลการคำนวณระยะปลอดภัย</h2>
-        <div id="resA"></div>
-        <div id="resB"></div>
-        <div id="resD"></div>
-        <div id="resAll"></div>
-        <div id="formula"></div>
-    </div>
-
-    <div id="analysisCard" class="card">
-        <h2 style="color: var(--danger);">วิเคราะห์แนวทางการแก้ไข</h2>
-        <label>1. วัดระยะส่วนที่ยื่นลงมาจากเพดานปล่อง (Hook / Beam) (mm)</label>
-        <input id="hookDepth" type="number" value="0" placeholder="ถ้าชนเพดานใส่ 0" oninput="calculate(false)">
-        
-        <label>2. ระยะ HGP ระยะรันบายโครงเวทน้อยที่สุดในแบบระบุ (Min HGP)</label>
-        <input id="hgpMin" type="number" placeholder="ใส่ค่าHGPน้อยที่สุดในแบบระบุ" oninput="calculate(false)">
-        
-        <label>3. ระยะ HGP ระยะรันบายโครงเวทมากที่สุดในแบบระบุ (Max HGP)</label>
-        <input id="hgpMax" type="number" placeholder="ระบุค่าHGPมากที่สุดในแบบระบุ" oninput="calculate(false)">
-
-        <div id="suggestionArea" class="suggestion-box"></div>
-    </div>
-
-    <div class="footer-counter">
-        <span class="icon">👁️</span>
-        <span id="visitCount" class="count">...</span>
-    </div>
-
-    <script>
-        const sksTable = {
-            "0.63": 14, "0.80": 23, "1.00": 35, "1.50": 79, "1.60": 90,
-            "1.75": 108, "2.00": 140, "2.50": 219, "3.00": 315
-        };
-
-        function showLayout() {
-            const layout = document.getElementById("layoutSelect").value;
-            document.getElementById("imgMR").style.display = (layout === "mr") ? "block" : "none";
-            document.getElementById("imgMRL").style.display = (layout === "mrl") ? "block" : "none";
-        }
-
-        function closeModal() {
-            document.getElementById("customAlert").style.display = "none";
-        }
-
-        function calculate(showPop) {
-            const vknValue = document.getElementById("vkn").value;
-            if (vknValue === "" && showPop) {
-                alert("กรุณาเลือก VKN ก่อนคำนวณ");
-                return;
-            }
-            
-            const SKS = sksTable[vknValue] || 0;
-            document.getElementById("sks").value = SKS;
-
-            const HGP = parseFloat(document.getElementById("hgp").value) || 0;
-            const HPHG = parseFloat(document.getElementById("hphg").value) || 0;
-            const X = parseFloat(document.getElementById("x").value) || 0;
-            const A = parseFloat(document.getElementById("a").value) || 0;
-            const B = parseFloat(document.getElementById("b").value) || 0;
-            const D = parseFloat(document.getElementById("d").value) || 0;
-            
-            const layoutType = document.getElementById("layoutSelect").value;
-
-            const Y = SKS + HGP + HPHG + X;
-            const Ay = A - Y;
-            const By = B - Y;
-            const Dy = D - Y;
-
-            updateResult("resA", Ay, 1000, "A-Y");
-            updateResult("resB", By, 300, "B-Y");
-            updateResult("resD", Dy, 100, "D-Y");
-
-            const overall = Ay >= 1000 && By >= 300 && Dy >= 100;
-            const resAll = document.getElementById("resAll");
-            resAll.className = overall ? "resultBox pass" : "resultBox fail-bg";
-            resAll.innerHTML = `Overall : ${overall ? "ผ่าน ✔" : "ไม่ผ่าน ✖"}`;
-
-            document.getElementById("formula").innerHTML = 
-                `<strong>สูตร:</strong> Y = SKS + HGP + HPHG + X<br>` +
-                `Y = ${SKS} + ${HGP} + ${HPHG} + ${X} = <strong>${Y} mm</strong>`;
-            
-            document.getElementById("a").className = Ay < 1000 ? "fail" : "";
-            document.getElementById("b").className = By < 300 ? "fail" : "";
-            document.getElementById("d").className = Dy < 100 ? "fail" : "";
-
-            if (showPop) {
-                const modal = document.getElementById("customAlert");
-                const header = document.getElementById("modalHeader");
-                const body = document.getElementById("modalBody");
-                
-                if (overall) {
-                    header.style.background = "#2ecc71";
-                    header.innerHTML = "✅ ผ่าน pass";
-                    body.innerHTML = "ผลการตรวจสอบ: ผ่านเกณฑ์ความปลอดภัยทั้งหมด";
-                } else {
-                    header.style.background = "#E2001A";
-                    header.innerHTML = "❌ ไม่ผ่าน fail";
-                    let msg = "";
-                    if (Ay < 1000) msg += `• ระยะ A (Headroom): ต้องการอีก ${Math.abs(Ay - 1000)} mm<br>`;
-                    if (By < 300) msg += `• ระยะ B (ราวกันตก): ต้องการอีก ${Math.abs(By - 300)} mm<br>`;
-                    if (Dy < 100) msg += `• ระยะ D (ปลายราง): ต้องการอีก ${Math.abs(Dy - 100)} mm<br>`;
-                    body.innerHTML = msg;
-                }
-                modal.style.display = "flex";
-            }
-
-            const analysisCard = document.getElementById("analysisCard");
-            if (!overall && vknValue !== "") {
-                analysisCard.style.display = "block";
-                runAnalysis(Ay, By, Dy, HGP, Y, layoutType);
-            } else {
-                analysisCard.style.display = "none";
-            }
-        }
-
-        function runAnalysis(Ay, By, Dy, currentHGP, Y, layoutType) {
-            const hook = parseFloat(document.getElementById("hookDepth").value) || 0;
-            const hgpMin = parseFloat(document.getElementById("hgpMin").value) || 0;
-            const suggestionArea = document.getElementById("suggestionArea");
-            
-            let html = "<div style='border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 15px;'>";
-            html += "<strong style='font-size: 16px; color: #E2001A;'>💡 รายงานวิเคราะห์แนวทางแก้ไขปัญหาเชิงลึก:</strong><br>";
-            html += `<span style='font-size: 14px;'>ค่าระยะสะสมทางดิ่ง (Total Cumulative Vertical Distance - Y) ตอนนี้ของคุณคือ <b>${Y} mm</b></span></div>`;
-            
-            const canReduceHGP = (hgpMin > 0 && currentHGP > hgpMin);
-            const reducibleAmount = canReduceHGP ? (currentHGP - hgpMin) : 0;
-
-            // --- 1. พื้นที่ปลอดภัยบนหลังคา (Safety Clearance Area) ---
-            html += `<div class="analysis-item ${Ay >= 1000 ? 'item-pass' : 'item-fail'}">`;
-            html += "<strong>1. พื้นที่ปลอดภัยบนหลังคาลิฟต์ (Safety Clearance Area - ระยะ A):</strong><br>";
-            
-            if (Ay >= 1000) {
-                html += `✅ <span style="color:green"><b>สถานะ: ผ่านเกณฑ์</b></span> (มีระยะคงเหลือ ${Ay} mm)<br>`;
-            } else {
-                const deficit = 1000 - Ay;
-                html += `❌ <span style="color:red"><b>สถานะ: ไม่ผ่านเกณฑ์ (ต้องการอีก ${deficit} mm)</b></span><br>`;
-                html += `<u><b>แนวทางการแก้ไข:</b></u><br>`;
-
-                // วิธีที่ 1
-                if (canReduceHGP) {
-                    const newAy = Ay + reducibleAmount;
-                    const isEnough = newAy >= 1000;
-                    html += `<div class="sub-method"><b>วิธีที่ 1: ปรับลดระยะรันบายโครงเวท (Counterweight Runby - HGP)</b><br>`;
-                    html += `• ระยะรันบายตอนนี้: <b>${currentHGP} mm</b><br>`;
-                    html += `• ระยะต่ำสุดตามแบบ (Min HGP): <b>${hgpMin} mm</b><br>`;
-                    html += `• <span class="result-highlight">สามารถลดระยะลงได้อีก: ${reducibleAmount} mm</span><br>`;
-                    html += `• ผลลัพธ์: ระยะปลอดภัย A จะเพิ่มขึ้นเป็น <b>${newAy} mm</b><br>`;
-                    html += isEnough 
-                        ? `✅ <b>สรุป: วิธีนี้สามารถแก้ปัญหาได้ (ผ่านเกณฑ์ทันที)</b>` 
-                        : `⚠️ <b>สรุป: วิธีนี้ช่วยเพิ่มระยะได้ แต่ยังต้องการอีก ${1000 - newAy} mm</b>`;
-                    html += `</div>`;
-                } else {
-                    html += `<div class="sub-method" style="background:#fff3cd; border-left-color:#ffc107;">`;
-                    html += `⚠️ <b>วิธีที่ 1:</b> ไม่สามารถลดระยะรันบาย (HGP) ได้แล้ว (ค่าHGPตอนนี้ ได้น้อยที่สุดตามแบบแล้ว)</div>`;
-                }
-
-                // วิธีที่ 2
-                if (hook > 0) {
-                    html += `<div class="sub-method"><b>วิธีที่ 2: ตัดส่วนที่ยื่นลงมาหรือส่วนที่จะชน (Hook/Beam/third party)</b><br>`;
-                    html += `ตัดส่วนที่ยื่นลงมา ตัดออกอีก <b>${hook} mm</b> จะได้ระยะเพิ่มขึ้นโดยตรง</div>`;
-                }
-            }
-            html += "</div>";
-
-            // --- 2. ราวกันตก (Balustrade Clearance) ---
-            html += `<div class="analysis-item ${By >= 300 ? 'item-pass' : 'item-fail'}">`;
-            html += "<strong>2. ระยะห่างของราวกันตก (Balustrade Clearance - ระยะ B):</strong><br>";
-            
-            if (By >= 300) {
-                html += `✅ <span style="color:green"><b>สถานะ: ผ่านเกณฑ์</b></span><br>`;
-            } else {
-                const deficit = 300 - By;
-                html += `❌ <span style="color:red"><b>สถานะ: ไม่ผ่านเกณฑ์ (ต้องการอีก ${deficit} mm)</b></span><br>`;
-                html += `<u><b>แนวทางการแก้ไข:</b></u><br>`;
-                
-                if (canReduceHGP) {
-                    const newBy = By + reducibleAmount;
-                    const isEnough = newBy >= 300;
-                    html += `<div class="sub-method"><b>วิธีที่ 1: ปรับลดระยะรันบายโครงเวท (HGP)</b><br>`;
-                    html += `• ลดระยะ HGP ลงได้สูงสุด <b>${reducibleAmount} mm</b><br>`;
-                    html += `• ผลลัพธ์: ระยะ B จะเพิ่มขึ้นเป็น <b>${newBy} mm</b><br>`;
-                    html += isEnough 
-                        ? `✅ <b>สรุป: ผ่านเกณฑ์ทันที</b>` 
-                        : `⚠️ <b>สรุป: ยังต้องการอีก ${300 - newBy} mm</b>`;
-                    html += `</div>`;
-                }
-                html += `<div class="sub-method"><b>วิธีอื่น ๆ:</b> ตรวจสอบตำแหน่งตะขอ (Hook) หรือพิจารณาใช้ราวกันตกแบบพับได้</div>`;
-            }
-            html += "</div>";
-
-            // --- 3. ปลายราง (Guide Rail Over-travel) ---
-            html += `<div class="analysis-item ${Dy >= 100 ? 'item-pass' : 'item-fail'}">`;
-            html += "<strong>3. ระยะปลายรางลิฟต์ (Guide Rail Over-travel - ระยะ D):</strong><br>";
-            
-            if (Dy >= 100) {
-                html += `✅ <span style="color:green"><b>สถานะ: ผ่านเกณฑ์</b></span><br>`;
-            } else {
-                const deficit = 100 - Dy;
-                html += `❌ <span style="color:red"><b>สถานะ: ไม่ผ่านเกณฑ์ (ต้องการอีก ${deficit} mm)</b></span><br>`;
-                html += `<u><b>แนวทางการแก้ไข:</b></u><br>`;
-
-                if (canReduceHGP) {
-                    const newDy = Dy + reducibleAmount;
-                    const isEnough = newDy >= 100;
-                    html += `<div class="sub-method"><b>วิธีที่ 1: ปรับลดระยะรันบายโครงเวท (HGP)</b><br>`;
-                    html += `• ลดระยะ HGP ลงได้สูงสุด <b>${reducibleAmount} mm</b><br>`;
-                    html += `• ผลลัพธ์: ระยะปลายราง D จะเพิ่มขึ้นเป็น <b>${newDy} mm</b><br>`;
-                    html += isEnough 
-                        ? `✅ <b>สรุป: ผ่านเกณฑ์ทันที (ปลายรางเหลือพอ)</b>` 
-                        : `⚠️ <b>สรุป: ยังต้องการอีก ${100 - newDy} mm</b>`;
-                    html += `</div>`;
-                }
-
-                // เงื่อนไขแยก MR / MRL สำหรับวิธีที่ 2
-                if (layoutType === 'mrl') {
-                    html += `<div class="sub-method" style="background:#fffafa; border-left-color:#dc3545;"><b>วิธีที่ 2: ตรวจสอบการติดตั้ง (สำหรับ MRL)</b><br>`;
-                    html += `สำหรับลิฟต์ MRL <span style="color:red; font-weight:bold;">ไม่แนะนำให้ต่อรางหน้างาน</span> กรุณาตรวจสอบระยะปลายรางจริง เทียบกับแบบติดตั้ง (Installation Drawing) อีกครั้ง ว่ามีการติดตั้งคลาดเคลื่อนหรือไม่ หากระยะไม่ตรงตามแบบ ให้แก้ไขตามมาตรฐานการติดตั้ง</div>`;
-                } else {
-                    html += `<div class="sub-method" style="background:#fffafa; border-left-color:#dc3545;"><b>วิธีที่ 2: การต่อราง (Rail Extension)</b><br>`;
-                    html += `สำหรับลิฟต์ MR หากลด HGP ไม่ได้ หรือลดแล้วไม่พอ <span style="color:red; font-weight:bold;">จำเป็นต้องต่อรางลิฟต์ให้สูงขึ้น</span> อย่างน้อย ${Math.max(0, deficit - reducibleAmount)} mm เพื่อความปลอดภัย</div>`;
-                }
-            }
-            html += "</div>";
-
-            suggestionArea.innerHTML = html;
-        }
-
-        function updateResult(id, val, limit, label) {
-            const el = document.getElementById(id);
-            const isPass = val >= limit;
-            const deficit = limit - val;
-            
-            el.className = isPass ? "resultBox pass" : "resultBox fail-bg";
-            
-            if (isPass) {
-                el.innerHTML = `${label} : ผ่าน ✔ (${val} ต้องการ ≥ ${limit} mm)`;
-            } else {
-                el.innerHTML = `${label} : ไม่ผ่าน ✖ (${val} ต้องการอีก : ${deficit} mm เพื่อให้ได้ ≥ ${limit} mm)`;
-            }
-        }
-
-        // Script นับจำนวน View (CounterAPI)
-        document.addEventListener("DOMContentLoaded", function() {
-            // Namespace และ Key สำหรับเก็บค่า
-            const namespace = 'schindler-safety-calc-tool';
-            const key = 'visits';
-
-            fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('visitCount').innerText = data.count;
-                })
-                .catch(error => {
-                    console.error('Error fetching count:', error);
-                    document.getElementById('visitCount').innerText = "-";
-                });
-        });
-    </script>
+  <style>
+    :root { 
+      --schindler-red: #D0021B; 
+      --bg-gray: #f4f4f4; 
+      --border-color: #dee2e6;
+      --date-width: 50px; /* ล็อคความกว้างวันที่ */
+    }
     
+    body { 
+      font-family: 'Sarabun', 'Roboto', sans-serif; 
+      background-color: var(--bg-gray); 
+      font-size: 13px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* บังคับให้ Scroll แค่ใน Container */
+    }
+
+    /* Navbar */
+    .navbar { 
+      background-color: white !important; 
+      border-bottom: 3px solid var(--schindler-red); 
+      height: 55px;
+      padding: 0 15px;
+      display: flex;
+      align-items: center;
+      z-index: 1000;
+    }
+    .navbar-brand { 
+      color: var(--schindler-red) !important; 
+      font-weight: 700; 
+      font-family: 'Roboto', sans-serif; 
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+    .btn-schindler { background-color: var(--schindler-red); color: white; border: none; font-weight: 600; font-size: 11px; padding: 5px 12px; }
+
+    /* Board Container - ตัวควบคุมการเลื่อน */
+    .board-container { 
+      position: absolute;
+      top: 55px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto; /* เลื่อนได้ทั้ง X และ Y */
+      -webkit-overflow-scrolling: touch;
+      background: white;
+    }
+    
+    .table-custom { 
+      border-collapse: separate; 
+      border-spacing: 0;
+      width: max-content; /* สำคัญ: บังคับให้กว้างตามเนื้อหา ไม่โดนบีบ */
+      min-width: 100%;
+    }
+    
+    /* Header Row */
+    .table-custom th { 
+      background-color: var(--schindler-red); 
+      color: white; 
+      text-align: center; 
+      padding: 10px 8px; 
+      font-weight: 600; 
+      font-size: 11px; 
+      position: sticky; 
+      top: 0; 
+      z-index: 20; /* สูงกว่าข้อมูล */
+      border: 0.5px solid #b00015;
+      min-width: 130px; /* ความกว้างช่องคนตรวจ */
+    }
+
+    /* ช่องมุมซ้ายบนสุด (Month/Year) */
+    .table-custom th.sticky-header-date {
+      left: 0;
+      z-index: 30; /* สูงที่สุดเพื่อทับทั้งแนวตั้งและนอน */
+      background-color: #333 !important;
+      width: var(--date-width) !important;
+      min-width: var(--date-width) !important;
+      max-width: var(--date-width) !important;
+      font-size: 10px;
+      line-height: 1.2;
+      border: 0.5px solid #222;
+    }
+
+    /* ตรึงคอลัมน์วันที่ (Sticky Date Column) */
+    .col-date { 
+      position: sticky;
+      left: 0;
+      z-index: 10; 
+      background-color: #f8f9fa !important; 
+      width: var(--date-width) !important;
+      min-width: var(--date-width) !important;
+      max-width: var(--date-width) !important;
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 16px; 
+      color: #333;
+      border-right: 2px solid #ccc !important;
+      border-bottom: 0.5px solid var(--border-color);
+      display: table-cell;
+      vertical-align: middle;
+    }
+    
+    .table-custom td { 
+      border: 0.5px solid var(--border-color); 
+      vertical-align: top; 
+      padding: 5px; 
+      height: 80px;
+      background-color: white;
+    }
+
+    .sunday-row td { background-color: #fff5f5; }
+    .sunday-row td.col-date { background-color: #ffeaea !important; }
+
+    /* Job Card */
+    .job-card { 
+      background: white; 
+      border: 1px solid #ddd; 
+      border-left: 4px solid #999; 
+      padding: 5px 8px; 
+      margin-bottom: 5px; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+      width: 100%;
+    }
+    .job-card.bkk { border-left-color: #222; }
+    .job-card.upc { border-left-color: #E91E63; background: #fff0f5; }
+    .job-card.re { border-left-color: #FFC107; background: #fffdf0; }
+    
+    .job-card .equip-line { font-size: 11px; font-weight: 800; color: #000; margin-bottom: 2px; }
+    .job-card .site-line { font-size: 10px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .status-check { font-size: 10px; color: #28a745; float: right; }
+
+    /* Loading Overlay */
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+    
+    /* Modals */
+    .modal-dialog { margin: 10px auto; max-width: 500px; }
+    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 4px; border: 1px solid #ddd; margin-top: 10px; }
+    .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body>
+
+<div id="globalLoading" class="loading-overlay">
+  <div class="spinner-border text-danger" style="width: 2.5rem; height: 2.5rem;"></div>
+  <div class="mt-3 fw-bold text-secondary" id="loadingText">Connecting...</div>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar fixed-top d-flex justify-content-between">
+  <div class="d-flex align-items-center">
+    <span class="navbar-brand">SAIS schedule <span style="font-weight:300;">digital booking</span></span>
+    <div id="userSection" class="ms-2 d-none d-sm-block"></div>
+  </div>
+  <div>
+    <span id="publicControls">
+        <button class="btn btn-sm btn-outline-dark" onclick="openLoginModal()">Login</button>
+    </span>
+    <span id="privateControls" style="display:none;">
+        <button class="btn btn-sm btn-schindler me-1" onclick="openMenuModal()">Menu</button>
+        <button class="btn btn-sm btn-light" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
+    </span>
+  </div>
+</nav>
+
+<!-- Main Table Wrapper -->
+<div class="board-container">
+  <table class="table-custom" id="mainTable">
+    <thead>
+        <tr id="headerRow">
+            <!-- Header cells injected by JS -->
+        </tr>
+    </thead>
+    <tbody id="boardBody">
+            <!-- Body rows injected by JS -->
+    </tbody>
+  </table>
+</div>
+
+<!-- ================= MODALS ================= -->
+<!-- 1. LOGIN -->
+<div class="modal fade" id="authModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div id="viewLogin">
+        <div class="modal-header bg-dark text-white"><h5 class="modal-title">Login</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-4">
+          <input type="text" id="loginUser" class="form-control mb-2" placeholder="Username">
+          <input type="password" id="loginPass" class="form-control mb-3" placeholder="Password">
+          <button class="btn btn-schindler w-100" onclick="handleLogin()">เข้าสู่ระบบ</button>
+          <div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิกใหม่</a></div>
+        </div>
+      </div>
+      <div id="viewRegister" style="display:none;">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title">Register</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-3">
+          <form id="regForm">
+            <input type="text" id="regUser" class="form-control mb-2" placeholder="Username *" required>
+            <input type="password" id="regPass" class="form-control mb-2" placeholder="Password *" required>
+            <input type="text" id="regName" class="form-control mb-2" placeholder="Full Name *" required>
+            <input type="text" id="regPE" class="form-control mb-2" placeholder="PE Code *" required>
+            <input type="text" id="regDept" class="form-control mb-2" placeholder="Dept *" required>
+            <input type="text" id="regPhone" class="form-control mb-2" placeholder="Phone *" required>
+            <input type="email" id="regEmail" class="form-control mb-2" placeholder="Email (@schindler.com) *" required>
+            <button type="submit" class="btn btn-schindler w-100 mt-2">ยืนยันสมัคร</button>
+          </form>
+          <div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">กลับหน้า Login</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. MAIN MENU -->
+<div class="modal fade" id="menuModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-light"><h5 class="modal-title fw-bold text-danger">เมนูจัดการ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-4">
+        <div class="menu-grid">
+           <div class="menu-btn" onclick="openBookingModal()"><i class="fas fa-plus-circle"></i> จองงานตรวจ</div>
+           <div class="menu-btn" onclick="openHistoryModal()"><i class="fas fa-history"></i> ประวัติ</div>
+           <div class="menu-btn" onclick="openManualModal()"><i class="fas fa-book"></i> คู่มือ</div>
+           <div class="menu-btn" id="btnAdminMenu" style="display:none;" onclick="openAdminPanel()"><i class="fas fa-users-cog"></i> Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. BOOKING FORM -->
+<div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white"><h5 class="modal-title" id="modalTitle">ลงคิวตรวจ</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-4">
+        <form id="bookingForm" class="needs-validation" novalidate>
+          <input type="hidden" id="formRowId" value="">
+          <div class="mb-3"><label class="fw-bold small">Site Project Name *</label><input type="text" class="form-control" id="site" required></div>
+          <div class="row mb-3">
+            <div class="col-6"><label class="fw-bold small">Equip No. *</label><input type="text" class="form-control" id="equipNo" required pattern="[0-9]+"></div>
+            <div class="col-6"><label class="fw-bold small">Lift/ESC/MW No.</label><input type="text" class="form-control" id="unitNo"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4"><label class="fw-bold small">วันที่ตรวจ *</label><input type="date" class="form-control" id="date" required onchange="validateDate(this)"></div>
+            <div class="col-4"><label class="fw-bold small">ประเภทงาน</label><select class="form-select" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div>
+            <div class="col-4"><label class="fw-bold small">Inspector</label><select class="form-select" id="inspectorName" required></select></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-6"><label class="fw-bold small">Foreman</label><input type="text" class="form-control" id="foreman" required></div>
+            <div class="col-6"><label class="fw-bold small">Tel</label><input type="text" class="form-control" id="tel" required></div>
+          </div>
+          <div class="mb-2"><label class="fw-bold small">Map Link</label><input type="text" class="form-control" id="map" placeholder="Link..."></div>
+        </form>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-schindler" onclick="submitBooking()">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. DETAIL MODAL -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-light"><h5 class="modal-title fw-bold text-danger" id="detailSite">Site</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-4" id="detailModalBody"></div>
+      <div class="px-4 pb-3" id="actionArea"></div>
+      <div class="modal-footer bg-light"><small class="text-muted me-auto" id="detailCreatedBy"></small><div id="manageButtons"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. HISTORY & ADMIN -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white"><h5 class="modal-title">ประวัติการใช้งาน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><div class="table-responsive" style="max-height:400px;"><table class="table table-sm table-striped"><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>Action</th><th>Detail</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // 🔴 API URL
+  const API_URL = "https://script.google.com/macros/s/AKfycbxuNlvGX2r1YZFyerx9ykMJYQghdRL5HeRT8TWXQ5aIflmkHU23NOzTw24PNvFx1WF6Ig/exec";
+
+  let currentUser = null;
+  let allJobs = [];
+  let inspectorList = [];
+  let currentJobId = null;
+
+  window.onload = function() { loadData(); };
+
+  async function loadData() {
+    showLoading(true, "Loading SAIS Board...");
+    try {
+      const res = await fetch(`${API_URL}?action=getData`);
+      const data = await res.json();
+      if(data.success) {
+        renderBoard(data);
+      } else {
+        Swal.fire("Backend Error", data.message, "error");
+      }
+    } catch(e) { 
+      Swal.fire("Error", "ไม่สามารถเชื่อมต่อ Server ได้ กรุณาตรวจสอบ Apps Script", "error"); 
+    }
+    showLoading(false);
+  }
+
+  function renderBoard(data) {
+    allJobs = data.jobs;
+    inspectorList = data.inspectors;
+
+    const today = new Date();
+    const monthAbbr = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][today.getMonth()];
+    const currentYear = today.getFullYear();
+
+    // 1. Build Headers
+    const header = document.getElementById('headerRow');
+    header.innerHTML = '';
+    
+    // First Cell (Month/Year Sticky)
+    const monthHeader = document.createElement('th');
+    monthHeader.className = 'sticky-header-date';
+    monthHeader.innerHTML = `${monthAbbr}<br>${currentYear}`;
+    header.appendChild(monthHeader);
+
+    // Inspector Names
+    inspectorList.forEach(name => {
+        const th = document.createElement('th');
+        th.innerText = name.toUpperCase();
+        header.appendChild(th);
+    });
+
+    // Update Select in Form
+    const sel = document.getElementById('inspectorName');
+    if(sel) sel.innerHTML = inspectorList.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    // 2. Build Body
+    const tbody = document.getElementById('boardBody');
+    tbody.innerHTML = '';
+    
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+    for(let i = 1; i <= daysInMonth; i++) {
+        const dateObj = new Date(today.getFullYear(), today.getMonth(), i);
+        const dateStr = dateObj.toISOString().split('T')[0];
+        const isSun = dateObj.getDay() === 0;
+
+        const tr = document.createElement('tr');
+        if(isSun) tr.className = 'sunday-row';
+        
+        // Sticky Date Cell
+        const dateTd = document.createElement('td');
+        dateTd.className = 'col-date';
+        dateTd.innerText = i;
+        tr.appendChild(dateTd);
+        
+        // Inspector Data Cells
+        inspectorList.forEach(name => {
+           const td = document.createElement('td');
+           const filteredJobs = allJobs.filter(j => j.date === dateStr && j.inspectorName === name);
+           
+           filteredJobs.forEach(j => {
+             const cls = j.type==='upcountry'?'upc':(j.type==='reinspect'?'re':'bkk');
+             const check = j.emailStatus ? '<span class="status-check"><i class="fas fa-check-circle"></i></span>' : '';
+             
+             const card = document.createElement('div');
+             card.className = `job-card ${cls}`;
+             card.onclick = () => openDetail(j.rowId);
+             card.innerHTML = `${check}<div class="equip-line">${j.equipNo}</div><div class="site-line">${j.site}</div>`;
+             td.appendChild(card);
+           });
+           
+           tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    }
+  }
+
+  // --- ACTIONS & API ---
+  async function callAPI(action, data = null) {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, data, user: currentUser ? currentUser.username : null })
+      });
+      return await response.json();
+    } catch (e) { return { success: false, message: "Connection lost" }; }
+  }
+
+  async function handleLogin() {
+    const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
+    showLoading(true, "Authenticating...");
+    const res = await callAPI('login', { username: u, password: p });
+    showLoading(false);
+    if(res.success) {
+      currentUser = res.user; updateUI();
+      bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+      openMenuModal();
+    } else Swal.fire("Error", res.message, "error");
+  }
+
+  function updateUI() {
+    const priv = document.getElementById('privateControls'), pub = document.getElementById('publicControls');
+    const uSec = document.getElementById('userSection');
+    if(currentUser) {
+      priv.style.display = 'inline-block'; pub.style.display = 'none';
+      uSec.innerHTML = `<span class="user-pill"><i class="fas fa-user-circle"></i> ${currentUser.fullname}</span>`;
+      document.getElementById('btnAdminMenu').style.display = currentUser.role === 'Admin' ? 'flex' : 'none';
+    } else {
+      priv.style.display = 'none'; pub.style.display = 'inline-block'; uSec.innerHTML = '';
+    }
+  }
+
+  function openDetail(rowId) {
+    const j = allJobs.find(x => x.rowId === rowId); if(!j) return;
+    currentJobId = rowId;
+    document.getElementById('detailSite').innerText = j.site;
+    document.getElementById('detailCreatedBy').innerText = `Created by: ${j.createdBy || '-'}`;
+    
+    let mapHTML = j.map && j.map.length > 5 ? 
+      `<div class="mt-3"><a href="${j.map}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">Open Map Link</a><div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(j.map)}&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe></div></div>` : "";
+    
+    document.getElementById('detailModalBody').innerHTML = `
+      <div class="row g-2 small">
+        <div class="col-6"><strong>Inspector:</strong><br>${j.inspectorName}</div>
+        <div class="col-6"><strong>Equip No:</strong><br>${j.equipNo}</div>
+        <div class="col-6"><strong>Unit No:</strong><br>${j.unitNo || '-'}</div>
+        <div class="col-6"><strong>Date:</strong><br>${j.date}</div>
+        <div class="col-6"><strong>Foreman:</strong><br>${j.foreman}</div>
+        <div class="col-6"><strong>Tel:</strong><br>${j.tel}</div>
+      </div> ${mapHTML}`;
+
+    const area = document.getElementById('actionArea');
+    if(j.emailStatus) area.innerHTML = `<div class="alert alert-success py-2 text-center mt-3 small">เอกสารเรียบร้อย (${j.lastCheck})</div>`;
+    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-3" onclick="confirmDocs()">ยืนยันรับเอกสาร</button>`;
+
+    const btns = document.getElementById('manageButtons');
+    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? 
+      `<button class="btn btn-outline-danger btn-sm me-2" onclick="deleteJob()">Delete</button><button class="btn btn-dark btn-sm" onclick="switchToEdit()">Edit</button>` : "";
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+  }
+
+  // --- Utils ---
+  function showLoading(s, m) { document.getElementById('globalLoading').style.display=s?'flex':'none'; document.getElementById('loadingText').innerText=m; }
+  function toggleAuthView(v) { document.getElementById('viewLogin').style.display=v==='login'?'block':'none'; document.getElementById('viewRegister').style.display=v==='register'?'block':'none'; }
+  function handleLogout() { currentUser = null; updateUI(); Swal.fire("Logged out", "", "info"); }
+  function openLoginModal() { new bootstrap.Modal(document.getElementById('authModal')).show(); toggleAuthView('login'); }
+  function openMenuModal() { new bootstrap.Modal(document.getElementById('menuModal')).show(); }
+  function openManualModal() { new bootstrap.Modal(document.getElementById('manualModal')).show(); }
+  function openBookingModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('menuModal')).hide(); document.getElementById('bookingForm').reset(); document.getElementById('formRowId').value=""; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
+  async function confirmDocs() { showLoading(true, "Updating..."); const res = await callAPI('confirmDocs', { rowId: currentJobId }); showLoading(false); if(res.success) { bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); } }
+  async function deleteJob() { if(!confirm("ลบงานนี้?")) return; showLoading(true, "Deleting..."); const res = await callAPI('deleteBooking', { rowId: currentJobId }); showLoading(false); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadData(); }
+  function validateDate(i) { const d=new Date(i.value),t=new Date(); d.setHours(0,0,0,0); t.setHours(0,0,0,0); const diff=(d-t)/864e5; i.setCustomValidity(diff<3||diff>60?'Invalid':''); }
+</script>
 </body>
 </html>
+
