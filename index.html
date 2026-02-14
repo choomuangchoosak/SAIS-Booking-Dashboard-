@@ -12,64 +12,65 @@
   <style>
     :root { 
       --schindler-red: #D0021B; 
-      --date-col-width: 45px; /* ลดความกว้างวันที่ลงอีก */
-      --insp-col-width: 85px; /* ลดความกว้างคอลัมน์คนตรวจลงอย่างมาก */
+      --date-w: 42px; 
+      --insp-w: 78px; /* บีบคอลัมน์คนตรวจให้เล็กที่สุด */
     }
     
-    body { font-family: 'Sarabun', sans-serif; background-color: #fff; margin: 0; padding: 0; overflow: hidden; }
+    body { font-family: 'Sarabun', sans-serif; background-color: #fff; margin: 0; padding: 0; overflow: hidden; font-size: 10px; }
 
     /* Navbar */
-    .navbar { background-color: white !important; border-bottom: 2.5px solid var(--schindler-red); height: 48px; padding: 0 10px; z-index: 1060; }
-    .navbar-brand { color: var(--schindler-red) !important; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .navbar { background-color: white !important; border-bottom: 2.5px solid var(--schindler-red); height: 45px; padding: 0 10px; z-index: 1060; }
+    .navbar-brand { color: var(--schindler-red) !important; font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.2px; }
 
-    /* Table Container */
-    .board-container { position: absolute; top: 48px; left: 0; right: 0; bottom: 0; overflow: auto; background: white; -webkit-overflow-scrolling: touch; }
+    /* Board Container */
+    .board-container { position: absolute; top: 45px; left: 0; right: 0; bottom: 0; overflow: auto; background: white; -webkit-overflow-scrolling: touch; }
     .table-main { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: fixed; }
     
     /* Headers */
     .table-main th { 
-      background-color: var(--schindler-red); color: white; text-align: center; padding: 8px 2px; font-weight: 700; font-size: 9px;
-      position: sticky; top: 0; z-index: 20; border: 0.5px solid #b00015; width: var(--insp-col-width);
-      white-space: normal; word-break: break-word; line-height: 1;
+      background-color: var(--schindler-red); color: white; text-align: center; padding: 4px 1px; font-weight: 700; font-size: 8.5px;
+      position: sticky; top: 0; z-index: 20; border: 0.5px solid #b00015; width: var(--insp-w);
+      white-space: normal; line-height: 1; word-break: break-all;
     }
 
     .table-main th.corner-header {
       left: 0; z-index: 40; background-color: #222 !important;
-      width: var(--date-col-width) !important; min-width: var(--date-col-width) !important; max-width: var(--date-col-width) !important;
-      font-size: 9px; line-height: 1; border: 1px solid #111;
+      width: var(--date-w) !important; min-width: var(--date-w);
+      font-size: 8px; line-height: 1.1; border: 1px solid #111;
     }
 
+    /* Sticky Date */
     .col-date { 
-      position: sticky; left: 0; z-index: 10; background-color: #f0f0f0 !important;
-      width: var(--date-col-width) !important; min-width: var(--date-col-width) !important; max-width: var(--date-col-width) !important;
-      text-align: center; font-weight: 800; font-size: 14px; color: #333;
-      border-right: 2px solid #888 !important; border-bottom: 0.5px solid #ddd !important;
+      position: sticky; left: 0; z-index: 10; background-color: #f2f2f2 !important;
+      width: var(--date-w) !important; min-width: var(--date-w);
+      text-align: center; font-weight: 800; font-size: 13px; color: #333;
+      border-right: 2px solid #999 !important; border-bottom: 0.5px solid #ddd !important;
       vertical-align: middle;
     }
     
-    .table-main td { border: 0.5px solid #eee; vertical-align: top; padding: 2px; height: 75px; width: var(--insp-col-width); overflow: hidden; }
-    .sunday-row td { background-color: #fff9f9; }
+    .table-main td { border: 0.5px solid #eee; vertical-align: top; padding: 1.5px; height: 70px; width: var(--insp-w); overflow: hidden; }
+    .sunday-row td { background-color: #fff8f8; }
     .sunday-row td.col-date { background-color: #ffeded !important; }
 
-    /* Card Design - บีบตัวอักษรให้เล็กที่สุดแต่ยังอ่านออก */
+    /* Ultra Small Cards */
     .job-card { 
-      background: white; border: 1px solid #ddd; border-left: 3px solid #999; 
-      padding: 3px 4px; margin-bottom: 3px; border-radius: 3px; cursor: pointer; 
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05); width: 100%;
+      background: white; border: 0.5px solid #ddd; border-left: 2.5px solid #999; 
+      padding: 2px 3px; margin-bottom: 2px; border-radius: 2px; cursor: pointer; 
+      box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 100%;
     }
     .job-card.bkk { border-left-color: #222; }
     .job-card.upc { border-left-color: #E91E63; background: #fff2f7; }
     .job-card.re { border-left-color: #FFC107; background: #fffef2; }
     
-    .job-card .eq-line { font-size: 9px; font-weight: 800; color: #000; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
-    .job-card .site-line { font-size: 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1; margin-top: 1px; }
+    .eq-line { font-size: 8.5px; font-weight: 800; color: #000; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1; }
+    .site-line { font-size: 7.5px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1; margin-top: 1px; }
 
     /* Modals & UI */
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .menu-item { height: 80px; border: 1px solid #ddd; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; font-weight: bold; cursor: pointer; font-size: 12px; }
-    .menu-item i { font-size: 1.5rem; margin-bottom: 4px; color: var(--schindler-red); }
-    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
+    .menu-item { height: 75px; border: 1px solid #ddd; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; font-weight: bold; cursor: pointer; font-size: 11px; }
+    .menu-item i { font-size: 1.4rem; margin-bottom: 3px; color: var(--schindler-red); }
+    .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; }
     .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
   </style>
 </head>
@@ -77,16 +78,16 @@
 
 <div id="globalLoading" class="loading-overlay">
   <div class="spinner-border text-danger" style="width: 2rem; height: 2rem;"></div>
-  <div class="mt-3 fw-bold text-secondary small">FETCHING...</div>
+  <div class="mt-3 fw-bold text-secondary small">FETCHING SAIS...</div>
 </div>
 
 <nav class="navbar fixed-top d-flex justify-content-between shadow-sm">
     <span class="navbar-brand">SAIS SCHEDULE <span style="font-weight:300;">DIGITAL BOOKING</span></span>
     <div>
-      <span id="publicArea"><button class="btn btn-sm btn-outline-dark py-0" style="font-size:10px;" onclick="openLoginModal()">Login</button></span>
-      <span id="privateArea" style="display:none;">
-          <button class="btn btn-sm btn-schindler me-1 py-0" style="font-size:10px;" onclick="openMenuModal()">Menu</button>
-          <button class="btn btn-sm btn-light py-0" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
+      <span id="pubArea"><button class="btn btn-sm btn-outline-dark py-0 px-2" style="font-size:10px; height:24px;" onclick="openLoginModal()">Login</button></span>
+      <span id="privArea" style="display:none;">
+          <button class="btn btn-sm btn-schindler me-1 py-0 px-2" style="font-size:10px; height:24px;" onclick="openMenuModal()">Menu</button>
+          <button class="btn btn-sm btn-light py-0 px-1" style="height:24px;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
       </span>
     </div>
 </nav>
@@ -99,36 +100,34 @@
 </div>
 
 <!-- ================= MODALS ================= -->
-<!-- Login -->
 <div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content">
-  <div id="viewLogin"><div class="modal-header bg-dark text-white p-2"><h6 class="modal-title">Login</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><input type="text" id="loginUser" class="form-control mb-2 form-control-sm" placeholder="Username"><input type="password" id="loginPass" class="form-control mb-3 form-control-sm" placeholder="Password"><button class="btn btn-schindler btn-sm w-100" onclick="handleLogin()">เข้าสู่ระบบ</button><div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิก</a></div></div></div>
-  <div id="viewRegister" style="display:none;"><div class="modal-header bg-danger text-white p-2"><h6 class="modal-title">Register</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="regForm"><input type="text" id="regUser" class="form-control mb-1 form-control-sm" placeholder="Username" required><input type="password" id="regPass" class="form-control mb-1 form-control-sm" placeholder="Password" required><input type="text" id="regName" class="form-control mb-1 form-control-sm" placeholder="Full Name" required><input type="text" id="regPE" class="form-control mb-1 form-control-sm" placeholder="PE Code" required><input type="text" id="regDept" class="form-control mb-1 form-control-sm" placeholder="Dept" required><input type="text" id="regPhone" class="form-control mb-1 form-control-sm" placeholder="Phone" required><input type="email" id="regEmail" class="form-control mb-2 form-control-sm" placeholder="Email (@schindler.com)" required><button type="submit" class="btn btn-schindler btn-sm w-100">ยืนยัน</button></form><div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">Back</a></div></div></div>
+  <div id="viewLogin"><div class="modal-header bg-dark text-white p-2"><h6 class="modal-title">Login</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><input type="text" id="loginUser" class="form-control mb-2 form-control-sm" placeholder="Username"><input type="password" id="loginPass" class="form-control mb-3 form-control-sm" placeholder="Password"><button class="btn btn-schindler btn-sm w-100" onclick="handleLogin()">Login</button><div class="text-center mt-3 small"><a href="#" onclick="toggleAuthView('register')">สมัครสมาชิก</a></div></div></div>
+  <div id="viewRegister" style="display:none;"><div class="modal-header bg-danger text-white p-2"><h6>Register</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="regForm"><input type="text" id="regUser" class="form-control mb-1 form-control-sm" placeholder="Username" required><input type="password" id="regPass" class="form-control mb-1 form-control-sm" placeholder="Password" required><input type="text" id="regName" class="form-control mb-1 form-control-sm" placeholder="Full Name" required><input type="text" id="regPE" class="form-control mb-1 form-control-sm" placeholder="PE Code" required><input type="text" id="regDept" class="form-control mb-1 form-control-sm" placeholder="Dept" required><input type="email" id="regEmail" class="form-control mb-2 form-control-sm" placeholder="Email (@schindler.com)" required><button type="submit" class="btn btn-schindler btn-sm w-100">Submit</button></form><div class="text-center mt-2 small"><a href="#" onclick="toggleAuthView('login')">Back</a></div></div></div>
 </div></div></div>
 
-<!-- Menu -->
 <div class="modal fade" id="menuModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header p-2"><h6 class="modal-title fw-bold text-danger">Main Menu</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="menu-grid">
   <div class="menu-item" onclick="openBookingModal()"><i class="fas fa-plus-circle"></i>จองงาน</div><div class="menu-item" onclick="openHistoryModal()"><i class="fas fa-history"></i>ประวัติ</div><div class="menu-item" onclick="openManualModal()"><i class="fas fa-book-open"></i>คู่มือ</div><div class="menu-item" id="btnAdminMenu" style="display:none;" onclick="openAdminPanel()"><i class="fas fa-users-cog"></i>Admin</div>
 </div></div></div></div></div>
 
-<!-- Booking -->
 <div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white p-2"><h6>ลงคิวตรวจ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="bookingForm" class="needs-validation" novalidate><input type="hidden" id="formRowId">
-  <div class="mb-2"><label class="fw-bold" style="font-size:11px;">Site Name *</label><input type="text" class="form-control form-control-sm" id="site" required></div>
-  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:11px;">Equip No. *</label><input type="text" class="form-control form-control-sm" id="equipNo" required pattern="[0-9]+"></div><div class="col-6"><label class="fw-bold" style="font-size:11px;">Unit No.</label><input type="text" class="form-control form-control-sm" id="unitNo"></div></div>
-  <div class="row mb-2"><div class="col-4"><label class="fw-bold" style="font-size:11px;">วันที่ตรวจ *</label><input type="date" class="form-control form-control-sm" id="date" required onchange="validateDate(this)"></div><div class="col-4"><label class="fw-bold" style="font-size:11px;">ประเภท</label><select class="form-select form-select-sm" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div><div class="col-4"><label class="fw-bold" style="font-size:11px;">Inspector</label><select class="form-select form-select-sm" id="inspectorName" required></select></div></div>
-  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:11px;">Foreman</label><input type="text" class="form-control form-control-sm" id="foreman" required></div><div class="col-6"><label class="fw-bold" style="font-size:11px;">เบอร์โทร</label><input type="text" class="form-control form-control-sm" id="tel" required></div></div>
-  <div class="mb-1"><label class="fw-bold" style="font-size:11px;">Map Link</label><input type="text" class="form-control form-control-sm" id="map" placeholder="https://..."></div>
+  <div class="mb-2"><label class="fw-bold" style="font-size:10px;">Site Project Name *</label><input type="text" class="form-control form-control-sm" id="site" required></div>
+  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:10px;">Equip No. *</label><input type="text" class="form-control form-control-sm" id="equipNo" required pattern="[0-9]+"></div><div class="col-6"><label class="fw-bold" style="font-size:10px;">Unit No.</label><input type="text" class="form-control form-control-sm" id="unitNo"></div></div>
+  <div class="row mb-2"><div class="col-4"><label class="fw-bold" style="font-size:10px;">วันที่นัด *</label><input type="date" class="form-control form-control-sm" id="date" required onchange="validateDate(this)"></div><div class="col-4"><label class="fw-bold" style="font-size:10px;">ประเภท</label><select class="form-select form-select-sm" id="type"><option>กรุงเทพ/ปริมณฑล</option><option>ต่างจังหวัด</option><option>Re-inspection</option></select></div><div class="col-4"><label class="fw-bold" style="font-size:10px;">Inspector</label><select class="form-select form-select-sm" id="inspectorName" required></select></div></div>
+  <div class="row mb-2"><div class="col-6"><label class="fw-bold" style="font-size:10px;">Foreman</label><input type="text" class="form-control form-control-sm" id="foreman" required></div><div class="col-6"><label class="fw-bold" style="font-size:10px;">เบอร์โทร</label><input type="text" class="form-control form-control-sm" id="tel" required></div></div>
+  <div class="mb-1"><label class="fw-bold" style="font-size:10px;">Map Link</label><input type="text" class="form-control form-control-sm" id="map" placeholder="https://..."></div>
 </form></div><div class="modal-footer p-2"><button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-sm btn-schindler" onclick="submitBooking()">SAVE</button></div></div></div></div>
 
-<!-- Detail -->
-<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light p-2"><h6 class="modal-title fw-bold text-danger" id="detailSite">Site</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" id="detailModalBody"></div><div class="px-3 pb-3" id="actionArea"></div><div class="modal-footer bg-light p-2"><small class="text-muted me-auto" id="detailCreatedBy" style="font-size:10px;"></small><div id="manageButtons"></div></div></div></div></div>
+<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light p-2"><h6 class="modal-title fw-bold text-danger" id="detailSite">Site</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" id="detailModalBody"></div><div class="px-3 pb-3" id="actionArea"></div><div class="modal-footer bg-light p-2"><small class="text-muted me-auto" id="detailCreatedBy" style="font-size:9px;"></small><div id="manageButtons"></div></div></div></div></div>
+
+<div class="modal fade" id="manualModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white p-2"><h6>คู่มือ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><h6>การจองงาน</h6><p>จองล่วงหน้า 3-60 วัน ห้ามเลขซ้ำ</p><h6>แจ้งเตือนงานใหม่</h6><p>ระบบจะเด้ง Pop-up สรุปงานจองใหม่ใน 24 ชม. ทันทีที่เข้าเว็บ</p></div></div></div></div>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // 🔴 API URL ตัวล่าสุดของคุณ
-  const API_URL = "https://script.google.com/macros/s/AKfycbzA12AZgUoP4Ayw0NB4KLwd0a7htVC8mpoGkeWpyZV8fIrBoMRrwf8JF5We9IoNdnbi/exec";
+  // 🔴 API URL จาก Google Apps Script ตัวล่าสุดของคุณ
+  const API_URL = "https://script.google.com/macros/s/AKfycbx2bAsOCKa0ftxmmC-M-_7Gt661p3q8y22QRDgpVvVEqIdzyr-F2AU_xoQ9yC1NOLK-/exec";
 
   let currentUser = null;
   let allJobs = [];
@@ -138,36 +137,37 @@
   window.onload = loadData;
 
   async function loadData() {
-    showLoading(true, "FETCHING...");
+    showLoading(true);
     try {
+      // ใช้ GET เพื่อความรวดเร็วและเลี่ยง Redirect Issues
       const res = await fetch(`${API_URL}?action=getData`);
       const data = await res.json();
       if(data.success) {
         renderBoard(data);
-        checkNewJobsPopup(data.jobs); // แสดง Pop-up งานใหม่
-      } else { Swal.fire("Backend Error", data.message, "error"); }
-    } catch(e) { Swal.fire("Error", "Server Connection Failed", "error"); }
+        checkNewJobsAlert(data.jobs); // เรียกระบบแจ้งเตือนงานใหม่
+      } else { Swal.fire("Error", data.message, "error"); }
+    } catch(e) { Swal.fire("Error", "Server Connection Failed. กรุณารีเฟรชหน้าจอใหม่อีกครั้ง", "error"); }
     showLoading(false);
   }
 
-  // --- ระบบแจ้งเตือน Pop-up งานใหม่ ---
-  function checkNewJobsPopup(jobs) {
+  // ระบบแจ้งเตือนงานใหม่ (ภายใน 24 ชม.)
+  function checkNewJobsAlert(jobs) {
     const now = new Date().getTime();
     const oneDay = 24 * 60 * 60 * 1000;
-    const newJobs = jobs.filter(j => (now - j.createdTime) < oneDay);
+    const newItems = jobs.filter(j => (now - j.createdTime) < oneDay);
 
-    if (newJobs.length > 0) {
-      let list = '<div class="text-start small mt-2" style="font-size:11px;">';
-      newJobs.forEach(j => {
-        list += `<div class="mb-2 border-bottom pb-1 text-dark">📍 <b>${j.site}</b><br>⚙️ Equip: ${j.equipNo} | 👷 ${j.inspectorName}</div>`;
+    if (newItems.length > 0) {
+      let listHtml = '<div class="text-start" style="font-size:10px; max-height:200px; overflow-y:auto;">';
+      newItems.forEach(j => {
+        listHtml += `<div class="mb-1 border-bottom pb-1">📍 <b>${j.site}</b><br>⚙️ Equip: ${j.equipNo} | 👷 ${j.inspectorName}</div>`;
       });
-      list += '</div>';
+      listHtml += '</div>';
 
       Swal.fire({
-        title: `📢 พบงานจองใหม่ (${newJobs.length} รายการ)`,
-        html: `สรุปรายการจองเข้ามาใน 24 ชม. ล่าสุด:${list}`,
+        title: `📢 พบงานใหม่ (${newItems.length} รายการ)`,
+        html: `งานที่มีการจองเข้ามาภายใน 24 ชม. ล่าสุด:${listHtml}`,
         icon: 'info',
-        confirmButtonText: 'ตกลง',
+        confirmButtonText: 'รับทราบ',
         confirmButtonColor: '#D0021B'
       });
     }
@@ -179,12 +179,12 @@
 
     const now = new Date();
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    const monthStr = months[now.getMonth()];
-    const yearStr = now.getFullYear();
+    const mStr = months[now.getMonth()];
+    const yStr = now.getFullYear();
 
-    // 1. Header (Dynamic & Compact)
+    // 1. Header (Dynamic Inspectors)
     const header = document.getElementById('headerRow');
-    header.innerHTML = `<th class="corner-header">${monthStr}<br>${yearStr}</th>`;
+    header.innerHTML = `<th class="corner-header">${mStr}<br>${yStr}</th>`;
     inspectorList.forEach(n => {
         const th = document.createElement('th'); th.innerText = n.toUpperCase(); header.appendChild(th);
     });
@@ -195,11 +195,11 @@
     // 2. Body
     const tbody = document.getElementById('boardBody');
     tbody.innerHTML = '';
-    const daysCount = new Date(yearStr, now.getMonth() + 1, 0).getDate();
+    const lastDay = new Date(yStr, now.getMonth() + 1, 0).getDate();
 
-    for(let d = 1; d <= daysCount; d++) {
-        const dateObj = new Date(yearStr, now.getMonth(), d);
-        const iso = dateObj.toISOString().split('T')[0];
+    for(let d = 1; d <= lastDay; d++) {
+        const dISO = `${yStr}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dateObj = new Date(yStr, now.getMonth(), d);
         const tr = document.createElement('tr');
         if(dateObj.getDay() === 0) tr.className = 'sunday-row';
 
@@ -208,7 +208,7 @@
 
         inspectorList.forEach(name => {
             const tdJob = document.createElement('td');
-            const filtered = allJobs.filter(j => j.date === iso && j.inspectorName === name);
+            const filtered = allJobs.filter(j => j.date === dISO && j.inspectorName === name);
             filtered.forEach(j => {
                 const cls = j.type==='upcountry'?'upc':(j.type==='reinspect'?'re':'bkk');
                 const card = document.createElement('div');
@@ -240,10 +240,10 @@
 
   function updateUI() {
     if(currentUser) {
-      document.getElementById('privateArea').style.display = 'inline-block'; document.getElementById('publicArea').style.display = 'none';
-      document.getElementById('userSection').innerHTML = `<small class="badge bg-light text-dark border">${currentUser.fullname}</small>`;
+      document.getElementById('privArea').style.display = 'inline-block'; document.getElementById('pubArea').style.display = 'none';
+      document.getElementById('btnAdminMenu').style.display = (currentUser.role === 'Admin') ? 'flex' : 'none';
     } else {
-      document.getElementById('privateArea').style.display = 'none'; document.getElementById('publicArea').style.display = 'inline-block';
+      document.getElementById('privArea').style.display = 'none'; document.getElementById('pubArea').style.display = 'inline-block';
     }
   }
 
@@ -251,14 +251,14 @@
     const j = allJobs.find(x => x.rowId === rowId); if(!j) return;
     currentJobId = rowId;
     document.getElementById('detailSite').innerText = j.site;
-    document.getElementById('detailCreatedBy').innerText = `Created by: ${j.createdBy || '-'}`;
+    document.getElementById('detailCreatedBy').innerText = `By: ${j.createdBy || '-'}`;
     let mapHTML = j.map && j.map.length > 5 ? `<div class="mt-2"><div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(j.map)}&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe></div></div>` : "";
-    document.getElementById('detailModalBody').innerHTML = `<div class="row g-2 small" style="font-size:12px;"><div class="col-6"><strong>Insp:</strong><br>${j.inspectorName}</div><div class="col-6"><strong>Equip:</strong><br>${j.equipNo}</div><div class="col-6"><strong>Unit:</strong><br>${j.unitNo || '-'}</div><div class="col-6"><strong>Date:</strong><br>${j.date}</div><div class="col-6"><strong>Foreman:</strong><br>${j.foreman}</div><div class="col-6"><strong>Tel:</strong><br>${j.tel}</div></div> ${mapHTML}`;
+    document.getElementById('detailModalBody').innerHTML = `<div class="row g-1 small" style="font-size:11px;"><div class="col-6"><strong>Insp:</strong> ${j.inspectorName}</div><div class="col-6"><strong>Equip:</strong> ${j.equipNo}</div><div class="col-6"><strong>Unit:</strong> ${j.unitNo || '-'}</div><div class="col-6"><strong>Tel:</strong> ${j.tel}</div></div> ${mapHTML}`;
     const area = document.getElementById('actionArea');
     if(j.emailStatus) area.innerHTML = `<div class="alert alert-success py-1 text-center mt-2 small">RECEIVED</div>`;
-    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-2" onclick="confirmDocs()">ยืนยันรับเอกสาร</button>`;
+    else area.innerHTML = `<button class="btn btn-success btn-sm w-100 mt-2" onclick="confirmDocs()">รับเอกสาร</button>`;
     const btns = document.getElementById('manageButtons');
-    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? `<button class="btn btn-outline-danger btn-sm me-1 py-0" onclick="deleteJob()">Delete</button><button class="btn btn-dark btn-sm py-0" onclick="switchToEdit()">Edit</button>` : "";
+    btns.innerHTML = (currentUser && (currentUser.role === 'Admin' || currentUser.username === j.createdBy)) ? `<button class="btn btn-outline-danger btn-sm me-1 py-0 px-2" onclick="deleteJob()">Del</button><button class="btn btn-dark btn-sm py-0 px-2" onclick="switchToEdit()">Edit</button>` : "";
     new bootstrap.Modal(document.getElementById('detailModal')).show();
   }
 
@@ -279,8 +279,8 @@
   function openManualModal() { new bootstrap.Modal(document.getElementById('manualModal')).show(); }
   function openBookingModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('menuModal')).hide(); document.getElementById('bookingForm').reset(); document.getElementById('formRowId').value=""; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
   function validateDate(i) { const d=new Date(i.value),t=new Date(); d.setHours(0,0,0,0); t.setHours(0,0,0,0); const diff=(d-t)/864e5; i.setCustomValidity((diff<3||diff>60)?'Invalid':''); }
-  function showLoading(s, m) { document.getElementById('globalLoading').style.display=s?'flex':'none'; if(m) document.getElementById('loadingText').innerText=m; }
-  async function openHistoryModal() { const res = await callAPI('getLogs'); if(res.success) document.getElementById('historyBody').innerHTML = res.logs.map(l => `<tr style="font-size:10px;"><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td><td>${l.detail}</td></tr>`).join(''); new bootstrap.Modal(document.getElementById('historyModal')).show(); }
+  function showLoading(s) { document.getElementById('globalLoading').style.display=s?'flex':'none'; }
+  async function openHistoryModal() { const res = await callAPI('getLogs'); if(res.success) document.getElementById('historyBody').innerHTML = res.logs.map(l => `<tr style="font-size:10px;"><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td></tr>`).join(''); new bootstrap.Modal(document.getElementById('historyModal')).show(); }
 </script>
 </body>
 </html>
