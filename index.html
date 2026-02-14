@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SAIS Booking (Compact)</title>
+    <title>SAIS Schedule digital booking</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -17,32 +17,72 @@
         body { 
             font-family: 'IBM Plex Sans Thai', sans-serif; 
             background-color: #f8fafc; 
-            overscroll-behavior-y: none;
-            font-size: 12px;
+            overscroll-behavior: none; /* ป้องกันการดึงขอบจอ */
+            height: 100vh;
+            overflow: hidden; /* ห้ามเลื่อนทั้งหน้า */
+            font-size: 11px;
         }
 
-        /* Scrollbar ซ่อนให้สวยงาม */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        /* --- Compact Grid System --- */
+        .fit-screen-container {
+            height: calc(100vh - 50px); /* ความสูงเต็มจอ ลบ Header */
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* Grid System */
-        .compact-grid {
+        .compact-header-row {
+            flex: 0 0 auto; /* ความสูงคงที่สำหรับหัวตาราง */
+        }
+
+        .compact-body {
+            flex: 1 1 auto; /* ยืดหยุ่นเต็มพื้นที่ที่เหลือ */
             display: grid;
-            /* วันที่ 45px, ที่เหลือแบ่งเท่าๆ กัน (คนละ min 75px) */
-            /* จะถูกกำหนดค่า Dynamic ใน React */
+            /* แบ่งเป็น 16 แถวเท่าๆ กัน (15 วัน + เผื่อเหลือ) */
+            grid-template-rows: repeat(15, 1fr); 
         }
 
-        /* Sticky Configs */
-        .sticky-header { position: sticky; top: 0; z-index: 40; background-color: #1e293b; color: white; }
-        .sticky-left { position: sticky; left: 0; z-index: 30; background-color: white; border-right: 1px solid #e2e8f0; }
-        .sticky-corner { position: sticky; top: 0; left: 0; z-index: 50; background-color: #0f172a; border-right: 1px solid #334155; }
+        .grid-row {
+            display: flex;
+            border-bottom: 1px solid #f1f5f9;
+        }
 
+        /* Cell Styling */
+        .cell-date {
+            width: 35px; /* ความกว้างคงที่สำหรับวันที่ */
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .cell-slot {
+            flex: 1; /* แบ่งพื้นที่ที่เหลือเท่าๆ กัน */
+            border-right: 1px solid #f1f5f9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px;
+        }
+        
         .schindler-gradient { background: linear-gradient(135deg, #D0021B 0%, #a50215 100%); }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         /* ป้องกัน Zoom บน iOS */
         input, select { font-size: 16px !important; }
+
+        /* การตัดคำสำหรับจอเล็ก */
+        .truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
@@ -62,7 +102,7 @@
             const [modal, setModal] = useState(null); 
             const [toast, setToast] = useState(null);
             
-            // State สำหรับควบคุมเวลา
+            // State สำหรับเวลาและช่วง (Period)
             const [currentDate, setCurrentDate] = useState(new Date());
             const [period, setPeriod] = useState(0); // 0 = วันที่ 1-15, 1 = วันที่ 16-สิ้นเดือน
 
@@ -100,31 +140,59 @@
                 setLoading(false); return false;
             };
 
-            const changeMonth = (offset) => {
-                const newDate = new Date(currentDate);
-                newDate.setMonth(newDate.getMonth() + offset);
-                setCurrentDate(newDate);
-                setPeriod(0); // Reset กลับไปครึ่งเดือนแรกเสมอเมื่อเปลี่ยนเดือน
+            // Logic เปลี่ยนช่วงเวลา (Previous / Next)
+            const togglePeriod = (direction) => {
+                if (direction === 'next') {
+                    if (period === 0) {
+                        setPeriod(1); // ไปครึ่งหลัง
+                    } else {
+                        // ข้ามไปเดือนถัดไป ครึ่งแรก
+                        const newDate = new Date(currentDate);
+                        newDate.setMonth(newDate.getMonth() + 1);
+                        setCurrentDate(newDate);
+                        setPeriod(0);
+                    }
+                } else {
+                    if (period === 1) {
+                        setPeriod(0); // กลับมาครึ่งแรก
+                    } else {
+                        // ย้อนไปเดือนก่อนหน้า ครึ่งหลัง
+                        const newDate = new Date(currentDate);
+                        newDate.setMonth(newDate.getMonth() - 1);
+                        setCurrentDate(newDate);
+                        setPeriod(1); // หรือจะให้เริ่มที่ 0 ก็ได้แล้วแต่ Logic
+                    }
+                }
             };
 
-            // สร้าง Array วันที่ตามช่วงที่เลือก (15 วัน)
             const daysInView = useMemo(() => {
                 const year = currentDate.getFullYear();
                 const month = currentDate.getMonth();
                 const lastDay = new Date(year, month + 1, 0).getDate();
                 
                 const startDay = period === 0 ? 1 : 16;
+                // ถ้าเป็นครึ่งหลัง ให้แสดงถึงวันสุดท้าย หรือถ้ามี 31 วันก็จบที่ 31 (Grid จะยืดหยุ่นเอง)
                 const endDay = period === 0 ? 15 : lastDay;
 
                 const days = [];
-                for (let d = startDay; d <= endDay; d++) {
-                    const date = new Date(year, month, d);
-                    days.push({
-                        full: date.toISOString().split('T')[0],
-                        day: d,
-                        weekday: date.toLocaleDateString('th-TH', { weekday: 'short' }),
-                        isWeekend: date.getDay() === 0 || date.getDay() === 6
-                    });
+                // สร้าง Loop ให้ครบ 15 ช่องเสมอ (หรือ 16) เพื่อความสวยงามของ Grid
+                const limit = period === 0 ? 15 : (lastDay - 15); 
+                
+                for (let i = 0; i < (period === 0 ? 15 : 16); i++) {
+                    const currentDayVal = startDay + i;
+                    if (currentDayVal <= endDay) {
+                        const date = new Date(year, month, currentDayVal);
+                        days.push({
+                            full: date.toISOString().split('T')[0],
+                            day: currentDayVal,
+                            weekday: date.toLocaleDateString('th-TH', { weekday: 'short' }),
+                            isWeekend: date.getDay() === 0 || date.getDay() === 6,
+                            isEmpty: false
+                        });
+                    } else {
+                        // ช่องว่างถ้าเดือนนั้นวันไม่ครบ (เช่น ก.พ.)
+                        days.push({ isEmpty: true, day: '', full: `empty-${i}` });
+                    }
                 }
                 return days;
             }, [currentDate, period]);
@@ -132,154 +200,156 @@
             // --- Components ---
 
             const LoginView = () => (
-                <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-                    <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 animate-slide-up">
-                        <div className="text-center mb-6">
-                            <h2 className="text-xl font-bold text-slate-800">SAIS Login</h2>
+                <div className="fixed inset-0 z-50 bg-white flex items-center justify-center p-6">
+                    <div className="w-full max-w-sm">
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-bold text-slate-800">SAIS Login</h2>
+                            <p className="text-slate-500">ระบบจองคิวตรวจงาน</p>
                         </div>
                         <form onSubmit={(e) => {
                             e.preventDefault();
+                            if (db.users.length === 0) {
+                                showToast('กำลังโหลดข้อมูล... กรุณารอสักครู่', 'error');
+                                return;
+                            }
                             const fd = new FormData(e.target);
-                            const u = db.users.find(x => x.username === fd.get('username') && x.password === fd.get('password'));
+                            const username = fd.get('username').trim();
+                            const password = fd.get('password').trim();
+                            
+                            const u = db.users.find(x => x.username === username && String(x.password) === password);
+                            
                             if (u) {
                                 setUser(u);
                                 localStorage.setItem('sais_user', JSON.stringify(u));
                                 setView('calendar');
-                            } else { showToast('รหัสผ่านผิด', 'error'); }
+                                showToast('เข้าสู่ระบบสำเร็จ');
+                            } else { 
+                                showToast('รหัสผ่านไม่ถูกต้อง', 'error'); 
+                            }
                         }} className="space-y-4">
                             <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
                             <input name="password" type="password" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
-                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl">เข้าสู่ระบบ</button>
+                      v9    <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">LOGIN</button>
                         </form>
                     </div>
                 </div>
             );
 
             const CalendarView = () => {
-                // คำนวณความกว้างตาราง: วันที่ 45px + (จำนวนคน * 85px)
-                const inspectorCount = db.inspectors.length || 1;
-                const gridStyle = {
-                    gridTemplateColumns: `45px repeat(${inspectorCount}, minmax(85px, 1fr))`
-                };
-
                 return (
-                    <div className="flex flex-col h-full bg-white">
-                        {/* 1. Header Controls (Sticky) */}
-                        <div className="bg-white px-2 py-2 shadow-sm z-20 flex flex-col gap-2 border-b">
-                            <div className="flex justify-between items-center">
-                                <button onClick={() => changeMonth(-1)} className="p-1.5 bg-slate-100 rounded-lg"><i data-lucide="chevron-left" className="w-4 h-4"></i></button>
-                                <h2 className="text-sm font-bold text-slate-800">
+                    <div className="fit-screen-container bg-white">
+                        {/* 1. Sub Header: Month & Navigation */}
+                        <div className="compact-header-row bg-slate-50 px-2 py-1.5 flex justify-between items-center border-b shadow-sm z-20">
+                            <button onClick={() => togglePeriod('prev')} className="p-1 bg-white rounded border shadow-sm active:scale-95">
+                                <i data-lucide="chevron-left" className="w-4 h-4 text-slate-600"></i>
+                            </button>
+                            
+                            <div className="text-center">
+                                <h2 className="text-xs font-bold text-slate-800">
                                     {currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
                                 </h2>
-                                <button onClick={() => changeMonth(1)} className="p-1.5 bg-slate-100 rounded-lg"><i data-lucide="chevron-right" className="w-4 h-4"></i></button>
+                                <span className="text-[10px] text-red-600 font-bold bg-red-50 px-2 rounded-full border border-red-100">
+                                    {period === 0 ? 'วันที่ 1 - 15' : 'วันที่ 16 - สิ้นเดือน'}
+                                </span>
                             </div>
-                            
-                            {/* Toggle Period 1-15 / 16-End */}
-                            <div className="flex bg-slate-100 p-1 rounded-lg">
-                                <button 
-                                    onClick={() => setPeriod(0)}
-                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${period === 0 ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400'}`}>
-                                    วันที่ 1 - 15
-                                </button>
-                                <button 
-                                    onClick={() => setPeriod(1)}
-                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${period === 1 ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400'}`}>
-                                    วันที่ 16 - สิ้นเดือน
-                                </button>
-                            </div>
+
+                            <button onClick={() => togglePeriod('next')} className="p-1 bg-white rounded border shadow-sm active:scale-95">
+                                <i data-lucide="chevron-right" className="w-4 h-4 text-slate-600"></i>
+                            </button>
                         </div>
 
-                        {/* 2. Grid Table */}
-                        <div className="flex-1 overflow-auto relative bg-white">
-                            <div className="compact-grid" style={gridStyle}>
-                                
-                                {/* Corner */}
-                                <div className="sticky-corner p-1 flex items-center justify-center text-[9px] font-bold text-white">
-                                    DATE
-                                </div>
-
-                                {/* Inspector Headers */}
-                                {db.inspectors.map((ins, i) => (
-                                    <div key={i} className="sticky-header p-1 text-center border-r border-white/10 flex flex-col justify-center h-[35px]">
-                                        <div className="text-[10px] font-bold truncate leading-tight">{ins.name}</div>
-                                        <div className="text-[8px] opacity-60 uppercase">{ins.short}</div>
-                                    </div>
-                                ))}
-
-                                {/* Rows */}
-                                {daysInView.map(d => (
-                                    <React.Fragment key={d.full}>
-                                        {/* Date Cell */}
-                                        <div className={`sticky-left flex flex-col items-center justify-center border-b border-slate-100 h-[60px]
-                                            ${d.isWeekend ? 'bg-slate-50' : 'bg-white'}`}>
-                                            <span className="text-sm font-bold text-slate-700 leading-none">{d.day}</span>
-                                            <span className={`text-[9px] font-bold mt-0.5 ${d.isWeekend ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
-                                        </div>
-
-                                        {/* Slot Cells */}
-                                        {db.inspectors.map((ins, idx) => {
-                                            const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
-                                            return (
-                                                <div 
-                                                    key={`${d.full}-${idx}`}
-                                                    className={`border-r border-b border-slate-100 p-0.5 relative active:bg-blue-50 transition-colors
-                                                        ${d.isWeekend ? 'bg-slate-50/50' : 'bg-white'}`}
-                                                    onClick={() => {
-                                                        if (!user) return setView('login');
-                                                        setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
-                                                    }}
-                                                >
-                                                    {tasks.length === 0 ? (
-                                                        <div className="w-full h-full flex items-center justify-center opacity-0 hover:opacity-100">
-                                                            <span className="text-lg text-slate-300 font-light">+</span>
-                                                        </div>
-                                                    ) : (
-                                                        tasks.map(b => (
-                                                            <div 
-                                                                key={b.id}
-                                                                onClick={(e) => { e.stopPropagation(); setModal({ type: 'detail', data: b }); }}
-                                                                className={`p-1 mb-0.5 rounded border shadow-sm text-left h-full flex flex-col justify-center
-                                                                    ${b.status === 'pending' ? 'bg-white border-slate-200' : 'bg-green-50 border-green-200'}`}
-                                                            >
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[8px] font-bold bg-slate-100 px-1 rounded text-slate-600">{b.time_slot}</span>
-                                                                    {/* Alert Dot */}
-                                                                    {(!b.layout_doc || b.layout_doc === 'false') && <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>}
-                                                                </div>
-                                                                <div className="text-[9px] font-bold text-slate-800 truncate mt-0.5 leading-tight">{b.site_name}</div>
-                                                                <div className="text-[8px] text-slate-400 truncate">#{b.equipment_no.replace(/\D/g,'')}</div>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </React.Fragment>
-                                ))}
+                        {/* 2. Inspector Headers */}
+                        <div className="compact-header-row flex bg-slate-800 text-white z-10 text-[9px]">
+                            <div className="w-[35px] flex items-center justify-center border-r border-white/20 font-bold bg-slate-900">
+                                DATE
                             </div>
+                            {db.inspectors.map((ins, i) => (
+                                <div key={i} className="flex-1 flex flex-col items-center justify-center py-1 border-r border-white/20 min-w-0">
+                                    <div className="font-bold truncate w-full text-center px-0.5">{ins.name}</div>
+                                    <div className="opacity-60 text-[8px]">{ins.short}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 3. Calendar Body (No Scroll) */}
+                        <div className="compact-body bg-white">
+                            {daysInView.map((d, index) => (
+                                <div key={index} className={`grid-row ${d.isEmpty ? 'bg-slate-50' : (d.isWeekend ? 'bg-slate-50' : 'bg-white')}`}>
+                                    {/* Date Column */}
+                                    <div className="cell-date">
+                                        {!d.isEmpty && (
+                                            <>
+                                                <span className="text-xs font-bold text-slate-700">{d.day}</span>
+                                                <span className={`text-[8px] font-bold ${d.isWeekend ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Inspector Slots */}
+                                    {!d.isEmpty && db.inspectors.map((ins, idx) => {
+                                        const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
+                                        const hasTask = tasks.length > 0;
+                                        const task = hasTask ? tasks[0] : null; // Show first task only in compact view
+
+                                        return (
+                                            <div 
+                                                key={idx}
+                                                className="cell-slot active:bg-blue-50"
+                                                onClick={() => {
+                                                    if (!user) return setView('login');
+                                                    if (hasTask) {
+                                                        setModal({ type: 'detail', data: task });
+                                                    } else {
+                                                        setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                    }
+                                                }}
+                                            >
+                                                {hasTask ? (
+                                                    <div className={`w-full h-full p-0.5 m-0.5 rounded border text-[8px] flex flex-col justify-center
+                                                        ${task.status === 'pending' ? 'bg-white border-slate-200 shadow-sm' : 'bg-green-50 border-green-200'}`}>
+                                                        
+                                                        <div className="font-bold text-slate-800 truncate leading-tight">{task.site_name}</div>
+                                                        <div className="flex justify-between items-center text-slate-500 leading-none mt-0.5">
+                                                            <span>{task.time_slot}</span>
+                                                            <span className="font-mono">#{task.equipment_no.replace(/\D/g,'')}</span>
+                                                        </div>
+                                                        {(!task.layout_doc || task.layout_doc === 'false') && (
+                                                            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-slate-100 text-lg opacity-0 hover:opacity-100">+</div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 );
             };
 
             const HistoryView = () => (
-                <div className="bg-white h-full overflow-auto p-4 pb-20">
-                    <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <i data-lucide="history" className="w-4 h-4"></i> ประวัติล่าสุด
-                    </h2>
-                    <div className="space-y-2">
-                        {[...db.history].reverse().slice(0, 30).map(h => (
+                <div className="fixed inset-0 z-40 bg-white flex flex-col animate-slide-up">
+                    <div className="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md">
+                        <h2 className="font-bold flex items-center gap-2"><i data-lucide="history" className="w-4 h-4"></i> ประวัติการทำรายการ</h2>
+                        <button onClick={() => setView('calendar')} className="p-1 bg-white/20 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
+                    </div>
+                    <div className="flex-1 overflow-auto p-4 space-y-2 pb-10">
+                        {db.history.length === 0 && <div className="text-center text-slate-400 mt-10">ไม่มีข้อมูลประวัติ</div>}
+                        {[...db.history].reverse().slice(0, 50).map(h => (
                             <div key={h.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[10px]">
                                 <div className="flex justify-between text-slate-400 mb-1">
                                     <span>{new Date(h.timestamp).toLocaleString('th-TH')}</span>
                                     <span className="font-bold text-slate-600">{h.user}</span>
                                 </div>
                                 <div className="flex items-start gap-2">
-                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0
+                                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold shrink-0
                                         ${h.action === 'CREATE' ? 'bg-green-100 text-green-700' : h.action === 'DELETE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                                         {h.action}
                                     </span>
-                                    <span className="text-slate-700 break-words">{h.details}</span>
+                                    <span className="text-slate-700">{h.details}</span>
                                 </div>
                             </div>
                         ))}
@@ -289,45 +359,44 @@
 
             // --- Main Layout ---
             return (
-                <div className="flex flex-col h-screen overflow-hidden">
-                    <header className="schindler-gradient text-white px-3 py-2 shrink-0 flex justify-between items-center shadow-md z-50">
+                <div className="h-full flex flex-col bg-white overflow-hidden">
+                    {/* Header */}
+                    <header className="schindler-gradient text-white px-3 py-2 flex justify-between items-center shadow-md z-50 h-[50px]">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xs font-bold tracking-wide">SAIS BOOKING v8</h1>
+                             <div className="bg-white p-0.5 rounded">
+                                <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-3 w-auto" onError={(e)=>e.target.style.display='none'}/>
+                            </div>
+                            <h1 className="text-xs font-bold tracking-wide">SAIS BOOKING v9</h1>
                         </div>
-                        {user ? (
-                            <button onClick={handleLogout} className="p-1.5 bg-white/20 rounded-full"><i data-lucide="log-out" className="w-3.5 h-3.5"></i></button>
-                        ) : (
-                            <button onClick={() => setView('login')} className="px-2 py-1 bg-white text-red-600 rounded text-[10px] font-bold">Login</button>
-                        )}
+                        <div className="flex items-center gap-3">
+                            {user && (
+                                <button onClick={() => setView('history')} className="text-white/80 hover:text-white flex items-center gap-1">
+                                    <i data-lucide="history" className="w-4 h-4"></i>
+                                    <span className="text-[9px] font-bold hidden sm:inline">ประวัติ</span>
+                                </button>
+                            )}
+                            {user ? (
+                                <button onClick={handleLogout} className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
+                                    <span className="text-[9px] font-bold">{user.full_name.split(' ')[0]}</span>
+                                    <i data-lucide="log-out" className="w-3 h-3"></i>
+                                </button>
+                            ) : (
+                                <button onClick={() => setView('login')} className="px-2 py-1 bg-white text-red-600 rounded text-[10px] font-bold">Login</button>
+                            )}
+                        </div>
                     </header>
 
-                    <main className="flex-1 overflow-hidden relative bg-slate-100">
-                        {view === 'calendar' ? <CalendarView /> : null}
-                        {view === 'history' ? <HistoryView /> : null}
-                        {view === 'login' ? <LoginView /> : null}
-                        {view === 'signup' && <LoginView /> /* Reuse login style for simplicity */}
+                    {/* Content */}
+                    <main className="flex-1 overflow-hidden relative">
+                        {view === 'calendar' && <CalendarView />}
+                        {view === 'history' && <HistoryView />}
+                        {view === 'login' && <LoginView />}
                     </main>
-
-                    {/* Bottom Nav */}
-                    <nav className="shrink-0 bg-white border-t px-6 py-2 flex justify-around pb-safe">
-                        <button onClick={() => setView('calendar')} className={`flex flex-col items-center gap-0.5 ${view === 'calendar' ? 'text-red-600' : 'text-slate-300'}`}>
-                            <i data-lucide="calendar" className="w-5 h-5"></i>
-                            <span className="text-[9px] font-bold">ตาราง</span>
-                        </button>
-                        <button onClick={fetchData} className={`flex flex-col items-center gap-0.5 text-slate-300 active:text-red-600 ${loading ? 'animate-spin' : ''}`}>
-                            <i data-lucide="refresh-cw" className="w-5 h-5"></i>
-                            <span className="text-[9px] font-bold">รีเฟรช</span>
-                        </button>
-                        <button onClick={() => setView('history')} className={`flex flex-col items-center gap-0.5 ${view === 'history' ? 'text-red-600' : 'text-slate-300'}`}>
-                            <i data-lucide="history" className="w-5 h-5"></i>
-                            <span className="text-[9px] font-bold">ประวัติ</span>
-                        </button>
-                    </nav>
 
                     {/* Modal (Bottom Sheet) */}
                     {modal && (
                         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center">
-                            <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto">
+                            <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
                                 <div className="flex justify-center pt-2 pb-1 sm:hidden"><div className="w-10 h-1 bg-slate-200 rounded-full"></div></div>
                                 
                                 {modal.type === 'booking' && (
@@ -353,7 +422,7 @@
                                             const ok = await apiAction(payload);
                                             if(ok) { showToast('จองสำเร็จ'); setModal(null); }
                                         }} className="space-y-3">
-                                            <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="ชื่อโครงการ (Site Name)" />
+                                            <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Site Project Name" />
                                             <div className="grid grid-cols-2 gap-2">
                                                 <input name="equipment_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Eq No." />
                                                 <input name="unit_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Unit No." />
@@ -362,12 +431,12 @@
                                                 <select name="time_slot" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option></select>
                                                 <select name="area" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>BKK</option><option>CM</option><option>PK</option><option>Others</option></select>
                                             </div>
-                                            <input name="foreman" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="ชื่อโฟร์แมน" />
-                                            <input name="tel" type="tel" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="เบอร์โทร" />
+                                            <input name="foreman" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Foreman" />
+                                            <input name="tel" type="tel" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Tel" />
                                             <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded">
                                                 * กรุณาส่งเอกสาร (Layout, Wiring, Pre-check) ทางเมลล่วงหน้า 3 วัน
                                             </div>
-                                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-md mt-2">ยืนยันการจอง</button>
+                                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-md mt-2">ยืนยัน</button>
                                         </form>
                                     </div>
                                 )}
@@ -425,7 +494,6 @@
                         </div>
                     )}
 
-                    {/* Toast */}
                     {toast && (
                         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-full shadow-xl text-white font-bold text-xs animate-slide-up
                             ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
