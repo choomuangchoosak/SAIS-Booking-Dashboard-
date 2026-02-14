@@ -2,27 +2,47 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAIS Professional Booking System</title>
-    <!-- React & Tailwind -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAIS Booking (Compact)</title>
+    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fonts & Icons -->
+    
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/umd/lucide.min.js"></script>
     
     <style>
-        body { font-family: 'IBM Plex Sans Thai', sans-serif; background-color: #f8fafc; }
-        /* Grid System สำหรับตารางปฏิทิน */
-        .grid-main { display: grid; grid-template-columns: 80px repeat(auto-fill, minmax(130px, 1fr)); }
+        body { 
+            font-family: 'IBM Plex Sans Thai', sans-serif; 
+            background-color: #f8fafc; 
+            overscroll-behavior-y: none;
+            font-size: 12px;
+        }
+
+        /* Scrollbar ซ่อนให้สวยงาม */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+        /* Grid System */
+        .compact-grid {
+            display: grid;
+            /* วันที่ 45px, ที่เหลือแบ่งเท่าๆ กัน (คนละ min 75px) */
+            /* จะถูกกำหนดค่า Dynamic ใน React */
+        }
+
+        /* Sticky Configs */
+        .sticky-header { position: sticky; top: 0; z-index: 40; background-color: #1e293b; color: white; }
+        .sticky-left { position: sticky; left: 0; z-index: 30; background-color: white; border-right: 1px solid #e2e8f0; }
+        .sticky-corner { position: sticky; top: 0; left: 0; z-index: 50; background-color: #0f172a; border-right: 1px solid #334155; }
+
         .schindler-gradient { background: linear-gradient(135deg, #D0021B 0%, #a50215 100%); }
-        /* Animation สำหรับการแจ้งเตือนเอกสาร */
-        .warning-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-        /* Custom Checkbox สำหรับ Admin */
-        .admin-checkbox:checked { background-color: #16a34a; border-color: #16a34a; }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* ป้องกัน Zoom บน iOS */
+        input, select { font-size: 16px !important; }
     </style>
 </head>
 <body>
@@ -31,32 +51,29 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // ==========================================
-        // ตั้งค่าระบบ (URL จาก Google Apps Script)
-        // ==========================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQUcxgT9TuHMVOqQJaUHAJRzdcDRf32uhJYF4d1J03houaV6uaJJrY9Df74ap_6DXk/exec"; 
-        const ADMIN_USERNAME = "jiraphong2227"; // User ที่เป็น Admin
+        const ADMIN_USERNAME = "jiraphong2227";
 
         const App = () => {
-            // Database State
             const [db, setDb] = useState({ bookings: [], users: [], history: [], inspectors: [] });
             const [user, setUser] = useState(JSON.parse(localStorage.getItem('sais_user')) || null);
             const [view, setView] = useState('calendar'); 
             const [loading, setLoading] = useState(false);
             const [modal, setModal] = useState(null); 
             const [toast, setToast] = useState(null);
+            
+            // State สำหรับควบคุมเวลา
+            const [currentDate, setCurrentDate] = useState(new Date());
+            const [period, setPeriod] = useState(0); // 0 = วันที่ 1-15, 1 = วันที่ 16-สิ้นเดือน
 
-            // ตรวจสอบสิทธิ์ Admin
             const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME, [user]);
 
-            // โหลดข้อมูลเมื่อเปิดเว็บ และ Auto Refresh ทุก 1 นาที
             useEffect(() => {
                 fetchData();
                 const timer = setInterval(fetchData, 60000);
                 return () => clearInterval(timer);
             }, []);
 
-            // ฟังก์ชันดึงข้อมูลจาก Google Sheets
             const fetchData = async () => {
                 if (!SCRIPT_URL) return;
                 setLoading(true);
@@ -64,7 +81,7 @@
                     const res = await fetch(SCRIPT_URL);
                     const data = await res.json();
                     setDb(data);
-                } catch (e) { console.error("Error fetching data:", e); }
+                } catch (e) { console.error(e); }
                 setLoading(false);
             };
 
@@ -73,483 +90,344 @@
                 setTimeout(() => setToast(null), 3000);
             };
 
-            // Logic: ตรวจสอบวันและเอกสาร (แจ้งเตือนล่วงหน้า 3 วัน)
-            const checkDocWarning = (bookingDate, docs) => {
-                const bDate = new Date(bookingDate);
-                const today = new Date();
-                const diffTime = bDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                // เช็คว่าสถานะเอกสารเป็น 'true' หรือยัง (เป็น String)
-                const missingDocs = docs.layout_doc !== 'true' || docs.wiring_doc !== 'true' || docs.precheck_doc !== 'true';
-                return (diffDays <= 3 && diffDays >= 0 && missingDocs);
-            };
-
-            const handleLogout = () => {
-                localStorage.removeItem('sais_user');
-                setUser(null);
-                setView('calendar');
-            };
-
-            // ฟังก์ชันยิง API ไปยัง Google Apps Script
             const apiAction = async (payload) => {
                 setLoading(true);
                 try {
-                    const res = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await res.json();
-                    if (result.status === 'ok') {
-                        fetchData(); // โหลดข้อมูลใหม่ทันทีที่ทำรายการสำเร็จ
-                        return true;
-                    }
-                } catch (e) { showToast('การเชื่อมต่อขัดข้อง', 'error'); }
-                setLoading(false);
-                return false;
+                    if (result.status === 'ok') { fetchData(); return true; }
+                } catch (e) { showToast('Error', 'error'); }
+                setLoading(false); return false;
             };
 
-            // --- Screen Components ---
+            const changeMonth = (offset) => {
+                const newDate = new Date(currentDate);
+                newDate.setMonth(newDate.getMonth() + offset);
+                setCurrentDate(newDate);
+                setPeriod(0); // Reset กลับไปครึ่งเดือนแรกเสมอเมื่อเปลี่ยนเดือน
+            };
+
+            // สร้าง Array วันที่ตามช่วงที่เลือก (15 วัน)
+            const daysInView = useMemo(() => {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                
+                const startDay = period === 0 ? 1 : 16;
+                const endDay = period === 0 ? 15 : lastDay;
+
+                const days = [];
+                for (let d = startDay; d <= endDay; d++) {
+                    const date = new Date(year, month, d);
+                    days.push({
+                        full: date.toISOString().split('T')[0],
+                        day: d,
+                        weekday: date.toLocaleDateString('th-TH', { weekday: 'short' }),
+                        isWeekend: date.getDay() === 0 || date.getDay() === 6
+                    });
+                }
+                return days;
+            }, [currentDate, period]);
+
+            // --- Components ---
 
             const LoginView = () => (
-                <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl border">
-                    <div className="text-center mb-8">
-                        <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-8 mx-auto mb-4" alt="Schindler" />
-                        <h2 className="text-2xl font-bold text-slate-800">เข้าสู่ระบบ SAIS</h2>
+                <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+                    <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 animate-slide-up">
+                        <div className="text-center mb-6">
+                            <h2 className="text-xl font-bold text-slate-800">SAIS Login</h2>
+                        </div>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const fd = new FormData(e.target);
+                            const u = db.users.find(x => x.username === fd.get('username') && x.password === fd.get('password'));
+                            if (u) {
+                                setUser(u);
+                                localStorage.setItem('sais_user', JSON.stringify(u));
+                                setView('calendar');
+                            } else { showToast('รหัสผ่านผิด', 'error'); }
+                        }} className="space-y-4">
+                            <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
+                            <input name="password" type="password" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
+                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl">เข้าสู่ระบบ</button>
+                        </form>
                     </div>
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const fd = new FormData(e.target);
-                        // Login Logic
-                        const u = db.users.find(x => x.username === fd.get('username') && x.password === fd.get('password'));
-                        if (u) {
-                            setUser(u);
-                            localStorage.setItem('sais_user', JSON.stringify(u));
-                            setView('calendar');
-                            showToast('ยินดีต้อนรับกลับครับ');
-                        } else {
-                            showToast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
-                        }
-                    }} className="space-y-4">
-                        <input name="username" required className="w-full p-4 bg-slate-50 rounded-xl border-none outline-red-500 transition" placeholder="ชื่อผู้ใช้" />
-                        <input name="password" type="password" required className="w-full p-4 bg-slate-50 rounded-xl border-none outline-red-500 transition" placeholder="รหัสผ่าน" />
-                        <button className="w-full py-4 schindler-gradient text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">Login</button>
-                        <button type="button" onClick={() => setView('signup')} className="w-full text-slate-500 text-sm text-center block hover:text-red-600 transition">สมัครสมาชิกพนักงาน</button>
-                    </form>
-                </div>
-            );
-
-            const SignupView = () => (
-                <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-3xl shadow-xl border">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">ลงทะเบียนพนักงานใหม่</h2>
-                    <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        const fd = new FormData(e.target);
-                        const email = fd.get('email');
-                        // Validation Email
-                        if (!email.toLowerCase().endsWith('@schindler.com')) {
-                            return showToast('ต้องใช้ Email @schindler.com เท่านั้น', 'error');
-                        }
-                        const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
-                        if (ok) {
-                            showToast('สมัครสำเร็จ กรุณาเข้าสู่ระบบ');
-                            setView('login');
-                        }
-                    }} className="space-y-4">
-                        <input name="full_name" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="ชื่อ-นามสกุล (Project)" />
-                        <input name="phone" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="เบอร์โทรศัพท์" />
-                        <input name="email" type="email" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Email (@schindler.com)" />
-                        <input name="username" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Username" />
-                        <input name="password" type="password" required className="w-full p-3 bg-slate-50 rounded-xl border outline-none focus:ring-2 ring-red-100" placeholder="Password" />
-                        <button className="w-full py-4 schindler-gradient text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">ยืนยันการสมัคร</button>
-                        <button type="button" onClick={() => setView('login')} className="w-full text-slate-500 text-sm text-center block">กลับไปหน้า Login</button>
-                    </form>
                 </div>
             );
 
             const CalendarView = () => {
-                // สร้าง array วันที่ 15 วัน (ย้อนหลัง 1, ล่วงหน้า 13)
-                const dates = useMemo(() => {
-                    const arr = [];
-                    const today = new Date();
-                    for (let i = -1; i < 14; i++) {
-                        const d = new Date(today);
-                        d.setDate(today.getDate() + i);
-                        arr.push({ full: d.toISOString().split('T')[0], day: d.getDate(), month: d.toLocaleDateString('th-TH', {month: 'short'}), w: d.toLocaleDateString('th-TH', {weekday: 'short'}) });
-                    }
-                    return arr;
-                }, []);
+                // คำนวณความกว้างตาราง: วันที่ 45px + (จำนวนคน * 85px)
+                const inspectorCount = db.inspectors.length || 1;
+                const gridStyle = {
+                    gridTemplateColumns: `45px repeat(${inspectorCount}, minmax(85px, 1fr))`
+                };
 
                 return (
-                    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        {/* Header Grid: แสดงรายชื่อ Inspector (Name) */}
-                        <div className="grid-main bg-slate-800 text-white sticky top-0 z-20">
-                            <div className="p-2 text-center text-[10px] uppercase font-bold opacity-50 border-r border-white/10 flex items-center justify-center">Date</div>
-                            {db.inspectors.map((ins, index) => (
-                                <div key={index} className="p-2 text-center border-r border-white/10">
-                                    <div className="text-xs font-bold truncate">{ins.name}</div>
-                                    <div className="text-[9px] opacity-60 italic">{ins.short}</div>
-                                </div>
-                            ))}
+                    <div className="flex flex-col h-full bg-white">
+                        {/* 1. Header Controls (Sticky) */}
+                        <div className="bg-white px-2 py-2 shadow-sm z-20 flex flex-col gap-2 border-b">
+                            <div className="flex justify-between items-center">
+                                <button onClick={() => changeMonth(-1)} className="p-1.5 bg-slate-100 rounded-lg"><i data-lucide="chevron-left" className="w-4 h-4"></i></button>
+                                <h2 className="text-sm font-bold text-slate-800">
+                                    {currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
+                                </h2>
+                                <button onClick={() => changeMonth(1)} className="p-1.5 bg-slate-100 rounded-lg"><i data-lucide="chevron-right" className="w-4 h-4"></i></button>
+                            </div>
+                            
+                            {/* Toggle Period 1-15 / 16-End */}
+                            <div className="flex bg-slate-100 p-1 rounded-lg">
+                                <button 
+                                    onClick={() => setPeriod(0)}
+                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${period === 0 ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400'}`}>
+                                    วันที่ 1 - 15
+                                </button>
+                                <button 
+                                    onClick={() => setPeriod(1)}
+                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${period === 1 ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400'}`}>
+                                    วันที่ 16 - สิ้นเดือน
+                                </button>
+                            </div>
                         </div>
-                        {/* Body Grid: ตารางวันและคิวงาน */}
-                        <div className="divide-y">
-                            {dates.map(d => (
-                                <div key={d.full} className="grid-main hover:bg-slate-50 transition">
-                                    {/* Column วันที่ */}
-                                    <div className="p-2 flex flex-col items-center justify-center border-r bg-slate-50/50">
-                                        <span className="text-base font-bold text-slate-700 leading-none">{d.day}</span>
-                                        <span className="text-[9px] text-slate-400 uppercase">{d.month}</span>
-                                        <span className="text-[9px] font-bold text-red-500 mt-1">{d.w}</span>
-                                    </div>
-                                    {/* Columns Inspector */}
-                                    {db.inspectors.map((ins, index) => {
-                                        // Filter คิวงานโดยใช้ชื่อ (Name)
-                                        const dayTasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
-                                        return (
-                                            <div 
-                                                key={`${d.full}-${index}`} 
-                                                className="p-1 min-h-[90px] border-r border-dashed last:border-0 relative group cursor-pointer"
-                                                onClick={() => {
-                                                    // คลิกช่องว่างเพื่อจอง
-                                                    if (!user) return setView('login');
-                                                    setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
-                                                }}
-                                            >
-                                                {dayTasks.map(b => {
-                                                    const isWarn = checkDocWarning(b.date, b);
-                                                    // ดึงเฉพาะตัวเลขจาก Eq. No
-                                                    const eqNum = b.equipment_no.replace(/\D/g, ''); 
-                                                    return (
-                                                        <div 
-                                                            key={b.id} 
-                                                            onClick={(e) => { e.stopPropagation(); setModal({ type: 'detail', data: b }); }}
-                                                            className={`p-1.5 mb-1 rounded-lg shadow-sm border transition-all hover:scale-[1.02] 
-                                                                ${isWarn ? 'bg-red-50 border-red-200 warning-pulse' : 'bg-white border-slate-100'}`}
-                                                        >
-                                                            {/* เวลา & แจ้งเตือน */}
-                                                            <div className="flex justify-between items-center mb-1">
-                                                                <span className={`text-[9px] font-bold px-1 rounded ${isWarn ? 'bg-red-200 text-red-800' : 'bg-slate-100 text-slate-600'}`}>
-                                                                    {b.time_slot}
-                                                                </span>
-                                                                {isWarn && <i data-lucide="alert-circle" className="w-3 h-3 text-red-500"></i>}
-                                                            </div>
-                                                            {/* ข้อมูลย่อ */}
-                                                            <div className="text-[10px] font-bold text-slate-800 truncate leading-tight mb-0.5">{b.site_name}</div>
-                                                            <div className="flex justify-between items-center text-[9px] text-slate-500 font-medium">
-                                                                <span className="truncate max-w-[45%]">Unit: {b.unit_no}</span>
-                                                                <span className="truncate font-mono">#{eqNum}</span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                                {/* ปุ่ม + เมื่อ Hover */}
-                                                <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                                    <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">+</div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+
+                        {/* 2. Grid Table */}
+                        <div className="flex-1 overflow-auto relative bg-white">
+                            <div className="compact-grid" style={gridStyle}>
+                                
+                                {/* Corner */}
+                                <div className="sticky-corner p-1 flex items-center justify-center text-[9px] font-bold text-white">
+                                    DATE
                                 </div>
-                            ))}
+
+                                {/* Inspector Headers */}
+                                {db.inspectors.map((ins, i) => (
+                                    <div key={i} className="sticky-header p-1 text-center border-r border-white/10 flex flex-col justify-center h-[35px]">
+                                        <div className="text-[10px] font-bold truncate leading-tight">{ins.name}</div>
+                                        <div className="text-[8px] opacity-60 uppercase">{ins.short}</div>
+                                    </div>
+                                ))}
+
+                                {/* Rows */}
+                                {daysInView.map(d => (
+                                    <React.Fragment key={d.full}>
+                                        {/* Date Cell */}
+                                        <div className={`sticky-left flex flex-col items-center justify-center border-b border-slate-100 h-[60px]
+                                            ${d.isWeekend ? 'bg-slate-50' : 'bg-white'}`}>
+                                            <span className="text-sm font-bold text-slate-700 leading-none">{d.day}</span>
+                                            <span className={`text-[9px] font-bold mt-0.5 ${d.isWeekend ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
+                                        </div>
+
+                                        {/* Slot Cells */}
+                                        {db.inspectors.map((ins, idx) => {
+                                            const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
+                                            return (
+                                                <div 
+                                                    key={`${d.full}-${idx}`}
+                                                    className={`border-r border-b border-slate-100 p-0.5 relative active:bg-blue-50 transition-colors
+                                                        ${d.isWeekend ? 'bg-slate-50/50' : 'bg-white'}`}
+                                                    onClick={() => {
+                                                        if (!user) return setView('login');
+                                                        setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                    }}
+                                                >
+                                                    {tasks.length === 0 ? (
+                                                        <div className="w-full h-full flex items-center justify-center opacity-0 hover:opacity-100">
+                                                            <span className="text-lg text-slate-300 font-light">+</span>
+                                                        </div>
+                                                    ) : (
+                                                        tasks.map(b => (
+                                                            <div 
+                                                                key={b.id}
+                                                                onClick={(e) => { e.stopPropagation(); setModal({ type: 'detail', data: b }); }}
+                                                                className={`p-1 mb-0.5 rounded border shadow-sm text-left h-full flex flex-col justify-center
+                                                                    ${b.status === 'pending' ? 'bg-white border-slate-200' : 'bg-green-50 border-green-200'}`}
+                                                            >
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-[8px] font-bold bg-slate-100 px-1 rounded text-slate-600">{b.time_slot}</span>
+                                                                    {/* Alert Dot */}
+                                                                    {(!b.layout_doc || b.layout_doc === 'false') && <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>}
+                                                                </div>
+                                                                <div className="text-[9px] font-bold text-slate-800 truncate mt-0.5 leading-tight">{b.site_name}</div>
+                                                                <div className="text-[8px] text-slate-400 truncate">#{b.equipment_no.replace(/\D/g,'')}</div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 );
             };
 
             const HistoryView = () => (
-                <div className="space-y-4 max-w-4xl mx-auto">
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="history" className="w-5 h-5"></i> ประวัติการทำรายการ
+                <div className="bg-white h-full overflow-auto p-4 pb-20">
+                    <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="history" className="w-4 h-4"></i> ประวัติล่าสุด
                     </h2>
-                    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase">
-                                <tr>
-                                    <th className="p-3">Time</th>
-                                    <th className="p-3">Action</th>
-                                    <th className="p-3">User</th>
-                                    <th className="p-3">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y text-xs">
-                                {[...db.history].reverse().map(h => (
-                                    <tr key={h.id} className="hover:bg-slate-50">
-                                        <td className="p-3 text-slate-500 whitespace-nowrap">{new Date(h.timestamp).toLocaleString('th-TH')}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold 
-                                                ${h.action === 'CREATE' ? 'bg-green-100 text-green-700' : h.action === 'DELETE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                {h.action}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 font-medium text-slate-700">{h.user}</td>
-                                        <td className="p-3 text-slate-600">{h.details}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="space-y-2">
+                        {[...db.history].reverse().slice(0, 30).map(h => (
+                            <div key={h.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[10px]">
+                                <div className="flex justify-between text-slate-400 mb-1">
+                                    <span>{new Date(h.timestamp).toLocaleString('th-TH')}</span>
+                                    <span className="font-bold text-slate-600">{h.user}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0
+                                        ${h.action === 'CREATE' ? 'bg-green-100 text-green-700' : h.action === 'DELETE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        {h.action}
+                                    </span>
+                                    <span className="text-slate-700 break-words">{h.details}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
 
             // --- Main Layout ---
-
             return (
-                <div className="pb-20 min-h-screen">
-                    {/* Top Bar */}
-                    <header className="schindler-gradient text-white p-3 sticky top-0 z-40 shadow-lg">
-                        <div className="max-w-7xl mx-auto flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-white p-1 rounded-md">
-                                    <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-4" alt="logo" />
-                                </div>
-                                <h1 className="text-base font-bold tracking-tight">SAIS BOOKING v5</h1>
-                            </div>
-                            
-                            <div className="flex items-center gap-3">
-                                {user ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="hidden md:block text-right">
-                                            <div className="text-[10px] font-bold">{user.full_name}</div>
-                                            <div className="text-[9px] opacity-70 uppercase">{isAdmin ? 'Admin' : 'Tech'}</div>
-                                        </div>
-                                        <button onClick={handleLogout} className="p-1.5 bg-white/10 rounded-full hover:bg-white/20">
-                                            <i data-lucide="log-out" className="w-4 h-4"></i>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button onClick={() => setView('login')} className="px-3 py-1.5 bg-white text-red-600 rounded-full font-bold text-xs shadow-lg">Login</button>
-                                )}
-                            </div>
+                <div className="flex flex-col h-screen overflow-hidden">
+                    <header className="schindler-gradient text-white px-3 py-2 shrink-0 flex justify-between items-center shadow-md z-50">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xs font-bold tracking-wide">SAIS BOOKING v8</h1>
                         </div>
+                        {user ? (
+                            <button onClick={handleLogout} className="p-1.5 bg-white/20 rounded-full"><i data-lucide="log-out" className="w-3.5 h-3.5"></i></button>
+                        ) : (
+                            <button onClick={() => setView('login')} className="px-2 py-1 bg-white text-red-600 rounded text-[10px] font-bold">Login</button>
+                        )}
                     </header>
 
-                    {/* Bottom Nav Bar */}
-                    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-6 py-2 rounded-full flex gap-6 z-50 shadow-2xl border border-white/10">
-                        <button onClick={() => setView('calendar')} className={`flex flex-col items-center gap-0.5 ${view === 'calendar' ? 'text-red-500' : 'opacity-60'}`}>
+                    <main className="flex-1 overflow-hidden relative bg-slate-100">
+                        {view === 'calendar' ? <CalendarView /> : null}
+                        {view === 'history' ? <HistoryView /> : null}
+                        {view === 'login' ? <LoginView /> : null}
+                        {view === 'signup' && <LoginView /> /* Reuse login style for simplicity */}
+                    </main>
+
+                    {/* Bottom Nav */}
+                    <nav className="shrink-0 bg-white border-t px-6 py-2 flex justify-around pb-safe">
+                        <button onClick={() => setView('calendar')} className={`flex flex-col items-center gap-0.5 ${view === 'calendar' ? 'text-red-600' : 'text-slate-300'}`}>
                             <i data-lucide="calendar" className="w-5 h-5"></i>
                             <span className="text-[9px] font-bold">ตาราง</span>
                         </button>
-                        <button onClick={() => setView('history')} className={`flex flex-col items-center gap-0.5 ${view === 'history' ? 'text-red-500' : 'opacity-60'}`}>
+                        <button onClick={fetchData} className={`flex flex-col items-center gap-0.5 text-slate-300 active:text-red-600 ${loading ? 'animate-spin' : ''}`}>
+                            <i data-lucide="refresh-cw" className="w-5 h-5"></i>
+                            <span className="text-[9px] font-bold">รีเฟรช</span>
+                        </button>
+                        <button onClick={() => setView('history')} className={`flex flex-col items-center gap-0.5 ${view === 'history' ? 'text-red-600' : 'text-slate-300'}`}>
                             <i data-lucide="history" className="w-5 h-5"></i>
                             <span className="text-[9px] font-bold">ประวัติ</span>
                         </button>
-                        {isAdmin && (
-                            <button onClick={() => {
-                                const name = prompt('ชื่อผู้ตรวจใหม่:');
-                                const short = prompt('ตัวย่อ (เช่น ช.):');
-                                if(name && short) apiAction({ action: 'add_inspector', name, short });
-                            }} className="flex flex-col items-center gap-0.5 opacity-60 hover:opacity-100">
-                                <i data-lucide="user-plus" className="w-5 h-5"></i>
-                                <span className="text-[9px] font-bold">ผู้ตรวจ</span>
-                            </button>
-                        )}
-                        <button onClick={fetchData} className="flex flex-col items-center gap-0.5 opacity-60">
-                            <i data-lucide="refresh-cw" className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`}></i>
-                            <span className="text-[9px] font-bold">รีเฟรช</span>
-                        </button>
                     </nav>
 
-                    <main className="max-w-7xl mx-auto p-2 md:p-6">
-                        {view === 'calendar' && <CalendarView />}
-                        {view === 'history' && <HistoryView />}
-                        {view === 'login' && <LoginView />}
-                        {view === 'signup' && <SignupView />}
-                    </main>
-
-                    {/* --- Modal จองคิว/แก้ไข --- */}
-                    {modal?.type === 'booking' && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in duration-200">
-                                <div className="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                                    <div>
-                                        <h2 className="text-lg font-bold text-slate-800">ลงทะเบียนจองคิว</h2>
-                                        <p className="text-[10px] text-red-500 font-bold uppercase">ผู้ตรวจ: {modal.data.inspector_name} | {modal.data.date}</p>
-                                    </div>
-                                    <button onClick={() => setModal(null)} className="p-2 bg-slate-100 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
-                                </div>
-                                <form onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const fd = new FormData(e.target);
-                                    const payload = {
-                                        action: modal.data.id ? 'update_booking' : 'create_booking',
-                                        ...Object.fromEntries(fd),
-                                        id: modal.data.id,
-                                        inspector_name: modal.data.inspector_name,
-                                        date: modal.data.date,
-                                        user: user.username,
-                                        updated_by: user.username
-                                    };
-                                    const ok = await apiAction(payload);
-                                    if(ok) { showToast('บันทึกข้อมูลเรียบร้อย'); setModal(null); }
-                                }} className="p-6 space-y-4">
-                                    
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Site Project Name</label>
-                                        <input name="site_name" defaultValue={modal.data.site_name} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 font-medium text-sm" />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Equipment No.</label>
-                                            <input name="equipment_no" defaultValue={modal.data.equipment_no} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                    {/* Modal (Bottom Sheet) */}
+                    {modal && (
+                        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center">
+                            <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto">
+                                <div className="flex justify-center pt-2 pb-1 sm:hidden"><div className="w-10 h-1 bg-slate-200 rounded-full"></div></div>
+                                
+                                {modal.type === 'booking' && (
+                                    <div className="p-5 pb-8">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-lg font-bold text-slate-800">จองคิว</h3>
+                                            <button onClick={() => setModal(null)} className="p-1.5 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Unit No.</label>
-                                            <input name="unit_no" defaultValue={modal.data.unit_no} required className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
+                                        <div className="text-[11px] text-red-500 font-bold uppercase mb-4 bg-red-50 p-2 rounded border border-red-100 text-center">
+                                            {modal.data.inspector_name} • {modal.data.date}
                                         </div>
+                                        <form onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            const fd = new FormData(e.target);
+                                            const payload = {
+                                                action: 'create_booking',
+                                                ...Object.fromEntries(fd),
+                                                inspector_name: modal.data.inspector_name,
+                                                date: modal.data.date,
+                                                user: user.username,
+                                                updated_by: user.username
+                                            };
+                                            const ok = await apiAction(payload);
+                                            if(ok) { showToast('จองสำเร็จ'); setModal(null); }
+                                        }} className="space-y-3">
+                                            <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="ชื่อโครงการ (Site Name)" />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <input name="equipment_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Eq No." />
+                                                <input name="unit_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Unit No." />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select name="time_slot" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option></select>
+                                                <select name="area" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>BKK</option><option>CM</option><option>PK</option><option>Others</option></select>
+                                            </div>
+                                            <input name="foreman" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="ชื่อโฟร์แมน" />
+                                            <input name="tel" type="tel" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="เบอร์โทร" />
+                                            <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded">
+                                                * กรุณาส่งเอกสาร (Layout, Wiring, Pre-check) ทางเมลล่วงหน้า 3 วัน
+                                            </div>
+                                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-md mt-2">ยืนยันการจอง</button>
+                                        </form>
                                     </div>
+                                )}
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Area</label>
-                                            <select name="area" defaultValue={modal.data.area} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm">
-                                                <option>BKK</option><option>CM</option><option>PK</option><option>Others</option>
-                                            </select>
+                                {modal.type === 'detail' && (
+                                    <div className="p-5 pb-8">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="text-lg font-bold text-slate-800 leading-tight">{modal.data.site_name}</h3>
+                                            <button onClick={() => setModal(null)} className="p-1.5 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Time Slot</label>
-                                            <select name="time_slot" defaultValue={modal.data.time_slot} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm">
-                                                <option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Foreman</label>
-                                            <input name="foreman" defaultValue={modal.data.foreman} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Tel</label>
-                                            <input name="tel" defaultValue={modal.data.tel} className="w-full p-3 bg-slate-50 rounded-xl border-none outline-red-500 text-sm" />
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3">
-                                        <i data-lucide="info" className="w-5 h-5 text-amber-500 shrink-0"></i>
-                                        <div className="text-xs text-amber-800">
-                                            <strong className="block mb-1">การส่งเอกสาร (Layout, Wiring, Pre-check)</strong>
-                                            กรุณาส่งไฟล์เอกสารทาง Email ให้ Admin ตรวจสอบล่วงหน้า 3 วัน
-                                        </div>
-                                    </div>
-
-                                    <button className="w-full py-4 schindler-gradient text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition disabled:opacity-50">
-                                        {modal.data.id ? 'อัปเดตข้อมูล' : 'ยืนยันการจอง'}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* --- Modal รายละเอียด (Admin Check) --- */}
-                    {modal?.type === 'detail' && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10">
-                                <div className="p-5 schindler-gradient text-white flex justify-between items-center">
-                                    <h2 className="font-bold">รายละเอียดการจอง</h2>
-                                    <button onClick={() => setModal(null)} className="p-1 bg-white/10 rounded-lg"><i data-lucide="x" className="w-5 h-5"></i></button>
-                                </div>
-                                <div className="p-6 space-y-5">
-                                    <div>
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Project</div>
-                                        <div className="text-xl font-bold text-slate-800 leading-tight">{modal.data.site_name}</div>
-                                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                            <i data-lucide="clock" className="w-3 h-3"></i> {modal.data.time_slot} น.
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Eq. No</div><div className="text-sm font-bold">{modal.data.equipment_no}</div></div>
-                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Unit</div><div className="text-sm font-bold">{modal.data.unit_no}</div></div>
-                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Area</div><div className="text-sm font-bold">{modal.data.area}</div></div>
-                                        <div><div className="text-[9px] text-slate-400 uppercase font-bold">Foreman</div><div className="text-sm font-bold truncate">{modal.data.foreman}</div></div>
-                                    </div>
-
-                                    <div className="space-y-3 pt-2">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="text-xs font-bold text-slate-700 uppercase">สถานะเอกสาร (Documents)</h4>
-                                            {isAdmin && <span className="text-[9px] bg-slate-100 px-2 py-1 rounded text-slate-500">Admin Mode</span>}
+                                        <div className="bg-slate-50 p-3 rounded-xl space-y-1.5 mb-4 text-xs border border-slate-100">
+                                            <div className="flex justify-between"><span className="text-slate-400">Date</span><span className="font-bold">{modal.data.date}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400">Time</span><span className="font-bold">{modal.data.time_slot}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400">Eq. No</span><span className="font-bold">{modal.data.equipment_no}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400">Unit</span><span className="font-bold">{modal.data.unit_no}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400">Foreman</span><span className="font-bold">{modal.data.foreman}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400">Tel</span><a href={`tel:${modal.data.tel}`} className="font-bold text-blue-600 underline">{modal.data.tel}</a></div>
                                         </div>
                                         
                                         <div className="space-y-2">
-                                            {[
-                                                { id: 'layout_doc', label: 'Layout Drawing' },
-                                                { id: 'wiring_doc', label: 'Wiring Diagram' },
-                                                { id: 'precheck_doc', label: 'Pre-check Form' }
-                                            ].map(doc => (
-                                                <div key={doc.id} className="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm">
-                                                    <span className="text-xs font-medium text-slate-600">{doc.label}</span>
-                                                    
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">Documents Check</p>
+                                            {['layout_doc', 'wiring_doc', 'precheck_doc'].map(doc => (
+                                                <div key={doc} className="flex justify-between items-center p-2.5 border rounded-lg">
+                                                    <span className="text-[10px] font-bold text-slate-600">{doc.replace('_doc','').toUpperCase()}</span>
                                                     {isAdmin ? (
-                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                            <span className="text-[10px] text-slate-400">{modal.data[doc.id] === 'true' ? 'อนุมัติแล้ว' : 'รอตรวจ'}</span>
-                                                            <input 
-                                                                type="checkbox" 
-                                                                className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500 admin-checkbox"
-                                                                checked={modal.data[doc.id] === 'true'}
-                                                                onChange={async (e) => {
-                                                                    // อัปเดต UI ทันที (Optimistic Update)
-                                                                    const newStatus = e.target.checked ? 'true' : 'false';
-                                                                    setModal(prev => ({ ...prev, data: { ...prev.data, [doc.id]: newStatus } }));
-                                                                    setDb(prev => ({
-                                                                        ...prev,
-                                                                        bookings: prev.bookings.map(b => b.id === modal.data.id ? { ...b, [doc.id]: newStatus } : b)
-                                                                    }));
-                                                                    // ส่งค่าไป Backend
-                                                                    await apiAction({ 
-                                                                        action: 'update_doc_status', 
-                                                                        id: modal.data.id, 
-                                                                        doc_type: doc.id, 
-                                                                        status: newStatus 
-                                                                    });
-                                                                }}
-                                                            />
-                                                        </label>
+                                                        <input type="checkbox" className="w-4 h-4 accent-green-600" 
+                                                            checked={modal.data[doc] === 'true'}
+                                                            onChange={async(e) => {
+                                                                const val = e.target.checked ? 'true' : 'false';
+                                                                setModal(p => ({...p, data: {...p.data, [doc]: val}}));
+                                                                setDb(p => ({...p, bookings: p.bookings.map(b => b.id===modal.data.id ? {...b, [doc]: val} : b)}));
+                                                                await apiAction({ action: 'update_doc_status', id: modal.data.id, doc_type: doc, status: val });
+                                                            }}
+                                                        />
                                                     ) : (
-                                                        modal.data[doc.id] === 'true' ? 
-                                                            <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                                                <i data-lucide="check-circle" className="w-3 h-3"></i> ครบถ้วน
-                                                            </span> : 
-                                                            <span className="flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-                                                                <i data-lucide="clock" className="w-3 h-3"></i> รอ Admin
-                                                            </span>
+                                                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${modal.data[doc] === 'true' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                                                            {modal.data[doc] === 'true' ? 'PASS' : 'WAIT'}
+                                                        </span>
                                                     )}
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
 
-                                    {(isAdmin || user?.username === modal.data.created_by) && (
-                                        <div className="flex gap-3 pt-4 border-t mt-2">
-                                            <button 
-                                                onClick={() => {
-                                                    const b = modal.data;
-                                                    setModal({ type: 'booking', data: {...b, inspector_name: b.inspector_name} });
-                                                }}
-                                                className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl text-xs hover:bg-slate-700"
-                                            >
-                                                แก้ไขข้อมูล
-                                            </button>
-                                            <button 
-                                                onClick={async () => {
-                                                    if(confirm('ยืนยันลบคิวงานนี้หรือไม่?')) {
-                                                        await apiAction({ action: 'delete_booking', id: modal.data.id, user: user.username, target_name: modal.data.site_name });
-                                                        setModal(null);
-                                                    }
-                                                }}
-                                                className="flex-1 py-3 bg-red-50 text-red-600 font-bold rounded-xl text-xs border border-red-100 hover:bg-red-100"
-                                            >
-                                                ลบคิว
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                        {(isAdmin || user?.username === modal.data.created_by) && (
+                                            <button onClick={async() => {
+                                                if(confirm('ลบรายการ?')) {
+                                                    await apiAction({ action: 'delete_booking', id: modal.data.id, user: user.username, target_name: modal.data.site_name });
+                                                    setModal(null);
+                                                }
+                                            }} className="w-full mt-4 py-3 bg-white border border-red-100 text-red-600 font-bold rounded-xl text-xs">ลบรายการจอง</button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
+                    {/* Toast */}
                     {toast && (
-                        <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl text-white font-bold text-sm animate-in fade-in slide-in-from-top-4 
+                        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-full shadow-xl text-white font-bold text-xs animate-slide-up
                             ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
                             {toast.msg}
                         </div>
@@ -558,8 +436,9 @@
             );
         };
 
-        ReactDOM.render(<App />, document.getElementById('root'));
-        setTimeout(() => lucide.createIcons(), 1000);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        setInterval(() => window.lucide?.createIcons(), 1000);
     </script>
 </body>
 </html>
