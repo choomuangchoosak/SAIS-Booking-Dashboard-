@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font: Sarabun (อ่านง่ายแม้ตัวเล็ก) -->
+    <!-- Font: Sarabun -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/umd/lucide.min.js"></script>
     
@@ -27,56 +27,40 @@
 
         /* --- Layout --- */
         .fit-screen-container {
-            height: calc(100vh - 45px); /* Header height 45px */
+            height: calc(100vh - 45px);
             display: flex;
             flex-direction: column;
         }
         .compact-body {
             flex: 1;
             display: grid;
-            grid-template-rows: repeat(16, 1fr); /* 15 วัน + 1 เผื่อขอบ */
+            grid-template-rows: repeat(16, 1fr);
             overflow: hidden;
         }
-        .grid-row {
-            display: flex;
-            border-bottom: 1px solid #f1f5f9;
-        }
+        .grid-row { display: flex; border-bottom: 1px solid #f1f5f9; }
 
         /* Columns */
         .cell-date {
-            width: 40px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-right: 1px solid #e2e8f0;
-            background: #fff;
-            position: relative;
+            width: 40px; flex-shrink: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; border-right: 1px solid #e2e8f0;
+            background: #fff; position: relative;
         }
         .cell-slot {
-            flex: 1;
-            border-right: 1px solid #f1f5f9;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1px;
+            flex: 1; border-right: 1px solid #f1f5f9; position: relative;
+            display: flex; align-items: center; justify-content: center; padding: 1px;
         }
 
         /* Highlights */
         .is-sunday { background-color: #fef2f2 !important; color: #dc2626; }
         .is-holiday { background-color: #fee2e2 !important; border-bottom: 1px solid #fecaca; }
-        .is-today { 
-            box-shadow: inset 0 0 0 2px #3b82f6; 
-            z-index: 10;
-        }
+        .is-today { box-shadow: inset 0 0 0 2px #3b82f6; z-index: 10; }
         
         .schindler-gradient { background: linear-gradient(135deg, #D0021B 0%, #a50215 100%); }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         input, select { font-size: 16px !important; }
+        .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1; }
     </style>
 </head>
 <body>
@@ -85,120 +69,24 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // ** URL สคริปต์ใหม่ **
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxI_OlN2UjTpTKIqbImcK56672CcLYxeinjQPQkfq3evIYf8ynxXOSWFwp6cLOSBMtC/exec"; 
         const ADMIN_USERNAME = "jiraphong2227";
-
-        // --- Component หน้า Login (แยกออกมาเพื่อแก้บั๊กพิมพ์แล้วหาย) ---
-        const LoginView = ({ setView, users, apiAction, user }) => {
-            const [mode, setMode] = useState('login'); // login, signup, manual
-            const [isLoading, setIsLoading] = useState(false);
-
-            // หน้าคู่มือการใช้งาน
-            if (mode === 'manual') return (
-                <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slide-up">
-                    <div className="p-4 border-b flex justify-between items-center shadow-sm">
-                        <h2 className="font-bold text-lg">คู่มือการใช้งาน</h2>
-                        <button onClick={() => setMode('login')} className="p-2 bg-slate-100 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
-                    </div>
-                    <div className="p-6 overflow-auto space-y-4 text-sm text-slate-700">
-                        <div className="bg-blue-50 p-4 rounded-xl">
-                            <h3 className="font-bold text-blue-800 mb-2">1. การเข้าใช้งาน</h3>
-                            <ul className="list-disc pl-5 space-y-1">
-                                <li>ต้องสมัครสมาชิกด้วย Email @schindler.com</li>
-                                <li>หลังสมัคร ต้องรอ Admin อนุมัติสิทธิ์ก่อน</li>
-                            </ul>
-                        </div>
-                        <div className="bg-green-50 p-4 rounded-xl">
-                            <h3 className="font-bold text-green-800 mb-2">2. การจองคิว</h3>
-                            <ul className="list-disc pl-5 space-y-1">
-                                <li>แตะที่ช่องว่างในตารางเพื่อจอง</li>
-                                <li>กรอกข้อมูลให้ครบถ้วน (Equipment No, Unit)</li>
-                                <li>ต้องส่งเอกสารล่วงหน้า 3 วัน</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="fixed inset-0 z-50 bg-slate-50 flex items-center justify-center p-6">
-                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 animate-slide-up">
-                        <div className="text-center mb-6">
-                            <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-6 mx-auto mb-3" />
-                            <h2 className="text-xl font-bold text-slate-800">{mode === 'signup' ? 'ลงทะเบียนใหม่' : 'เข้าสู่ระบบ'}</h2>
-                        </div>
-
-                        {mode === 'login' && (
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                const fd = new FormData(e.target);
-                                const u = users.find(x => x.username === fd.get('username').trim() && String(x.password) === fd.get('password').trim());
-                                if (u) {
-                                    if (u.role === 'pending') {
-                                        alert('บัญชีของคุณรอการอนุมัติจาก Admin');
-                                    } else {
-                                        localStorage.setItem('sais_user', JSON.stringify(u));
-                                        window.location.reload(); // Reload เพื่อโหลด state ใหม่
-                                    }
-                                } else {
-                                    alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-                                }
-                            }} className="space-y-4">
-                                <input name="username" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
-                                <input name="password" type="password" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
-                                <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">เข้าสู่ระบบ</button>
-                                <div className="flex justify-between mt-4">
-                                    <button type="button" onClick={() => setMode('signup')} className="text-slate-500 text-xs">สมัครสมาชิก</button>
-                                    <button type="button" onClick={() => setMode('manual')} className="text-red-600 font-bold text-xs flex items-center gap-1"><i data-lucide="book" className="w-3 h-3"></i> คู่มือการใช้งาน</button>
-                                </div>
-                            </form>
-                        )}
-
-                        {mode === 'signup' && (
-                            <form onSubmit={async (e) => {
-                                e.preventDefault();
-                                setIsLoading(true);
-                                const fd = new FormData(e.target);
-                                if (!fd.get('email').endsWith('@schindler.com')) {
-                                    alert('ต้องใช้เมล @schindler.com เท่านั้น');
-                                    setIsLoading(false);
-                                    return;
-                                }
-                                const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
-                                setIsLoading(false);
-                                if (ok) {
-                                    alert('ลงทะเบียนสำเร็จ! กรุณารอ Admin อนุมัติ');
-                                    setMode('login');
-                                } else {
-                                    alert('เกิดข้อผิดพลาด หรือชื่อซ้ำ');
-                                }
-                            }} className="space-y-3">
-                                <input name="full_name" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="ชื่อ-นามสกุล" />
-                                <input name="email" required type="email" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Email" />
-                                <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
-                                <input name="password" required type="password" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
-                                <input name="phone" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="เบอร์โทร" />
-                                <button disabled={isLoading} className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg mt-2">
-                                    {isLoading ? 'กำลังบันทึก...' : 'ยืนยันสมัคร'}
-                                </button>
-                                <button type="button" onClick={() => setMode('login')} className="w-full text-slate-400 text-xs py-2">กลับ</button>
-                            </form>
-                        )}
-                    </div>
-                </div>
-            );
-        };
 
         const App = () => {
             const [db, setDb] = useState({ bookings: [], users: [], history: [], inspectors: [] });
             const [user, setUser] = useState(JSON.parse(localStorage.getItem('sais_user')) || null);
             const [view, setView] = useState('calendar'); 
             const [loading, setLoading] = useState(false);
-            const [modal, setModal] = useState(null); 
             
+            // UI States
+            const [modal, setModal] = useState(null); 
+            const [showLogin, setShowLogin] = useState(false); // Popup Login
+            const [showManual, setShowManual] = useState(false); // Popup Manual
+            const [toast, setToast] = useState(null);
+            
+            // Calendar States
             const [currentDate, setCurrentDate] = useState(new Date());
-            const [period, setPeriod] = useState(0); // 0=1-15, 1=16-End
+            const [period, setPeriod] = useState(0); 
 
             const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME || user?.role === 'admin', [user]);
 
@@ -231,15 +119,21 @@
                 return false;
             };
 
+            const showToast = (msg, type = 'success') => {
+                setToast({ msg, type });
+                setTimeout(() => setToast(null), 3000);
+            };
+
             const handleLogout = () => {
                 localStorage.removeItem('sais_user');
                 setUser(null);
+                showToast('ออกจากระบบแล้ว');
             };
 
+            // --- Logic ---
             const togglePeriod = (dir) => {
                 let newPeriod = period;
                 let newDate = new Date(currentDate);
-                
                 if (dir === 'next') {
                     if (period === 0) newPeriod = 1;
                     else { newPeriod = 0; newDate.setMonth(newDate.getMonth() + 1); }
@@ -257,18 +151,15 @@
                 const lastDay = new Date(year, month + 1, 0).getDate();
                 const start = period === 0 ? 1 : 16;
                 const end = period === 0 ? 15 : lastDay;
-                
                 const days = [];
-                const totalSlots = period === 0 ? 15 : 16; // Fix row count for grid consistency
+                const totalSlots = period === 0 ? 15 : 16;
                 
                 for (let i = 0; i < totalSlots; i++) {
                     const d = start + i;
                     if (d <= end) {
                         const date = new Date(year, month, d);
                         const today = new Date();
-                        // Check holiday from DB (Booking named SYSTEM_HOLIDAY)
                         const isDbHoliday = db.bookings.some(b => b.date === date.toISOString().split('T')[0] && b.inspector_name === 'SYSTEM_HOLIDAY');
-
                         days.push({
                             full: date.toISOString().split('T')[0],
                             day: d,
@@ -278,18 +169,113 @@
                             isToday: date.getDate() === today.getDate() && date.getMonth() === today.getMonth(),
                             isEmpty: false
                         });
-                    } else {
-                        days.push({ isEmpty: true });
-                    }
+                    } else { days.push({ isEmpty: true }); }
                 }
                 return days;
             }, [currentDate, period, db.bookings]);
 
-            // --- Admin Logic ---
             const pendingUsers = db.users.filter(u => u.role === 'pending');
 
-            if (!user) return <LoginView setView={setView} users={db.users} apiAction={apiAction} user={user} />;
+            // --- Sub-Components ---
 
+            const LoginPopup = () => {
+                const [mode, setMode] = useState('login');
+                const [showPwd, setShowPwd] = useState(false);
+                const [isSubmitting, setIsSubmitting] = useState(false);
+
+                return (
+                    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+                        <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 animate-slide-up relative">
+                            {/* Close Button */}
+                            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+                                <i data-lucide="x" className="w-5 h-5 text-slate-500"></i>
+                            </button>
+
+                            <div className="text-center mb-6">
+                                <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-6 mx-auto mb-3" />
+                                <h2 className="text-xl font-bold text-slate-800">{mode === 'signup' ? 'ลงทะเบียน' : 'เข้าสู่ระบบ'}</h2>
+                            </div>
+
+                            {mode === 'login' ? (
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const fd = new FormData(e.target);
+                                    const u = db.users.find(x => x.username === fd.get('username').trim() && String(x.password) === fd.get('password').trim());
+                                    if (u) {
+                                        if (u.role === 'pending') {
+                                            alert('รอ Admin อนุมัติ');
+                                        } else {
+                                            setUser(u);
+                                            localStorage.setItem('sais_user', JSON.stringify(u));
+                                            setShowLogin(false);
+                                            showToast('เข้าสู่ระบบสำเร็จ');
+                                        }
+                                    } else { alert('ข้อมูลไม่ถูกต้อง'); }
+                                }} className="space-y-4">
+                                    <input name="username" className="w-full p-3 bg-slate-100 rounded-xl outline-none" placeholder="Username" />
+                                    <div className="relative">
+                                        <input name="password" type={showPwd ? "text" : "password"} className="w-full p-3 bg-slate-100 rounded-xl outline-none" placeholder="Password" />
+                                        <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-3 text-slate-400">
+                                            <i data-lucide={showPwd ? "eye-off" : "eye"} className="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                    <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">Login</button>
+                                    <button type="button" onClick={() => setMode('signup')} className="w-full text-xs text-slate-500 mt-2">ยังไม่มีบัญชี? สมัครสมาชิก</button>
+                                </form>
+                            ) : (
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    setIsSubmitting(true);
+                                    const fd = new FormData(e.target);
+                                    if (!fd.get('email').endsWith('@schindler.com')) { alert('@schindler.com เท่านั้น'); setIsSubmitting(false); return; }
+                                    const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
+                                    setIsSubmitting(false);
+                                    if (ok) { alert('ลงทะเบียนสำเร็จ รออนุมัติ'); setMode('login'); }
+                                }} className="space-y-3">
+                                    <input name="full_name" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="ชื่อ-นามสกุล" />
+                                    <input name="email" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Email" />
+                                    <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
+                                    <input name="password" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
+                                    <input name="phone" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="เบอร์โทร" />
+                                    <button disabled={isSubmitting} className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">
+                                        {isSubmitting ? '...' : 'ยืนยันสมัคร'}
+                                    </button>
+                                    <button type="button" onClick={() => setMode('login')} className="w-full text-xs text-slate-400">กลับ</button>
+                                </form>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const ManualPopup = () => (
+                <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex flex-col animate-slide-up bg-white">
+                    <div className="p-4 border-b flex justify-between items-center shadow-sm bg-slate-50">
+                        <h2 className="font-bold text-lg flex items-center gap-2"><i data-lucide="book" className="w-5 h-5"></i> คู่มือการใช้งาน</h2>
+                        <button onClick={() => setShowManual(false)} className="p-2 bg-white rounded-full border"><i data-lucide="x" className="w-5 h-5"></i></button>
+                    </div>
+                    <div className="p-6 overflow-auto space-y-4 text-sm text-slate-700 bg-white">
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <h3 className="font-bold text-blue-800 mb-2">1. การเข้าใช้งาน (Login)</h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>ทุกคนสามารถดูตารางงานได้โดยไม่ต้อง Login</li>
+                                <li>หากต้องการ <b>จอง, แก้ไข หรือลบ</b> ต้อง Login ก่อน</li>
+                                <li>สมัครสมาชิกใหม่ต้องใช้ Email <b>@schindler.com</b> และรอ Admin อนุมัติ</li>
+                            </ul>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                            <h3 className="font-bold text-green-800 mb-2">2. การจองคิวตรวจ</h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>เลือกวันที่และ Inspector ที่ว่าง (ช่องว่างๆ)</li>
+                                <li>กรอกข้อมูล <b>Equipment No.</b> และ <b>Unit No.</b> ให้ครบถ้วน</li>
+                                <li>ต้องส่งเอกสาร (Layout, Wiring) ล่วงหน้า <b>3 วัน</b></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- Main Layout ---
             return (
                 <div className="h-screen flex flex-col bg-white overflow-hidden">
                     {/* Header */}
@@ -298,10 +284,10 @@
                             <h1 className="text-xs font-bold tracking-wide">SAIS schedule digital booking</h1>
                         </div>
                         
-                        {/* Month Selector in Header */}
+                        {/* Month Selector */}
                         <div className="flex items-center bg-black/20 rounded-lg px-1">
                             <button onClick={() => togglePeriod('prev')} className="p-1 px-2 hover:bg-white/10 text-white rounded"><i data-lucide="chevron-left" className="w-4 h-4"></i></button>
-                            <div className="px-2 text-center leading-tight">
+                            <div className="px-2 text-center leading-tight w-[70px]">
                                 <div className="text-[10px] font-bold">{currentDate.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })}</div>
                                 <div className="text-[9px] opacity-80">{period===0 ? '1-15' : '16-End'}</div>
                             </div>
@@ -309,14 +295,26 @@
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button onClick={() => setView('history')} className="text-white/90 hover:text-white relative">
-                                <i data-lucide="history" className="w-5 h-5"></i>
+                            {/* Manual Button (New Location) */}
+                            <button onClick={() => setShowManual(true)} className="bg-white/20 p-1.5 rounded-full hover:bg-white/30" title="คู่มือ">
+                                <i data-lucide="book" className="w-3.5 h-3.5"></i>
                             </button>
-                            <button onClick={handleLogout} className="bg-white/20 p-1.5 rounded-full"><i data-lucide="log-out" className="w-3.5 h-3.5"></i></button>
+
+                            {/* Login/User Button */}
+                            {user ? (
+                                <button onClick={handleLogout} className="bg-white/20 p-1.5 rounded-full flex items-center gap-1 pl-2">
+                                    <span className="text-[9px] font-bold">{user.full_name.split(' ')[0]}</span>
+                                    <i data-lucide="log-out" className="w-3.5 h-3.5"></i>
+                                </button>
+                            ) : (
+                                <button onClick={() => setShowLogin(true)} className="px-2 py-1 bg-white text-red-600 rounded text-[10px] font-bold shadow">
+                                    Login
+                                </button>
+                            )}
                         </div>
                     </header>
 
-                    {/* Pending Users Alert (Admin Only) */}
+                    {/* Pending Users Alert */}
                     {isAdmin && pendingUsers.length > 0 && (
                         <div className="bg-amber-100 px-3 py-1 flex justify-between items-center text-[10px] text-amber-800">
                             <span>มี {pendingUsers.length} คนรออนุมัติ</span>
@@ -324,11 +322,10 @@
                         </div>
                     )}
 
-                    {/* Main Content */}
+                    {/* Content */}
                     <main className="flex-1 overflow-hidden relative">
                         {view === 'calendar' && (
                             <div className="fit-screen-container bg-white">
-                                {/* Inspector Headers */}
                                 <div className="compact-header-row flex bg-slate-800 text-white z-10 text-[9px] border-b border-white/20">
                                     <div className="w-[40px] flex items-center justify-center font-bold bg-slate-900 border-r border-white/20">DATE</div>
                                     {db.inspectors.map((ins, i) => (
@@ -339,23 +336,14 @@
                                     ))}
                                 </div>
 
-                                {/* Calendar Body */}
                                 <div className="compact-body bg-white">
                                     {daysInView.map((d, index) => (
                                         <div key={index} className={`grid-row ${d.isEmpty ? 'bg-slate-50' : ''}`}>
-                                            {/* Date Cell */}
-                                            <div 
-                                                className={`cell-date ${d.isSunday ? 'is-sunday' : ''} ${d.isHoliday ? 'is-holiday' : ''} ${d.isToday ? 'is-today' : ''}`}
+                                            <div className={`cell-date ${d.isSunday ? 'is-sunday' : ''} ${d.isHoliday ? 'is-holiday' : ''} ${d.isToday ? 'is-today' : ''}`}
                                                 onClick={() => {
                                                     if(isAdmin && !d.isEmpty) {
-                                                        if(confirm(`ตั้งค่า ${d.full} เป็นวันหยุดหรือไม่?`)) {
-                                                            apiAction({ 
-                                                                action: 'create_booking', 
-                                                                inspector_name: 'SYSTEM_HOLIDAY', 
-                                                                date: d.full, 
-                                                                site_name: 'วันหยุด',
-                                                                user: user.username 
-                                                            });
+                                                        if(confirm(`ตั้งวันหยุด ${d.full} ?`)) {
+                                                            apiAction({ action: 'create_booking', inspector_name: 'SYSTEM_HOLIDAY', date: d.full, site_name: 'วันหยุด', user: user.username });
                                                         }
                                                     }
                                                 }}
@@ -369,10 +357,8 @@
                                                 )}
                                             </div>
 
-                                            {/* Inspector Slots */}
                                             {!d.isEmpty && db.inspectors.map((ins, idx) => {
                                                 if (d.isHoliday) return <div key={idx} className="cell-slot bg-red-50/50"></div>;
-
                                                 const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
                                                 const hasTask = tasks.length > 0;
                                                 const task = hasTask ? tasks[0] : null;
@@ -381,7 +367,10 @@
                                                     <div key={idx} className="cell-slot active:bg-blue-50"
                                                         onClick={() => {
                                                             if (hasTask) setModal({ type: 'detail', data: task });
-                                                            else setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                            else {
+                                                                if (!user) { setShowLogin(true); return; } // Check Login Here
+                                                                setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                            }
                                                         }}
                                                     >
                                                         {hasTask ? (
@@ -423,7 +412,17 @@
                         )}
                     </main>
 
-                    {/* Modals */}
+                    {/* Popups */}
+                    {showLogin && <LoginPopup />}
+                    {showManual && <ManualPopup />}
+                    {toast && (
+                        <div className={`fixed top-14 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-full shadow-xl text-white font-bold text-xs animate-slide-up
+                            ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                            {toast.msg}
+                        </div>
+                    )}
+
+                    {/* Data Modals */}
                     {modal && (
                         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center">
                             <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
@@ -438,16 +437,9 @@
                                         <form onSubmit={async (e) => {
                                             e.preventDefault();
                                             const fd = new FormData(e.target);
-                                            const payload = {
-                                                action: 'create_booking',
-                                                ...Object.fromEntries(fd),
-                                                inspector_name: modal.data.inspector_name,
-                                                date: modal.data.date,
-                                                user: user.username,
-                                                updated_by: user.username
-                                            };
+                                            const payload = { action: 'create_booking', ...Object.fromEntries(fd), inspector_name: modal.data.inspector_name, date: modal.data.date, user: user.username };
                                             const ok = await apiAction(payload);
-                                            if(ok) { alert('จองสำเร็จ'); setModal(null); }
+                                            if(ok) { showToast('จองสำเร็จ'); setModal(null); }
                                         }} className="space-y-3">
                                             <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="ชื่อโครงการ" />
                                             <div className="grid grid-cols-2 gap-2">
@@ -501,13 +493,15 @@
                                                 </div>
                                             ))}
                                         </div>
-                                        {(isAdmin || user?.username === modal.data.created_by) && (
+                                        {(isAdmin || user?.username === modal.data.created_by) ? (
                                             <button onClick={async() => {
                                                 if(confirm('ลบรายการ?')) {
                                                     await apiAction({ action: 'delete_booking', id: modal.data.id, user: user.username, target_name: modal.data.site_name });
                                                     setModal(null);
                                                 }
                                             }} className="w-full mt-4 py-3 bg-white border border-red-100 text-red-600 font-bold rounded-xl text-xs">ลบรายการจอง</button>
+                                        ) : (
+                                            !user && <div className="mt-4 text-center text-xs text-red-500 bg-red-50 p-2 rounded">กรุณา Login เพื่อแก้ไขข้อมูล</div>
                                         )}
                                     </div>
                                 )}
@@ -523,16 +517,16 @@
                                                 <div key={u.username} className="p-3 border rounded flex justify-between items-center text-xs">
                                                     <div>
                                                         <div className="font-bold">{u.full_name}</div>
-                                                        <div className="text-slate-500">{u.username} | {u.email}</div>
+                                                        <div className="text-slate-500">{u.username}</div>
                                                     </div>
                                                     <button onClick={async () => {
-                                                        if(confirm('อนุมัติผู้ใช้นี้?')) {
+                                                        if(confirm('อนุมัติ?')) {
                                                             await apiAction({ action: 'approve_user', target_username: u.username });
                                                         }
                                                     }} className="px-3 py-1 bg-green-600 text-white rounded font-bold">อนุมัติ</button>
                                                 </div>
                                             ))}
-                                            {pendingUsers.length === 0 && <div className="text-center text-slate-400">ไม่มีรายการรออนุมัติ</div>}
+                                            {pendingUsers.length === 0 && <div className="text-center text-slate-400">ไม่มีรายการ</div>}
                                         </div>
                                     </div>
                                 )}
