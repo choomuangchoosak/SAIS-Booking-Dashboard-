@@ -3,52 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SAIS Schedule digital booking</title>
+    <title>SAIS schedule digital booking</title>
     
+    <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font: Sarabun (อ่านง่ายแม้ตัวเล็ก) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/umd/lucide.min.js"></script>
     
     <style>
         body { 
-            font-family: 'IBM Plex Sans Thai', sans-serif; 
+            font-family: 'Sarabun', sans-serif; 
             background-color: #f8fafc; 
-            overscroll-behavior: none; /* ป้องกันการดึงขอบจอ */
+            overscroll-behavior: none;
             height: 100vh;
-            overflow: hidden; /* ห้ามเลื่อนทั้งหน้า */
+            overflow: hidden;
             font-size: 11px;
         }
 
-        /* --- Compact Grid System --- */
+        /* --- Layout --- */
         .fit-screen-container {
-            height: calc(100vh - 50px); /* ความสูงเต็มจอ ลบ Header */
+            height: calc(100vh - 45px); /* Header height 45px */
             display: flex;
             flex-direction: column;
         }
-
-        .compact-header-row {
-            flex: 0 0 auto; /* ความสูงคงที่สำหรับหัวตาราง */
-        }
-
         .compact-body {
-            flex: 1 1 auto; /* ยืดหยุ่นเต็มพื้นที่ที่เหลือ */
+            flex: 1;
             display: grid;
-            /* แบ่งเป็น 16 แถวเท่าๆ กัน (15 วัน + เผื่อเหลือ) */
-            grid-template-rows: repeat(15, 1fr); 
+            grid-template-rows: repeat(16, 1fr); /* 15 วัน + 1 เผื่อขอบ */
+            overflow: hidden;
         }
-
         .grid-row {
             display: flex;
             border-bottom: 1px solid #f1f5f9;
         }
 
-        /* Cell Styling */
+        /* Columns */
         .cell-date {
-            width: 35px; /* ความกว้างคงที่สำหรับวันที่ */
+            width: 40px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -56,10 +52,10 @@
             justify-content: center;
             border-right: 1px solid #e2e8f0;
             background: #fff;
+            position: relative;
         }
-
         .cell-slot {
-            flex: 1; /* แบ่งพื้นที่ที่เหลือเท่าๆ กัน */
+            flex: 1;
             border-right: 1px solid #f1f5f9;
             position: relative;
             display: flex;
@@ -67,32 +63,132 @@
             justify-content: center;
             padding: 1px;
         }
+
+        /* Highlights */
+        .is-sunday { background-color: #fef2f2 !important; color: #dc2626; }
+        .is-holiday { background-color: #fee2e2 !important; border-bottom: 1px solid #fecaca; }
+        .is-today { 
+            box-shadow: inset 0 0 0 2px #3b82f6; 
+            z-index: 10;
+        }
         
         .schindler-gradient { background: linear-gradient(135deg, #D0021B 0%, #a50215 100%); }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* ป้องกัน Zoom บน iOS */
         input, select { font-size: 16px !important; }
-
-        /* การตัดคำสำหรับจอเล็ก */
-        .truncate-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            line-height: 1;
-        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQUcxgT9TuHMVOqQJaUHAJRzdcDRf32uhJYF4d1J03houaV6uaJJrY9Df74ap_6DXk/exec"; 
+        // ** URL สคริปต์ใหม่ **
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxI_OlN2UjTpTKIqbImcK56672CcLYxeinjQPQkfq3evIYf8ynxXOSWFwp6cLOSBMtC/exec"; 
         const ADMIN_USERNAME = "jiraphong2227";
+
+        // --- Component หน้า Login (แยกออกมาเพื่อแก้บั๊กพิมพ์แล้วหาย) ---
+        const LoginView = ({ setView, users, apiAction, user }) => {
+            const [mode, setMode] = useState('login'); // login, signup, manual
+            const [isLoading, setIsLoading] = useState(false);
+
+            // หน้าคู่มือการใช้งาน
+            if (mode === 'manual') return (
+                <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slide-up">
+                    <div className="p-4 border-b flex justify-between items-center shadow-sm">
+                        <h2 className="font-bold text-lg">คู่มือการใช้งาน</h2>
+                        <button onClick={() => setMode('login')} className="p-2 bg-slate-100 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
+                    </div>
+                    <div className="p-6 overflow-auto space-y-4 text-sm text-slate-700">
+                        <div className="bg-blue-50 p-4 rounded-xl">
+                            <h3 className="font-bold text-blue-800 mb-2">1. การเข้าใช้งาน</h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>ต้องสมัครสมาชิกด้วย Email @schindler.com</li>
+                                <li>หลังสมัคร ต้องรอ Admin อนุมัติสิทธิ์ก่อน</li>
+                            </ul>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-xl">
+                            <h3 className="font-bold text-green-800 mb-2">2. การจองคิว</h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>แตะที่ช่องว่างในตารางเพื่อจอง</li>
+                                <li>กรอกข้อมูลให้ครบถ้วน (Equipment No, Unit)</li>
+                                <li>ต้องส่งเอกสารล่วงหน้า 3 วัน</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="fixed inset-0 z-50 bg-slate-50 flex items-center justify-center p-6">
+                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 animate-slide-up">
+                        <div className="text-center mb-6">
+                            <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-6 mx-auto mb-3" />
+                            <h2 className="text-xl font-bold text-slate-800">{mode === 'signup' ? 'ลงทะเบียนใหม่' : 'เข้าสู่ระบบ'}</h2>
+                        </div>
+
+                        {mode === 'login' && (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const fd = new FormData(e.target);
+                                const u = users.find(x => x.username === fd.get('username').trim() && String(x.password) === fd.get('password').trim());
+                                if (u) {
+                                    if (u.role === 'pending') {
+                                        alert('บัญชีของคุณรอการอนุมัติจาก Admin');
+                                    } else {
+                                        localStorage.setItem('sais_user', JSON.stringify(u));
+                                        window.location.reload(); // Reload เพื่อโหลด state ใหม่
+                                    }
+                                } else {
+                                    alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                                }
+                            }} className="space-y-4">
+                                <input name="username" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
+                                <input name="password" type="password" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
+                                <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">เข้าสู่ระบบ</button>
+                                <div className="flex justify-between mt-4">
+                                    <button type="button" onClick={() => setMode('signup')} className="text-slate-500 text-xs">สมัครสมาชิก</button>
+                                    <button type="button" onClick={() => setMode('manual')} className="text-red-600 font-bold text-xs flex items-center gap-1"><i data-lucide="book" className="w-3 h-3"></i> คู่มือการใช้งาน</button>
+                                </div>
+                            </form>
+                        )}
+
+                        {mode === 'signup' && (
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                setIsLoading(true);
+                                const fd = new FormData(e.target);
+                                if (!fd.get('email').endsWith('@schindler.com')) {
+                                    alert('ต้องใช้เมล @schindler.com เท่านั้น');
+                                    setIsLoading(false);
+                                    return;
+                                }
+                                const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
+                                setIsLoading(false);
+                                if (ok) {
+                                    alert('ลงทะเบียนสำเร็จ! กรุณารอ Admin อนุมัติ');
+                                    setMode('login');
+                                } else {
+                                    alert('เกิดข้อผิดพลาด หรือชื่อซ้ำ');
+                                }
+                            }} className="space-y-3">
+                                <input name="full_name" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="ชื่อ-นามสกุล" />
+                                <input name="email" required type="email" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Email" />
+                                <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
+                                <input name="password" required type="password" className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
+                                <input name="phone" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="เบอร์โทร" />
+                                <button disabled={isLoading} className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg mt-2">
+                                    {isLoading ? 'กำลังบันทึก...' : 'ยืนยันสมัคร'}
+                                </button>
+                                <button type="button" onClick={() => setMode('login')} className="w-full text-slate-400 text-xs py-2">กลับ</button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            );
+        };
 
         const App = () => {
             const [db, setDb] = useState({ bookings: [], users: [], history: [], inspectors: [] });
@@ -100,13 +196,11 @@
             const [view, setView] = useState('calendar'); 
             const [loading, setLoading] = useState(false);
             const [modal, setModal] = useState(null); 
-            const [toast, setToast] = useState(null);
             
-            // State สำหรับเวลาและช่วง (Period)
             const [currentDate, setCurrentDate] = useState(new Date());
-            const [period, setPeriod] = useState(0); // 0 = วันที่ 1-15, 1 = วันที่ 16-สิ้นเดือน
+            const [period, setPeriod] = useState(0); // 0=1-15, 1=16-End
 
-            const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME, [user]);
+            const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME || user?.role === 'admin', [user]);
 
             useEffect(() => {
                 fetchData();
@@ -116,18 +210,11 @@
 
             const fetchData = async () => {
                 if (!SCRIPT_URL) return;
-                setLoading(true);
                 try {
                     const res = await fetch(SCRIPT_URL);
                     const data = await res.json();
                     setDb(data);
                 } catch (e) { console.error(e); }
-                setLoading(false);
-            };
-
-            const showToast = (msg, type = 'success') => {
-                setToast({ msg, type });
-                setTimeout(() => setToast(null), 3000);
             };
 
             const apiAction = async (payload) => {
@@ -135,265 +222,208 @@
                 try {
                     const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await res.json();
-                    if (result.status === 'ok') { fetchData(); return true; }
-                } catch (e) { showToast('Error', 'error'); }
-                setLoading(false); return false;
+                    setLoading(false);
+                    if (result.status === 'ok') {
+                        fetchData();
+                        return true;
+                    }
+                } catch (e) { setLoading(false); }
+                return false;
             };
 
-            // Logic เปลี่ยนช่วงเวลา (Previous / Next)
-            const togglePeriod = (direction) => {
-                if (direction === 'next') {
-                    if (period === 0) {
-                        setPeriod(1); // ไปครึ่งหลัง
-                    } else {
-                        // ข้ามไปเดือนถัดไป ครึ่งแรก
-                        const newDate = new Date(currentDate);
-                        newDate.setMonth(newDate.getMonth() + 1);
-                        setCurrentDate(newDate);
-                        setPeriod(0);
-                    }
+            const handleLogout = () => {
+                localStorage.removeItem('sais_user');
+                setUser(null);
+            };
+
+            const togglePeriod = (dir) => {
+                let newPeriod = period;
+                let newDate = new Date(currentDate);
+                
+                if (dir === 'next') {
+                    if (period === 0) newPeriod = 1;
+                    else { newPeriod = 0; newDate.setMonth(newDate.getMonth() + 1); }
                 } else {
-                    if (period === 1) {
-                        setPeriod(0); // กลับมาครึ่งแรก
-                    } else {
-                        // ย้อนไปเดือนก่อนหน้า ครึ่งหลัง
-                        const newDate = new Date(currentDate);
-                        newDate.setMonth(newDate.getMonth() - 1);
-                        setCurrentDate(newDate);
-                        setPeriod(1); // หรือจะให้เริ่มที่ 0 ก็ได้แล้วแต่ Logic
-                    }
+                    if (period === 1) newPeriod = 0;
+                    else { newPeriod = 1; newDate.setMonth(newDate.getMonth() - 1); }
                 }
+                setPeriod(newPeriod);
+                setCurrentDate(newDate);
             };
 
             const daysInView = useMemo(() => {
                 const year = currentDate.getFullYear();
                 const month = currentDate.getMonth();
                 const lastDay = new Date(year, month + 1, 0).getDate();
+                const start = period === 0 ? 1 : 16;
+                const end = period === 0 ? 15 : lastDay;
                 
-                const startDay = period === 0 ? 1 : 16;
-                // ถ้าเป็นครึ่งหลัง ให้แสดงถึงวันสุดท้าย หรือถ้ามี 31 วันก็จบที่ 31 (Grid จะยืดหยุ่นเอง)
-                const endDay = period === 0 ? 15 : lastDay;
-
                 const days = [];
-                // สร้าง Loop ให้ครบ 15 ช่องเสมอ (หรือ 16) เพื่อความสวยงามของ Grid
-                const limit = period === 0 ? 15 : (lastDay - 15); 
+                const totalSlots = period === 0 ? 15 : 16; // Fix row count for grid consistency
                 
-                for (let i = 0; i < (period === 0 ? 15 : 16); i++) {
-                    const currentDayVal = startDay + i;
-                    if (currentDayVal <= endDay) {
-                        const date = new Date(year, month, currentDayVal);
+                for (let i = 0; i < totalSlots; i++) {
+                    const d = start + i;
+                    if (d <= end) {
+                        const date = new Date(year, month, d);
+                        const today = new Date();
+                        // Check holiday from DB (Booking named SYSTEM_HOLIDAY)
+                        const isDbHoliday = db.bookings.some(b => b.date === date.toISOString().split('T')[0] && b.inspector_name === 'SYSTEM_HOLIDAY');
+
                         days.push({
                             full: date.toISOString().split('T')[0],
-                            day: currentDayVal,
+                            day: d,
                             weekday: date.toLocaleDateString('th-TH', { weekday: 'short' }),
-                            isWeekend: date.getDay() === 0 || date.getDay() === 6,
+                            isSunday: date.getDay() === 0,
+                            isHoliday: isDbHoliday,
+                            isToday: date.getDate() === today.getDate() && date.getMonth() === today.getMonth(),
                             isEmpty: false
                         });
                     } else {
-                        // ช่องว่างถ้าเดือนนั้นวันไม่ครบ (เช่น ก.พ.)
-                        days.push({ isEmpty: true, day: '', full: `empty-${i}` });
+                        days.push({ isEmpty: true });
                     }
                 }
                 return days;
-            }, [currentDate, period]);
+            }, [currentDate, period, db.bookings]);
 
-            // --- Components ---
+            // --- Admin Logic ---
+            const pendingUsers = db.users.filter(u => u.role === 'pending');
 
-            const LoginView = () => (
-                <div className="fixed inset-0 z-50 bg-white flex items-center justify-center p-6">
-                    <div className="w-full max-w-sm">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-slate-800">SAIS Login</h2>
-                            <p className="text-slate-500">ระบบจองคิวตรวจงาน</p>
-                        </div>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            if (db.users.length === 0) {
-                                showToast('กำลังโหลดข้อมูล... กรุณารอสักครู่', 'error');
-                                return;
-                            }
-                            const fd = new FormData(e.target);
-                            const username = fd.get('username').trim();
-                            const password = fd.get('password').trim();
-                            
-                            const u = db.users.find(x => x.username === username && String(x.password) === password);
-                            
-                            if (u) {
-                                setUser(u);
-                                localStorage.setItem('sais_user', JSON.stringify(u));
-                                setView('calendar');
-                                showToast('เข้าสู่ระบบสำเร็จ');
-                            } else { 
-                                showToast('รหัสผ่านไม่ถูกต้อง', 'error'); 
-                            }
-                        }} className="space-y-4">
-                            <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
-                            <input name="password" type="password" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
-                      v9    <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-lg">LOGIN</button>
-                        </form>
-                    </div>
-                </div>
-            );
+            if (!user) return <LoginView setView={setView} users={db.users} apiAction={apiAction} user={user} />;
 
-            const CalendarView = () => {
-                return (
-                    <div className="fit-screen-container bg-white">
-                        {/* 1. Sub Header: Month & Navigation */}
-                        <div className="compact-header-row bg-slate-50 px-2 py-1.5 flex justify-between items-center border-b shadow-sm z-20">
-                            <button onClick={() => togglePeriod('prev')} className="p-1 bg-white rounded border shadow-sm active:scale-95">
-                                <i data-lucide="chevron-left" className="w-4 h-4 text-slate-600"></i>
-                            </button>
-                            
-                            <div className="text-center">
-                                <h2 className="text-xs font-bold text-slate-800">
-                                    {currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
-                                </h2>
-                                <span className="text-[10px] text-red-600 font-bold bg-red-50 px-2 rounded-full border border-red-100">
-                                    {period === 0 ? 'วันที่ 1 - 15' : 'วันที่ 16 - สิ้นเดือน'}
-                                </span>
-                            </div>
-
-                            <button onClick={() => togglePeriod('next')} className="p-1 bg-white rounded border shadow-sm active:scale-95">
-                                <i data-lucide="chevron-right" className="w-4 h-4 text-slate-600"></i>
-                            </button>
-                        </div>
-
-                        {/* 2. Inspector Headers */}
-                        <div className="compact-header-row flex bg-slate-800 text-white z-10 text-[9px]">
-                            <div className="w-[35px] flex items-center justify-center border-r border-white/20 font-bold bg-slate-900">
-                                DATE
-                            </div>
-                            {db.inspectors.map((ins, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center justify-center py-1 border-r border-white/20 min-w-0">
-                                    <div className="font-bold truncate w-full text-center px-0.5">{ins.name}</div>
-                                    <div className="opacity-60 text-[8px]">{ins.short}</div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* 3. Calendar Body (No Scroll) */}
-                        <div className="compact-body bg-white">
-                            {daysInView.map((d, index) => (
-                                <div key={index} className={`grid-row ${d.isEmpty ? 'bg-slate-50' : (d.isWeekend ? 'bg-slate-50' : 'bg-white')}`}>
-                                    {/* Date Column */}
-                                    <div className="cell-date">
-                                        {!d.isEmpty && (
-                                            <>
-                                                <span className="text-xs font-bold text-slate-700">{d.day}</span>
-                                                <span className={`text-[8px] font-bold ${d.isWeekend ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Inspector Slots */}
-                                    {!d.isEmpty && db.inspectors.map((ins, idx) => {
-                                        const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
-                                        const hasTask = tasks.length > 0;
-                                        const task = hasTask ? tasks[0] : null; // Show first task only in compact view
-
-                                        return (
-                                            <div 
-                                                key={idx}
-                                                className="cell-slot active:bg-blue-50"
-                                                onClick={() => {
-                                                    if (!user) return setView('login');
-                                                    if (hasTask) {
-                                                        setModal({ type: 'detail', data: task });
-                                                    } else {
-                                                        setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
-                                                    }
-                                                }}
-                                            >
-                                                {hasTask ? (
-                                                    <div className={`w-full h-full p-0.5 m-0.5 rounded border text-[8px] flex flex-col justify-center
-                                                        ${task.status === 'pending' ? 'bg-white border-slate-200 shadow-sm' : 'bg-green-50 border-green-200'}`}>
-                                                        
-                                                        <div className="font-bold text-slate-800 truncate leading-tight">{task.site_name}</div>
-                                                        <div className="flex justify-between items-center text-slate-500 leading-none mt-0.5">
-                                                            <span>{task.time_slot}</span>
-                                                            <span className="font-mono">#{task.equipment_no.replace(/\D/g,'')}</span>
-                                                        </div>
-                                                        {(!task.layout_doc || task.layout_doc === 'false') && (
-                                                            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-slate-100 text-lg opacity-0 hover:opacity-100">+</div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            };
-
-            const HistoryView = () => (
-                <div className="fixed inset-0 z-40 bg-white flex flex-col animate-slide-up">
-                    <div className="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md">
-                        <h2 className="font-bold flex items-center gap-2"><i data-lucide="history" className="w-4 h-4"></i> ประวัติการทำรายการ</h2>
-                        <button onClick={() => setView('calendar')} className="p-1 bg-white/20 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
-                    </div>
-                    <div className="flex-1 overflow-auto p-4 space-y-2 pb-10">
-                        {db.history.length === 0 && <div className="text-center text-slate-400 mt-10">ไม่มีข้อมูลประวัติ</div>}
-                        {[...db.history].reverse().slice(0, 50).map(h => (
-                            <div key={h.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[10px]">
-                                <div className="flex justify-between text-slate-400 mb-1">
-                                    <span>{new Date(h.timestamp).toLocaleString('th-TH')}</span>
-                                    <span className="font-bold text-slate-600">{h.user}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold shrink-0
-                                        ${h.action === 'CREATE' ? 'bg-green-100 text-green-700' : h.action === 'DELETE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                                        {h.action}
-                                    </span>
-                                    <span className="text-slate-700">{h.details}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-
-            // --- Main Layout ---
             return (
-                <div className="h-full flex flex-col bg-white overflow-hidden">
+                <div className="h-screen flex flex-col bg-white overflow-hidden">
                     {/* Header */}
-                    <header className="schindler-gradient text-white px-3 py-2 flex justify-between items-center shadow-md z-50 h-[50px]">
+                    <header className="schindler-gradient text-white h-[45px] px-3 flex justify-between items-center shadow-md z-50">
                         <div className="flex items-center gap-2">
-                             <div className="bg-white p-0.5 rounded">
-                                <img src="https://www.schindler.com/etc.clientlibs/schindler/clientlibs/clientlib-site/resources/images/logo.svg" className="h-3 w-auto" onError={(e)=>e.target.style.display='none'}/>
-                            </div>
-                            <h1 className="text-xs font-bold tracking-wide">SAIS BOOKING v9</h1>
+                            <h1 className="text-xs font-bold tracking-wide">SAIS schedule digital booking</h1>
                         </div>
+                        
+                        {/* Month Selector in Header */}
+                        <div className="flex items-center bg-black/20 rounded-lg px-1">
+                            <button onClick={() => togglePeriod('prev')} className="p-1 px-2 hover:bg-white/10 text-white rounded"><i data-lucide="chevron-left" className="w-4 h-4"></i></button>
+                            <div className="px-2 text-center leading-tight">
+                                <div className="text-[10px] font-bold">{currentDate.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })}</div>
+                                <div className="text-[9px] opacity-80">{period===0 ? '1-15' : '16-End'}</div>
+                            </div>
+                            <button onClick={() => togglePeriod('next')} className="p-1 px-2 hover:bg-white/10 text-white rounded"><i data-lucide="chevron-right" className="w-4 h-4"></i></button>
+                        </div>
+
                         <div className="flex items-center gap-3">
-                            {user && (
-                                <button onClick={() => setView('history')} className="text-white/80 hover:text-white flex items-center gap-1">
-                                    <i data-lucide="history" className="w-4 h-4"></i>
-                                    <span className="text-[9px] font-bold hidden sm:inline">ประวัติ</span>
-                                </button>
-                            )}
-                            {user ? (
-                                <button onClick={handleLogout} className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
-                                    <span className="text-[9px] font-bold">{user.full_name.split(' ')[0]}</span>
-                                    <i data-lucide="log-out" className="w-3 h-3"></i>
-                                </button>
-                            ) : (
-                                <button onClick={() => setView('login')} className="px-2 py-1 bg-white text-red-600 rounded text-[10px] font-bold">Login</button>
-                            )}
+                            <button onClick={() => setView('history')} className="text-white/90 hover:text-white relative">
+                                <i data-lucide="history" className="w-5 h-5"></i>
+                            </button>
+                            <button onClick={handleLogout} className="bg-white/20 p-1.5 rounded-full"><i data-lucide="log-out" className="w-3.5 h-3.5"></i></button>
                         </div>
                     </header>
 
-                    {/* Content */}
+                    {/* Pending Users Alert (Admin Only) */}
+                    {isAdmin && pendingUsers.length > 0 && (
+                        <div className="bg-amber-100 px-3 py-1 flex justify-between items-center text-[10px] text-amber-800">
+                            <span>มี {pendingUsers.length} คนรออนุมัติ</span>
+                            <button onClick={() => setModal({ type: 'users' })} className="underline font-bold">จัดการ</button>
+                        </div>
+                    )}
+
+                    {/* Main Content */}
                     <main className="flex-1 overflow-hidden relative">
-                        {view === 'calendar' && <CalendarView />}
-                        {view === 'history' && <HistoryView />}
-                        {view === 'login' && <LoginView />}
+                        {view === 'calendar' && (
+                            <div className="fit-screen-container bg-white">
+                                {/* Inspector Headers */}
+                                <div className="compact-header-row flex bg-slate-800 text-white z-10 text-[9px] border-b border-white/20">
+                                    <div className="w-[40px] flex items-center justify-center font-bold bg-slate-900 border-r border-white/20">DATE</div>
+                                    {db.inspectors.map((ins, i) => (
+                                        <div key={i} className="flex-1 flex flex-col items-center justify-center py-1.5 border-r border-white/20 min-w-0">
+                                            <div className="font-bold truncate w-full text-center px-0.5">{ins.name}</div>
+                                            <div className="opacity-60 text-[8px]">{ins.short}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Calendar Body */}
+                                <div className="compact-body bg-white">
+                                    {daysInView.map((d, index) => (
+                                        <div key={index} className={`grid-row ${d.isEmpty ? 'bg-slate-50' : ''}`}>
+                                            {/* Date Cell */}
+                                            <div 
+                                                className={`cell-date ${d.isSunday ? 'is-sunday' : ''} ${d.isHoliday ? 'is-holiday' : ''} ${d.isToday ? 'is-today' : ''}`}
+                                                onClick={() => {
+                                                    if(isAdmin && !d.isEmpty) {
+                                                        if(confirm(`ตั้งค่า ${d.full} เป็นวันหยุดหรือไม่?`)) {
+                                                            apiAction({ 
+                                                                action: 'create_booking', 
+                                                                inspector_name: 'SYSTEM_HOLIDAY', 
+                                                                date: d.full, 
+                                                                site_name: 'วันหยุด',
+                                                                user: user.username 
+                                                            });
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                {!d.isEmpty && (
+                                                    <>
+                                                        <span className="text-sm font-bold text-slate-700 leading-none">{d.day}</span>
+                                                        <span className={`text-[8px] mt-0.5 font-bold ${d.isSunday ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
+                                                        {d.isHoliday && <span className="text-[7px] text-red-500 mt-0.5">หยุด</span>}
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Inspector Slots */}
+                                            {!d.isEmpty && db.inspectors.map((ins, idx) => {
+                                                if (d.isHoliday) return <div key={idx} className="cell-slot bg-red-50/50"></div>;
+
+                                                const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
+                                                const hasTask = tasks.length > 0;
+                                                const task = hasTask ? tasks[0] : null;
+
+                                                return (
+                                                    <div key={idx} className="cell-slot active:bg-blue-50"
+                                                        onClick={() => {
+                                                            if (hasTask) setModal({ type: 'detail', data: task });
+                                                            else setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                        }}
+                                                    >
+                                                        {hasTask ? (
+                                                            <div className={`w-full h-full p-0.5 m-0.5 rounded border flex flex-col justify-center text-[9px] relative
+                                                                ${task.status === 'pending' ? 'bg-white border-slate-200' : 'bg-green-50 border-green-200'}`}>
+                                                                <div className="font-bold truncate-2 leading-tight text-slate-800">{task.site_name}</div>
+                                                                <div className="text-[8px] text-slate-500 absolute top-0.5 right-0.5">{task.time_slot}</div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-slate-100 text-lg opacity-0 hover:opacity-100">+</div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'history' && (
+                            <div className="absolute inset-0 z-40 bg-white flex flex-col animate-slide-up">
+                                <div className="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md">
+                                    <h2 className="font-bold">ประวัติการทำงาน</h2>
+                                    <button onClick={() => setView('calendar')} className="p-1 bg-white/20 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                <div className="flex-1 overflow-auto p-4 space-y-2">
+                                    {[...db.history].reverse().slice(0,50).map(h => (
+                                        <div key={h.id} className="p-3 bg-slate-50 rounded border text-xs">
+                                            <div className="flex justify-between text-slate-400 mb-1">
+                                                <span>{new Date(h.timestamp).toLocaleString('th-TH')}</span>
+                                                <span className="font-bold text-slate-600">{h.user}</span>
+                                            </div>
+                                            <div>{h.details}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </main>
 
-                    {/* Modal (Bottom Sheet) */}
+                    {/* Modals */}
                     {modal && (
                         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center">
                             <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
@@ -403,10 +433,7 @@
                                     <div className="p-5 pb-8">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-lg font-bold text-slate-800">จองคิว</h3>
-                                            <button onClick={() => setModal(null)} className="p-1.5 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
-                                        </div>
-                                        <div className="text-[11px] text-red-500 font-bold uppercase mb-4 bg-red-50 p-2 rounded border border-red-100 text-center">
-                                            {modal.data.inspector_name} • {modal.data.date}
+                                            <button onClick={() => setModal(null)} className="p-1 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
                                         </div>
                                         <form onSubmit={async (e) => {
                                             e.preventDefault();
@@ -420,23 +447,21 @@
                                                 updated_by: user.username
                                             };
                                             const ok = await apiAction(payload);
-                                            if(ok) { showToast('จองสำเร็จ'); setModal(null); }
+                                            if(ok) { alert('จองสำเร็จ'); setModal(null); }
                                         }} className="space-y-3">
-                                            <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Site Project Name" />
+                                            <input name="site_name" required className="w-full p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="ชื่อโครงการ" />
                                             <div className="grid grid-cols-2 gap-2">
-                                                <input name="equipment_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Eq No." />
-                                                <input name="unit_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Unit No." />
+                                                <input name="equipment_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="Eq No." />
+                                                <input name="unit_no" required className="p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="Unit No." />
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <select name="time_slot" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option></select>
-                                                <select name="area" className="p-2.5 bg-slate-50 rounded-lg text-sm border-none"><option>BKK</option><option>CM</option><option>PK</option><option>Others</option></select>
+                                                <select name="time_slot" className="p-2.5 bg-slate-50 rounded-lg text-sm"><option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option></select>
+                                                <select name="area" className="p-2.5 bg-slate-50 rounded-lg text-sm"><option>BKK</option><option>CM</option><option>PK</option><option>Others</option></select>
                                             </div>
-                                            <input name="foreman" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Foreman" />
-                                            <input name="tel" type="tel" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm border-none" placeholder="Tel" />
-                                            <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded">
-                                                * กรุณาส่งเอกสาร (Layout, Wiring, Pre-check) ทางเมลล่วงหน้า 3 วัน
-                                            </div>
-                                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl shadow-md mt-2">ยืนยัน</button>
+                                            <input name="foreman" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="Foreman" />
+                                            <input name="tel" type="tel" className="w-full p-2.5 bg-slate-50 rounded-lg text-sm" placeholder="Tel" />
+                                            <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded">* ต้องส่งเอกสารล่วงหน้า 3 วัน</div>
+                                            <button className="w-full py-3 schindler-gradient text-white font-bold rounded-xl mt-2">ยืนยัน</button>
                                         </form>
                                     </div>
                                 )}
@@ -444,8 +469,8 @@
                                 {modal.type === 'detail' && (
                                     <div className="p-5 pb-8">
                                         <div className="flex justify-between items-start mb-4">
-                                            <h3 className="text-lg font-bold text-slate-800 leading-tight">{modal.data.site_name}</h3>
-                                            <button onClick={() => setModal(null)} className="p-1.5 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
+                                            <h3 className="text-lg font-bold text-slate-800">{modal.data.site_name}</h3>
+                                            <button onClick={() => setModal(null)} className="p-1 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
                                         </div>
                                         <div className="bg-slate-50 p-3 rounded-xl space-y-1.5 mb-4 text-xs border border-slate-100">
                                             <div className="flex justify-between"><span className="text-slate-400">Date</span><span className="font-bold">{modal.data.date}</span></div>
@@ -455,19 +480,16 @@
                                             <div className="flex justify-between"><span className="text-slate-400">Foreman</span><span className="font-bold">{modal.data.foreman}</span></div>
                                             <div className="flex justify-between"><span className="text-slate-400">Tel</span><a href={`tel:${modal.data.tel}`} className="font-bold text-blue-600 underline">{modal.data.tel}</a></div>
                                         </div>
-                                        
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase">Documents Check</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">Documents</p>
                                             {['layout_doc', 'wiring_doc', 'precheck_doc'].map(doc => (
                                                 <div key={doc} className="flex justify-between items-center p-2.5 border rounded-lg">
                                                     <span className="text-[10px] font-bold text-slate-600">{doc.replace('_doc','').toUpperCase()}</span>
                                                     {isAdmin ? (
-                                                        <input type="checkbox" className="w-4 h-4 accent-green-600" 
-                                                            checked={modal.data[doc] === 'true'}
+                                                        <input type="checkbox" className="w-4 h-4 accent-green-600" checked={modal.data[doc] === 'true'}
                                                             onChange={async(e) => {
                                                                 const val = e.target.checked ? 'true' : 'false';
                                                                 setModal(p => ({...p, data: {...p.data, [doc]: val}}));
-                                                                setDb(p => ({...p, bookings: p.bookings.map(b => b.id===modal.data.id ? {...b, [doc]: val} : b)}));
                                                                 await apiAction({ action: 'update_doc_status', id: modal.data.id, doc_type: doc, status: val });
                                                             }}
                                                         />
@@ -479,7 +501,6 @@
                                                 </div>
                                             ))}
                                         </div>
-
                                         {(isAdmin || user?.username === modal.data.created_by) && (
                                             <button onClick={async() => {
                                                 if(confirm('ลบรายการ?')) {
@@ -490,14 +511,32 @@
                                         )}
                                     </div>
                                 )}
-                            </div>
-                        </div>
-                    )}
 
-                    {toast && (
-                        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-full shadow-xl text-white font-bold text-xs animate-slide-up
-                            ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-                            {toast.msg}
+                                {modal.type === 'users' && isAdmin && (
+                                    <div className="p-5 pb-8 h-[70vh] flex flex-col">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-bold">อนุมัติผู้ใช้งาน</h3>
+                                            <button onClick={() => setModal(null)} className="p-1 bg-slate-100 rounded-full"><i data-lucide="x" className="w-4 h-4"></i></button>
+                                        </div>
+                                        <div className="flex-1 overflow-auto space-y-2">
+                                            {pendingUsers.map(u => (
+                                                <div key={u.username} className="p-3 border rounded flex justify-between items-center text-xs">
+                                                    <div>
+                                                        <div className="font-bold">{u.full_name}</div>
+                                                        <div className="text-slate-500">{u.username} | {u.email}</div>
+                                                    </div>
+                                                    <button onClick={async () => {
+                                                        if(confirm('อนุมัติผู้ใช้นี้?')) {
+                                                            await apiAction({ action: 'approve_user', target_username: u.username });
+                                                        }
+                                                    }} className="px-3 py-1 bg-green-600 text-white rounded font-bold">อนุมัติ</button>
+                                                </div>
+                                            ))}
+                                            {pendingUsers.length === 0 && <div className="text-center text-slate-400">ไม่มีรายการรออนุมัติ</div>}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
