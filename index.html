@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAIS Schedule Digital Booking</title>
+    
+    <!-- Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- Font: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/umd/lucide.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background-color: #f1f5f9; 
+            overscroll-behavior: none;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        /* --- Layout --- */
+        .fit-screen-container {
+            height: calc(100vh - 55px);
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        .compact-header-row { flex: 0 0 auto; }
+        .compact-body {
+            flex: 1;
+            display: grid;
+            grid-template-rows: repeat(16, 1fr);
+            overflow: hidden;
+        }
+        .grid-row { display: flex; border-bottom: 1px solid #e2e8f0; }
+
+        /* --- Cells --- */
+        .cell-date {
+            width: 50px; flex-shrink: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-right: 2px solid #e2e8f0;
+            background: #fff; position: relative;
+            font-weight: 500; text-align: center;
+        }
+
+        .cell-slot {
+            flex: 1; border-right: 1px solid #f1f5f9;
+            position: relative; display: flex;
+            align-items: center; justify-content: center;
+            padding: 2px; transition: all 0.1s;
+        }
+        .cell-slot:active { background-color: #f1f5f9; }
+
+        /* --- Theme Colors --- */
+        .schindler-gradient { 
+            background: #D0021B; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .is-sunday { background-color: #fff1f2 !important; color: #D0021B; }
+        .is-holiday-row { background-color: #fef2f2 !important; }
+        
+        /* Holiday Text in Cell */
+        .holiday-label {
+            font-size: 8px; font-weight: 700; color: #ef4444;
+            transform: rotate(-15deg); opacity: 0.2;
+            pointer-events: none; position: absolute;
+        }
+
+        /* Animations */
+        .animate-pop { animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Input Fixes */
+        input, select { font-size: 16px !important; }
+        
+        /* Custom Alert Dialog */
+        .custom-dialog-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxI_OlN2UjTpTKIqbImcK56672CcLYxeinjQPQkfq3evIYf8ynxXOSWFwp6cLOSBMtC/exec"; 
+        const ADMIN_USERNAME = "jiraphong2227";
+
+        // --- Custom Alert/Confirm Component ---
+        const CustomDialog = ({ type, title, message, onConfirm, onCancel }) => (
+            <div className="custom-dialog-overlay animate-pop">
+                <div className="bg-white w-[85%] max-w-sm rounded-2xl shadow-2xl p-6 text-center">
+                    <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 
+                        ${type === 'confirm' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`}>
+                        {type === 'confirm' ? <i data-lucide="alert-triangle" className="w-6 h-6"></i> : <i data-lucide="info" className="w-6 h-6"></i>}
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
+                    <p className="text-slate-500 text-sm mb-6">{message}</p>
+                    <div className="flex gap-3">
+                        {type === 'confirm' && (
+                            <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition">
+                                Cancel
+                            </button>
+                        )}
+                        <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg transition">
+                            {type === 'confirm' ? 'Confirm' : 'OK'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [db, setDb] = useState({ bookings: [], users: [], history: [], inspectors: [] });
+            const [user, setUser] = useState(JSON.parse(localStorage.getItem('sais_user')) || null);
+            const [view, setView] = useState('calendar'); 
+            const [loading, setLoading] = useState(false);
+            
+            // UI States
+            const [modal, setModal] = useState(null); 
+            const [showLogin, setShowLogin] = useState(false);
+            const [showManual, setShowManual] = useState(false);
+            const [dialog, setDialog] = useState(null); // { type, title, message, action }
+            
+            // Calendar
+            const [currentDate, setCurrentDate] = useState(new Date());
+            const [period, setPeriod] = useState(0); 
+
+            const isAdmin = useMemo(() => user?.username === ADMIN_USERNAME || user?.role === 'admin', [user]);
+
+            // --- Auto Refresh Logic (Fix Refresh while typing) ---
+            useEffect(() => {
+                fetchData(); // First load
+                
+                const timer = setInterval(() => {
+                    // **สำคัญ:** หยุดโหลดถ้ามีการเปิด Modal หรือ Popup ค้างไว้
+                    if (!modal && !showLogin && !showManual && !dialog) {
+                        fetchData();
+                    }
+                }, 60000); // 1 นาที
+
+                return () => clearInterval(timer);
+            }, [modal, showLogin, showManual, dialog]); // Depend on UI states
+
+            const fetchData = async () => {
+                if (!SCRIPT_URL) return;
+                try {
+                    const res = await fetch(SCRIPT_URL);
+                    const data = await res.json();
+                    setDb(data);
+                } catch (e) { console.error(e); }
+            };
+
+            const apiAction = async (payload) => {
+                setLoading(true);
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const result = await res.json();
+                    setLoading(false);
+                    if (result.status === 'ok') {
+                        fetchData();
+                        return true;
+                    }
+                } catch (e) { setLoading(false); }
+                return false;
+            };
+
+            const showDialog = (title, message, type = 'alert', action = null) => {
+                setDialog({ title, message, type, action });
+            };
+
+            // --- Helpers ---
+            const togglePeriod = (dir) => {
+                let newPeriod = period;
+                let newDate = new Date(currentDate);
+                if (dir === 'next') {
+                    if (period === 0) newPeriod = 1;
+                    else { newPeriod = 0; newDate.setMonth(newDate.getMonth() + 1); }
+                } else {
+                    if (period === 1) newPeriod = 0;
+                    else { newPeriod = 1; newDate.setMonth(newDate.getMonth() - 1); }
+                }
+                setPeriod(newPeriod);
+                setCurrentDate(newDate);
+            };
+
+            const daysInView = useMemo(() => {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const start = period === 0 ? 1 : 16;
+                const end = period === 0 ? 15 : lastDay;
+                const days = [];
+                
+                for (let i = 0; i < 16; i++) {
+                    const d = start + i;
+                    if (d <= end) {
+                        const date = new Date(year, month, d);
+                        const today = new Date();
+                        // Check Holiday from DB
+                        const isDbHoliday = db.bookings.some(b => b.date === date.toISOString().split('T')[0] && b.inspector_name === 'SYSTEM_HOLIDAY');
+                        // English Weekday
+                        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        
+                        days.push({
+                            full: date.toISOString().split('T')[0],
+                            day: d,
+                            weekday: weekday,
+                            isSunday: date.getDay() === 0,
+                            isHoliday: isDbHoliday,
+                            isToday: date.getDate() === today.getDate() && date.getMonth() === today.getMonth(),
+                            isEmpty: false
+                        });
+                    } else { days.push({ isEmpty: true }); }
+                }
+                return days;
+            }, [currentDate, period, db.bookings]);
+
+            // --- Capture & Export ---
+            const exportSchedule = async () => {
+                setLoading(true);
+                await new Promise(r => setTimeout(r, 200)); // Wait render
+                const element = document.getElementById('schedule-capture-area');
+                try {
+                    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                    const link = document.createElement('a');
+                    link.download = `SAIS_Schedule_${new Date().toISOString().slice(0,10)}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 0.9);
+                    link.click();
+                } catch (e) { showDialog('Error', 'ไม่สามารถบันทึกภาพได้'); }
+                setLoading(false);
+            };
+
+            // --- Main Render ---
+            return (
+                <div className="h-screen flex flex-col bg-white overflow-hidden relative">
+                    
+                    {/* Custom Dialog Overlay */}
+                    {dialog && (
+                        <CustomDialog 
+                            type={dialog.type} 
+                            title={dialog.title} 
+                            message={dialog.message}
+                            onConfirm={() => {
+                                if (dialog.action) dialog.action();
+                                setDialog(null);
+                            }}
+                            onCancel={() => setDialog(null)}
+                        />
+                    )}
+
+                    {/* Loading Spinner */}
+                    {loading && (
+                        <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center text-red-600 font-bold">
+                            <i data-lucide="loader-2" className="w-10 h-10 animate-spin mb-2"></i>
+                            <span>Processing...</span>
+                        </div>
+                    )}
+
+                    {/* Header */}
+                    <header className="schindler-gradient text-white h-[55px] px-4 flex justify-between items-center shadow-lg z-50">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm active:scale-95 transition" onClick={() => setShowManual(true)}>
+                                <i data-lucide="book-open" className="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h1 className="text-sm font-bold tracking-wide">SAIS BOOKING</h1>
+                                <div className="text-[10px] opacity-80 uppercase tracking-wider">Digital Schedule</div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                            <button onClick={exportSchedule} className="bg-white/20 p-2 rounded-full hover:bg-white/30 active:scale-95 transition">
+                                <i data-lucide="camera" className="w-5 h-5 text-white"></i>
+                            </button>
+
+                            {user ? (
+                                <button onClick={() => { localStorage.removeItem('sais_user'); setUser(null); }} className="bg-white text-red-700 px-3 py-1.5 rounded-full font-bold text-xs shadow-sm flex items-center gap-2">
+                                    <span>{user.full_name.split(' ')[0]}</span>
+                                    <i data-lucide="log-out" className="w-3 h-3"></i>
+                                </button>
+                            ) : (
+                                <button onClick={() => setShowLogin(true)} className="bg-white text-red-700 px-4 py-1.5 rounded-full font-bold text-xs shadow-sm active:scale-95 transition">
+                                    LOGIN
+                                </button>
+                            )}
+                        </div>
+                    </header>
+
+                    {/* Content */}
+                    <div className="fit-screen-container" id="schedule-capture-area">
+                        {/* Nav Bar */}
+                        <div className="compact-header-row bg-slate-50 px-4 py-2 flex justify-between items-center border-b border-slate-200">
+                            <button onClick={() => togglePeriod('prev')} className="p-2 bg-white rounded-lg border shadow-sm active:bg-slate-100"><i data-lucide="chevron-left" className="w-4 h-4 text-slate-600"></i></button>
+                            <div className="text-center">
+                                <div className="text-base font-bold text-slate-800">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                                <div className="text-xs text-slate-500 font-medium">{period===0 ? 'First Half (1-15)' : 'Second Half (16-End)'}</div>
+                            </div>
+                            <button onClick={() => togglePeriod('next')} className="p-2 bg-white rounded-lg border shadow-sm active:bg-slate-100"><i data-lucide="chevron-right" className="w-4 h-4 text-slate-600"></i></button>
+                        </div>
+
+                        {/* Grid Header */}
+                        <div className="compact-header-row flex bg-slate-800 text-white z-10 text-[10px] border-b border-white/20 shadow-md">
+                            <div className="w-[50px] flex items-center justify-center font-bold bg-slate-900 border-r border-white/20">DATE</div>
+                            {db.inspectors.map((ins, i) => (
+                                <div key={i} className="flex-1 flex flex-col items-center justify-center py-2 border-r border-white/20 min-w-0">
+                                    <div className="font-bold truncate w-full text-center px-1 text-[11px]">{ins.name}</div>
+                                    <div className="opacity-60 text-[9px] uppercase">{ins.short}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Grid Body */}
+                        <div className="compact-body bg-white">
+                            {daysInView.map((d, index) => (
+                                <div key={index} className={`grid-row ${d.isEmpty ? 'bg-slate-50' : ''} ${d.isHoliday ? 'is-holiday-row' : ''}`}>
+                                    {/* Date Cell */}
+                                    <div 
+                                        className={`cell-date ${d.isSunday ? 'is-sunday' : ''} ${d.isToday ? 'border-l-4 border-l-blue-500 bg-blue-50' : ''}`}
+                                        onClick={() => {
+                                            if(isAdmin && !d.isEmpty) {
+                                                showDialog('Setting', `ตั้งค่าวันหยุด ${d.full}?`, 'confirm', () => 
+                                                    apiAction({ action: 'create_booking', inspector_name: 'SYSTEM_HOLIDAY', date: d.full, site_name: 'HOLIDAY', user: user.username })
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        {!d.isEmpty && (
+                                            <>
+                                                <span className="text-sm font-bold text-slate-700 leading-none">{d.day}</span>
+                                                <span className={`text-[9px] mt-0.5 font-bold uppercase ${d.isSunday ? 'text-red-500' : 'text-slate-400'}`}>{d.weekday}</span>
+                                                {(d.isHoliday || d.isSunday) && <span className="text-[8px] text-red-500 mt-0.5 font-bold">HOLIDAY</span>}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Slot Cells */}
+                                    {!d.isEmpty && db.inspectors.map((ins, idx) => {
+                                        // Logic: ถ้าเป็นวันหยุด/อาทิตย์ ต้องเป็น Admin ถึงจะจองได้ (OT)
+                                        const isOffDay = d.isHoliday || d.isSunday;
+                                        
+                                        const tasks = db.bookings.filter(b => b.date === d.full && b.inspector_name === ins.name);
+                                        const hasTask = tasks.length > 0;
+                                        const task = hasTask ? tasks[0] : null;
+
+                                        return (
+                                            <div key={idx} className={`cell-slot ${isOffDay && !hasTask ? 'bg-red-50/30' : ''}`}
+                                                onClick={() => {
+                                                    if (hasTask) {
+                                                        setModal({ type: 'detail', data: task });
+                                                    } else {
+                                                        if (isOffDay && !isAdmin) {
+                                                            // ถ้าไม่ใช่ Admin จองวันหยุดไม่ได้
+                                                            return; 
+                                                        }
+                                                        if (!user) { setShowLogin(true); return; }
+                                                        setModal({ type: 'booking', data: { date: d.full, inspector_name: ins.name } });
+                                                    }
+                                                }}
+                                            >
+                                                {isOffDay && !hasTask && <span className="holiday-label">HOLIDAY</span>}
+                                                
+                                                {hasTask ? (
+                                                    <div className={`w-full h-full rounded border flex flex-col justify-center px-1 relative
+                                                        ${task.status === 'pending' ? 'bg-white border-slate-200 shadow-sm' : 'bg-green-100 border-green-300'}`}>
+                                                        <div className="font-bold truncate leading-tight text-[10px] text-slate-800">{task.site_name}</div>
+                                                        <div className="text-[8px] text-slate-500 absolute top-0.5 right-1">{task.time_slot}</div>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* --- Login Popup --- */}
+                    {showLogin && (
+                        <LoginComponent 
+                            onClose={() => setShowLogin(false)} 
+                            users={db.users} 
+                            onLogin={(u) => { setUser(u); localStorage.setItem('sais_user', JSON.stringify(u)); setShowLogin(false); showDialog('Welcome', `ยินดีต้อนรับคุณ ${u.full_name}`); }}
+                            apiAction={apiAction}
+                            showDialog={showDialog}
+                        />
+                    )}
+
+                    {/* --- Manual Popup --- */}
+                    {showManual && (
+                        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-pop">
+                            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                                <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+                                    <h2 className="font-bold flex items-center gap-2"><i data-lucide="book" className="w-5 h-5 text-red-600"></i> คู่มือการใช้งาน</h2>
+                                    <button onClick={() => setShowManual(false)}><i data-lucide="x" className="w-5 h-5 text-slate-400"></i></button>
+                                </div>
+                                <div className="p-6 overflow-y-auto text-sm text-slate-600 space-y-4">
+                                    <div className="space-y-1">
+                                        <h3 className="font-bold text-slate-900">1. การใช้งานทั่วไป</h3>
+                                        <p>• ดูตารางงานได้ทันทีโดยไม่ต้อง Login</p>
+                                        <p>• ต้อง Login ก่อนจึงจะทำการ <b>จอง/แก้ไข</b> ได้</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="font-bold text-slate-900">2. การจองวันหยุด (OT)</h3>
+                                        <p>• <span className="text-red-600 font-bold">HOLIDAY</span> คือวันหยุด</p>
+                                        <p>• เฉพาะ <b>Admin</b> เท่านั้นที่สามารถลงงานวันหยุดได้</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- Booking/Detail Modal --- */}
+                    {modal && (
+                        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center animate-pop">
+                            <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                                <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-800">{modal.type === 'booking' ? 'Booking Form' : 'Job Details'}</h3>
+                                            <p className="text-xs text-red-600 font-bold mt-1 uppercase flex items-center gap-1">
+                                                {modal.data.inspector_name} • {modal.data.date}
+                                            </p>
+                                        </div>
+                                        <button onClick={() => setModal(null)} className="p-2 bg-slate-100 rounded-full"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                    </div>
+
+                                    {modal.type === 'booking' ? (
+                                        <form onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            const fd = new FormData(e.target);
+                                            const payload = { action: 'create_booking', ...Object.fromEntries(fd), inspector_name: modal.data.inspector_name, date: modal.data.date, user: user.username };
+                                            showDialog('Confirm', 'ยืนยันการจองคิว?', 'confirm', async () => {
+                                                const ok = await apiAction(payload);
+                                                if(ok) { setModal(null); showDialog('Success', 'บันทึกข้อมูลเรียบร้อย'); }
+                                            });
+                                        }} className="space-y-4">
+                                            <div><label className="text-xs font-bold text-slate-500">Project</label><input name="site_name" required className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="Site Name" /></div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="text-xs font-bold text-slate-500">Eq No.</label><input name="equipment_no" required className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="XXXX" /></div>
+                                                <div><label className="text-xs font-bold text-slate-500">Unit</label><input name="unit_no" required className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="A1" /></div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="text-xs font-bold text-slate-500">Time</label><select name="time_slot" className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"><option>09:00</option><option>10:30</option><option>13:30</option><option>15:00</option></select></div>
+                                                <div><label className="text-xs font-bold text-slate-500">Area</label><select name="area" className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"><option>BKK</option><option>CM</option><option>PK</option><option>Others</option></select></div>
+                                            </div>
+                                            <div><label className="text-xs font-bold text-slate-500">Foreman & Tel</label><div className="flex gap-2"><input name="foreman" className="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="Name" /><input name="tel" className="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="08x-xxx-xxxx" /></div></div>
+                                            <button className="w-full py-3.5 bg-red-600 text-white font-bold rounded-xl shadow-lg mt-2">CONFIRM BOOKING</button>
+                                        </form>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <h2 className="text-lg font-bold text-slate-800">{modal.data.site_name}</h2>
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-y-3 text-sm">
+                                                <div><span className="text-xs text-slate-400 block">Eq No.</span><b>{modal.data.equipment_no}</b></div>
+                                                <div><span className="text-xs text-slate-400 block">Unit</span><b>{modal.data.unit_no}</b></div>
+                                                <div><span className="text-xs text-slate-400 block">Foreman</span><b>{modal.data.foreman}</b></div>
+                                                <div><span className="text-xs text-slate-400 block">Tel</span><a href={`tel:${modal.data.tel}`} className="text-blue-600 font-bold">{modal.data.tel}</a></div>
+                                            </div>
+                                            
+                                            <div className="space-y-2 pt-2">
+                                                <div className="text-xs font-bold text-slate-400 uppercase">Documents</div>
+                                                {['layout_doc', 'wiring_doc', 'precheck_doc'].map(doc => (
+                                                    <div key={doc} className="flex justify-between items-center p-3 border rounded-xl">
+                                                        <span className="text-xs font-bold text-slate-600">{doc.replace('_doc','').toUpperCase()}</span>
+                                                        {isAdmin ? (
+                                                            <input type="checkbox" className="w-5 h-5 accent-green-600" checked={modal.data[doc] === 'true'}
+                                                                onChange={async(e) => {
+                                                                    const val = e.target.checked ? 'true' : 'false';
+                                                                    setModal(p => ({...p, data: {...p.data, [doc]: val}}));
+                                                                    await apiAction({ action: 'update_doc_status', id: modal.data.id, doc_type: doc, status: val });
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${modal.data[doc] === 'true' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                                                                {modal.data[doc] === 'true' ? 'PASS' : 'WAIT'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {(isAdmin || user?.username === modal.data.created_by) && (
+                                                <button onClick={() => {
+                                                    showDialog('Delete', 'ต้องการลบรายการนี้?', 'confirm', async () => {
+                                                        const ok = await apiAction({ action: 'delete_booking', id: modal.data.id, user: user.username, target_name: modal.data.site_name });
+                                                        if(ok) { setModal(null); showDialog('Deleted', 'ลบรายการสำเร็จ'); }
+                                                    });
+                                                }} className="w-full py-3 text-red-600 border border-red-200 rounded-xl font-bold mt-4 hover:bg-red-50">Delete Booking</button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- Extracted Login Component ---
+        const LoginComponent = ({ onClose, users, onLogin, apiAction, showDialog }) => {
+            const [mode, setMode] = useState('login');
+            const [showPwd, setShowPwd] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            return (
+                <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-pop">
+                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200"><i data-lucide="x" className="w-5 h-5 text-slate-500"></i></button>
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800">{mode === 'signup' ? 'Register' : 'Login'}</h2>
+                            <p className="text-slate-400 text-sm">SAIS System</p>
+                        </div>
+                        {mode === 'login' ? (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const fd = new FormData(e.target);
+                                const u = users.find(x => x.username === fd.get('username').trim() && String(x.password) === fd.get('password').trim());
+                                if (u) {
+                                    if (u.role === 'pending') showDialog('Pending', 'รอ Admin อนุมัติสิทธิ์');
+                                    else onLogin(u);
+                                } else showDialog('Error', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                            }} className="space-y-4">
+                                <input name="username" className="w-full p-3 bg-slate-100 rounded-xl outline-none" placeholder="Username" />
+                                <div className="relative">
+                                    <input name="password" type={showPwd ? "text" : "password"} className="w-full p-3 bg-slate-100 rounded-xl outline-none" placeholder="Password" />
+                                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-3 text-slate-400"><i data-lucide={showPwd ? "eye-off" : "eye"} className="w-5 h-5"></i></button>
+                                </div>
+                                <button className="w-full py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg">LOGIN</button>
+                                <button type="button" onClick={() => setMode('signup')} className="w-full text-xs text-slate-500 mt-2 underline">สมัครสมาชิกใหม่</button>
+                            </form>
+                        ) : (
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                setIsSubmitting(true);
+                                const fd = new FormData(e.target);
+                                if (!fd.get('email').endsWith('@schindler.com')) { showDialog('Error', 'Email ต้องลงท้ายด้วย @schindler.com'); setIsSubmitting(false); return; }
+                                const ok = await apiAction({ action: 'signup', ...Object.fromEntries(fd) });
+                                setIsSubmitting(false);
+                                if (ok) { showDialog('Success', 'ลงทะเบียนสำเร็จ รออนุมัติ'); setMode('login'); }
+                            }} className="space-y-3">
+                                <input name="full_name" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Full Name" />
+                                <input name="email" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Email" />
+                                <input name="username" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Username" />
+                                <input name="password" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Password" />
+                                <input name="phone" required className="w-full p-3 bg-slate-100 rounded-xl" placeholder="Phone" />
+                                <button disabled={isSubmitting} className="w-full py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg">{isSubmitting ? '...' : 'REGISTER'}</button>
+                                <button type="button" onClick={() => setMode('login')} className="w-full text-xs text-slate-400 mt-2">Back to Login</button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        setInterval(() => window.lucide?.createIcons(), 1000);
+    </script>
+</body>
+</html>
